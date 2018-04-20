@@ -172,6 +172,62 @@ describe('Converter', () => {
   DataFactory.variable('human_height'),
 ]));
       });
+
+      it('it should convert a query with aliases', async () => {
+        const context = {
+          empireHero: 'http://example.org/empireHero',
+          jediHero: 'http://example.org/jediHero',
+          hero: 'http://example.org/hero',
+          episode: 'http://example.org/episode',
+          EMPIRE: 'http://example.org/types/empire',
+          JEDI: 'http://example.org/types/jedi',
+          name: 'http://example.org/name',
+        };
+        return expect(converter.graphqlToSparqlAlgebra(`
+{
+  empireHero: hero(episode: EMPIRE) {
+    name
+  }
+  jediHero: hero(episode: JEDI) {
+    name
+  }
+}
+`, context)).toEqual(OperationFactory.createProject(OperationFactory.createBgp([
+  OperationFactory.createPattern(
+    DataFactory.blankNode('b5'),
+    DataFactory.namedNode('http://example.org/hero'),
+    DataFactory.variable('empireHero'),
+  ),
+  OperationFactory.createPattern(
+    DataFactory.variable('empireHero'),
+    DataFactory.namedNode('http://example.org/episode'),
+    DataFactory.namedNode('http://example.org/types/empire'),
+  ),
+  OperationFactory.createPattern(
+    DataFactory.variable('empireHero'),
+    DataFactory.namedNode('http://example.org/name'),
+    DataFactory.variable('empireHero_name'),
+  ),
+  OperationFactory.createPattern(
+    DataFactory.blankNode('b5'),
+    DataFactory.namedNode('http://example.org/hero'),
+    DataFactory.variable('jediHero'),
+  ),
+  OperationFactory.createPattern(
+    DataFactory.variable('jediHero'),
+    DataFactory.namedNode('http://example.org/episode'),
+    DataFactory.namedNode('http://example.org/types/jedi'),
+  ),
+  OperationFactory.createPattern(
+    DataFactory.variable('jediHero'),
+    DataFactory.namedNode('http://example.org/name'),
+    DataFactory.variable('jediHero_name'),
+  ),
+]), [
+  DataFactory.variable('empireHero_name'),
+  DataFactory.variable('jediHero_name'),
+]));
+      });
     });
 
     describe('#definitionToPattern', () => {
@@ -189,7 +245,7 @@ describe('Converter', () => {
             },
           })).toEqual(OperationFactory.createBgp([
             OperationFactory.createPattern(
-              DataFactory.blankNode('b5'),
+              DataFactory.blankNode('b6'),
               DataFactory.namedNode('http://example.org/theField'),
               DataFactory.variable('a_theField'),
             ),
@@ -333,6 +389,29 @@ describe('Converter', () => {
         return expect(ctx.terminalVariables).toEqual([
           DataFactory.variable('a_theField_anotherField'),
         ]);
+      });
+
+      it('should convert a field selection node with an alias', async () => {
+        const ctx = {
+          context: {
+            theField: 'http://example.org/theField',
+          },
+          path: [ 'a' ],
+          terminalVariables: [],
+        };
+        const subject = DataFactory.namedNode('theSubject');
+        return expect(converter.selectionToPatterns(ctx, subject,
+          {
+            alias: { kind: 'Name', value: 'theAliasField' },
+            kind: 'Field',
+            name: { kind: 'Name', value: 'theField' },
+          })).toEqual([
+            OperationFactory.createPattern(
+              subject,
+              DataFactory.namedNode('http://example.org/theField'),
+              DataFactory.variable('a_theAliasField'),
+            ),
+          ]);
       });
     });
 

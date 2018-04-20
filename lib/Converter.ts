@@ -78,9 +78,9 @@ export class Converter {
     switch (selectionNode.kind) {
     case 'Field':
       const fieldNode: FieldNode = <FieldNode> selectionNode;
-      const value: string = fieldNode.name.value;
-      const predicate: RDF.NamedNode = this.valueToNamedNode(value, convertContext.context);
-      const object: RDF.Variable = this.nameToVariable(fieldNode.name, convertContext);
+      const predicate: RDF.NamedNode = this.valueToNamedNode(fieldNode.name.value, convertContext.context);
+      const object: RDF.Variable = this.nameToVariable(fieldNode.alias ? fieldNode.alias : fieldNode.name,
+        convertContext);
       let patterns: Algebra.Pattern[] = [
         this.operationFactory.createPattern(subject, predicate, object),
       ];
@@ -94,8 +94,9 @@ export class Converter {
       }
 
       if (fieldNode.selectionSet && fieldNode.selectionSet.selections.length) {
+        const pathSubValue: string = fieldNode.alias ? fieldNode.alias.value : fieldNode.name.value;
         const subConvertContext: IConvertContext = Object.assign(Object.assign({}, convertContext),
-          { path: convertContext.path.concat([value]) });
+          { path: convertContext.path.concat([pathSubValue]) });
         for (const subPatterns of fieldNode.selectionSet.selections
           .map(this.selectionToPatterns.bind(this, subConvertContext, object))) {
           patterns = patterns.concat(<Algebra.Pattern[]> subPatterns);
@@ -104,7 +105,7 @@ export class Converter {
         convertContext.terminalVariables.push(object);
       }
 
-      // TODO: directives, alias
+      // TODO: directives
 
       return patterns;
     case 'FragmentSpread':

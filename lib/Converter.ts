@@ -109,8 +109,6 @@ export class Converter {
       throw new Error('Not implemented yet'); // TODO
     case 'InlineFragment':
       throw new Error('Not implemented yet'); // TODO
-    default:
-      throw new Error('Unsupported selection node: ' + selectionNode.kind);
     }
   }
 
@@ -163,8 +161,6 @@ export class Converter {
       throw new Error('Not implemented yet'); // TODO
     case 'ObjectValue':
       throw new Error('Not implemented yet'); // TODO
-    default:
-      throw new Error('Unsupported value node: ' + valueNode.kind);
     }
   }
 

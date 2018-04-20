@@ -124,6 +124,54 @@ describe('Converter', () => {
   DataFactory.variable('human_friends_name'),
 ]));
       });
+
+      it('it should convert a query with enum arguments', async () => {
+        const context = {
+          human: 'http://example.org/human',
+          id: 'http://example.org/id',
+          name: 'http://example.org/name',
+          height: 'http://example.org/height',
+          unit: 'http://example.org/unit',
+          FOOT: 'http://example.org/types/foot',
+        };
+        return expect(converter.graphqlToSparqlAlgebra(`
+{
+  human(id: "1000") {
+    name
+    height(unit: FOOT)
+  }
+}
+`, context)).toEqual(OperationFactory.createProject(OperationFactory.createBgp([
+  OperationFactory.createPattern(
+    DataFactory.blankNode('b4'),
+    DataFactory.namedNode('http://example.org/human'),
+    DataFactory.variable('human'),
+  ),
+  OperationFactory.createPattern(
+    DataFactory.variable('human'),
+    DataFactory.namedNode('http://example.org/id'),
+    DataFactory.literal('1000'),
+  ),
+  OperationFactory.createPattern(
+    DataFactory.variable('human'),
+    DataFactory.namedNode('http://example.org/name'),
+    DataFactory.variable('human_name'),
+  ),
+  OperationFactory.createPattern(
+    DataFactory.variable('human'),
+    DataFactory.namedNode('http://example.org/height'),
+    DataFactory.variable('human_height'),
+  ),
+  OperationFactory.createPattern(
+    DataFactory.variable('human_height'),
+    DataFactory.namedNode('http://example.org/unit'),
+    DataFactory.namedNode('http://example.org/types/foot'),
+  ),
+]), [
+  DataFactory.variable('human_name'),
+  DataFactory.variable('human_height'),
+]));
+      });
     });
 
     describe('#definitionToPattern', () => {
@@ -141,7 +189,7 @@ describe('Converter', () => {
             },
           })).toEqual(OperationFactory.createBgp([
             OperationFactory.createPattern(
-              DataFactory.blankNode('b4'),
+              DataFactory.blankNode('b5'),
               DataFactory.namedNode('http://example.org/theField'),
               DataFactory.variable('a_theField'),
             ),
@@ -320,109 +368,58 @@ describe('Converter', () => {
     });
 
     describe('#valueToTerm', () => {
+      const ctx = {
+        FOOT: 'http://example.org/types/foot',
+      };
       it('should convert a variable', async () => {
         return expect(converter.valueToTerm(
-          { kind: 'Variable', name: { kind: 'Name', value: 'myVar' } }))
+          { kind: 'Variable', name: { kind: 'Name', value: 'myVar' } }, ctx))
           .toEqual(DataFactory.variable('myVar'));
       });
 
       it('should convert an int', async () => {
         return expect(converter.valueToTerm(
-          { kind: 'IntValue', value: '123' }))
+          { kind: 'IntValue', value: '123' }, ctx))
           .toEqual(DataFactory.literal('123',
             DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#integer')));
       });
 
       it('should convert a float', async () => {
         return expect(converter.valueToTerm(
-          { kind: 'FloatValue', value: '123.1' }))
+          { kind: 'FloatValue', value: '123.1' }, ctx))
           .toEqual(DataFactory.literal('123.1',
             DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#float')));
       });
 
       it('should convert a string', async () => {
         return expect(converter.valueToTerm(
-          { kind: 'StringValue', value: 'abc' })).toEqual(DataFactory.literal('abc'));
+          { kind: 'StringValue', value: 'abc' }, ctx)).toEqual(DataFactory.literal('abc'));
       });
 
       it('should convert a true boolean', async () => {
         return expect(converter.valueToTerm(
-          { kind: 'BooleanValue', value: true }))
+          { kind: 'BooleanValue', value: true }, ctx))
           .toEqual(DataFactory.literal('true',
             DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#boolean')));
       });
 
       it('should convert a false boolean', async () => {
         return expect(converter.valueToTerm(
-          { kind: 'BooleanValue', value: false }))
+          { kind: 'BooleanValue', value: false }, ctx))
           .toEqual(DataFactory.literal('false',
             DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#boolean')));
       });
 
       it('should convert a null value', async () => {
         return expect(converter.valueToTerm(
-          { kind: 'NullValue' }).termType).toEqual('BlankNode');
+          { kind: 'NullValue' }, ctx).termType).toEqual('BlankNode');
+      });
+
+      it('should convert an enum value', async () => {
+        return expect(converter.valueToTerm(
+          { kind: 'EnumValue', value: 'FOOT' }, ctx))
+          .toEqual(DataFactory.namedNode('http://example.org/types/foot'));
       });
     });
   });
-
-  // TODO: make proper tests and do first commit.
-
-  /*describe('#graphqlToSparqlAlgebra', () => {
-    it('should work TODO', async () => {
-      const context = {
-        human: "http://example.org/human",
-        id: "http://example.org/id",
-        name: "http://example.org/name",
-        friends: "http://example.org/friends",
-      };
-      const q1 = `
-{
-  human(id: "1000") {
-    name
-  }
-}
-`;
-      const q2 = `
-{
-  human(id: "1000") {
-    name
-    # Queries can have comments!
-    friends {
-      name
-    }
-  }
-}
-`;
-      const q3 = `
-{
-  empireHero: hero(episode: EMPIRE) {
-    name
-  }
-  jediHero: hero(episode: JEDI) {
-    name
-  }
-}
-`;
-      const q10 = `
-{
-  human(id: "1000") {
-    name
-    height(unit: FOOT)
-  }
-}
-{
-  empireHero: hero(episode: EMPIRE) {
-    name
-  }
-  jediHero: hero(episode: JEDI) {
-    name
-  }
-}`;
-      const algebra = new Converter().graphqlToSparqlAlgebra(q3, context);
-      console.log(JSON.stringify(algebra, null, '  ')); // TODO
-      console.log(toSparql(algebra)); // TODO
-      return expect(true).toEqual(true); // TODO
-    });
-  });*/
 });

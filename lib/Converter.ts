@@ -1,6 +1,7 @@
 import {
   BooleanValueNode,
-  DefinitionNode, DocumentNode, FieldNode, FloatValueNode, IntValueNode, NameNode, OperationDefinitionNode, parse,
+  DefinitionNode, DocumentNode, EnumValueNode, FieldNode, FloatValueNode, IntValueNode, NameNode,
+  OperationDefinitionNode, parse,
   SelectionNode,
   StringValueNode,
   ValueNode, VariableNode,
@@ -87,7 +88,8 @@ export class Converter {
       if (fieldNode.arguments && fieldNode.arguments.length) {
         for (const argument of fieldNode.arguments) {
           patterns.push(this.operationFactory.createPattern(object,
-            this.valueToNamedNode(argument.name.value, convertContext.context), this.valueToTerm(argument.value)));
+            this.valueToNamedNode(argument.name.value, convertContext.context),
+            this.valueToTerm(argument.value, convertContext.context)));
         }
       }
 
@@ -136,9 +138,10 @@ export class Converter {
   /**
    * Convert a GraphQL value into an RDF term.
    * @param {ValueNode} valueNode A GraphQL value node.
+   * @param {IContext} context A JSON-LD context.
    * @return {Term} An RDF term.
    */
-  public valueToTerm(valueNode: ValueNode): RDF.Term {
+  public valueToTerm(valueNode: ValueNode, context: IContext): RDF.Term {
     switch (valueNode.kind) {
     case 'Variable':
       return this.dataFactory.variable((<VariableNode> valueNode).name.value);
@@ -156,7 +159,7 @@ export class Converter {
     case 'NullValue':
       return this.dataFactory.blankNode(); // TODO: Not sure about this one yet...
     case 'EnumValue':
-      throw new Error('Not implemented yet'); // TODO
+      return this.valueToNamedNode((<EnumValueNode> valueNode).value, context);
     case 'ListValue':
       throw new Error('Not implemented yet'); // TODO
     case 'ObjectValue':

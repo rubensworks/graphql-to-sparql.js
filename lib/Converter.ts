@@ -79,12 +79,15 @@ export class Converter {
     case 'Field':
       const fieldNode: FieldNode = <FieldNode> selectionNode;
       const predicate: RDF.NamedNode = this.valueToNamedNode(fieldNode.name.value, convertContext.context);
+      // Aliases change the variable name (and path name)
       const object: RDF.Variable = this.nameToVariable(fieldNode.alias ? fieldNode.alias : fieldNode.name,
         convertContext);
+      // Create at least a pattern for the parent node and the current path.
       let patterns: Algebra.Pattern[] = [
         this.operationFactory.createPattern(subject, predicate, object),
       ];
 
+      // Create patterns for the node's arguments
       if (fieldNode.arguments && fieldNode.arguments.length) {
         for (const argument of fieldNode.arguments) {
           patterns.push(this.operationFactory.createPattern(object,
@@ -93,7 +96,9 @@ export class Converter {
         }
       }
 
+      // Recursive call for nested selection sets
       if (fieldNode.selectionSet && fieldNode.selectionSet.selections.length) {
+        // Change path value when there was an alias on this node.
         const pathSubValue: string = fieldNode.alias ? fieldNode.alias.value : fieldNode.name.value;
         const subConvertContext: IConvertContext = Object.assign(Object.assign({}, convertContext),
           { path: convertContext.path.concat([pathSubValue]) });
@@ -102,6 +107,8 @@ export class Converter {
           patterns = patterns.concat(<Algebra.Pattern[]> subPatterns);
         }
       } else {
+        // If no nested selection sets exist,
+        // consider the object variable as a terminal variable that should be selected.
         convertContext.terminalVariables.push(object);
       }
 

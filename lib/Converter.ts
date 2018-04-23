@@ -29,9 +29,11 @@ export class Converter {
    * Translates a GraphQL query into SPARQL algebra.
    * @param {string} graphqlQuery A GraphQL query string.
    * @param {IContext} context A JSON-LD context.
+   * @param {IVariablesDictionary} variablesDict A variables dictionary.
    * @return {Operation}
    */
-  public graphqlToSparqlAlgebra(graphqlQuery: string, context: IContext): Algebra.Operation {
+  public graphqlToSparqlAlgebra(graphqlQuery: string, context: IContext,
+                                variablesDict?: IVariablesDictionary): Algebra.Operation {
     const document: DocumentNode = parse(graphqlQuery);
 
     const queryParseContext: IConvertContext = {
@@ -39,6 +41,7 @@ export class Converter {
       fragmentDefinitions: this.indexFragments(document),
       path: [],
       terminalVariables: [],
+      variablesDict: variablesDict || {},
     };
     return this.operationFactory.createProject(
       <Algebra.Operation> document.definitions.map(this.definitionToPattern.bind(this, queryParseContext)).reduce(
@@ -89,7 +92,22 @@ export class Converter {
 
       const subject: RDF.Term = this.dataFactory.blankNode();
 
-      // TODO: variables, directives
+      // Variables
+      if (operationDefinition.variableDefinitions) {
+        for (const variableDefinition of operationDefinition.variableDefinitions) {
+          // Put the default value in the context if it hasn't been defined yet.
+          if (variableDefinition.defaultValue) {
+            const name: string = variableDefinition.variable.name.value;
+            if (!convertContext.variablesDict[name]) {
+              convertContext.variablesDict[name] = variableDefinition.defaultValue;
+            }
+          }
+
+          // TODO: type
+        }
+      }
+
+      // TODO: directives
 
       return this.operationFactory.createBgp([].concat.apply([], operationDefinition.selectionSet.selections
         .map(this.selectionToPatterns.bind(this, convertContext, subject))));
@@ -151,7 +169,7 @@ export class Converter {
         for (const argument of fieldNode.arguments) {
           patterns.push(this.operationFactory.createPattern(object,
             this.valueToNamedNode(argument.name.value, convertContext.context),
-            this.valueToTerm(argument.value, convertContext.context)));
+            this.valueToTerm(argument.value, convertContext)));
         }
       }
 
@@ -203,13 +221,22 @@ export class Converter {
   /**
    * Convert a GraphQL value into an RDF term.
    * @param {ValueNode} valueNode A GraphQL value node.
-   * @param {IContext} context A JSON-LD context.
+   * @param {IConvertContext} convertContext A convert context.
    * @return {Term} An RDF term.
    */
-  public valueToTerm(valueNode: ValueNode, context: IContext): RDF.Term {
+  public valueToTerm(valueNode: ValueNode, convertContext: IConvertContext): RDF.Term {
     switch (valueNode.kind) {
     case 'Variable':
-      return this.dataFactory.variable((<VariableNode> valueNode).name.value);
+      const variableNode: VariableNode = <VariableNode> valueNode;
+      const id: string = variableNode.name.value;
+      const value: ValueNode = convertContext.variablesDict[id];
+      if (!value) {
+        throw new Error('Undefined variable: ' + id);
+      }
+      if (value.kind === 'Variable') {
+        throw new Error('Variable refers to another variable: ' + id);
+      }
+      return this.valueToTerm(value, convertContext);
     case 'IntValue':
       return this.dataFactory.literal((<IntValueNode> valueNode).value,
         this.dataFactory.namedNode('http://www.w3.org/2001/XMLSchema#integer'));
@@ -224,7 +251,7 @@ export class Converter {
     case 'NullValue':
       return this.dataFactory.blankNode(); // TODO: Not sure about this one yet...
     case 'EnumValue':
-      return this.valueToNamedNode((<EnumValueNode> valueNode).value, context);
+      return this.valueToNamedNode((<EnumValueNode> valueNode).value, convertContext.context);
     case 'ListValue':
       throw new Error('Not implemented yet'); // TODO
     case 'ObjectValue':
@@ -254,6 +281,10 @@ export interface IConvertContext {
    * All available fragment definitions.
    */
   fragmentDefinitions: {[name: string]: FragmentDefinitionNode};
+  /**
+   * A variable dictionary in case there are dynamic arguments in the query.
+   */
+  variablesDict: IVariablesDictionary;
 }
 
 /**
@@ -261,4 +292,11 @@ export interface IConvertContext {
  */
 export interface IContext {
   [id: string]: string;
+}
+
+/**
+ * A variable dictionary in case there are dynamic arguments in the query.
+ */
+export interface IVariablesDictionary {
+  [id: string]: ValueNode;
 }

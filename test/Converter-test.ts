@@ -1,6 +1,6 @@
 import * as DataFactory from "rdf-data-model";
 import {Factory, toSparql} from "sparqlalgebrajs";
-import {Converter} from "../lib/Converter";
+import {Converter, IVariablesDictionary} from "../lib/Converter";
 
 // tslint:disable:object-literal-sort-keys
 
@@ -324,6 +324,57 @@ fragment comparisonFields on Character {
   DataFactory.variable('rightComparison_friends_name'),
 ]));
       });
+
+      it('it should convert a query with fragments', async () => {
+        const context = {
+          hero: 'http://example.org/hero',
+          episode: 'http://example.org/episode',
+          JEDI: 'http://example.org/types/jedi',
+          name: 'http://example.org/name',
+          friends: 'http://example.org/friends',
+        };
+        const variablesDict: IVariablesDictionary = {
+          episode: { kind: 'EnumValue', value: 'JEDI' },
+        };
+        return expect(converter.graphqlToSparqlAlgebra(`
+query HeroNameAndFriends($episode: Episode) {
+  hero(episode: $episode) {
+    name
+    friends {
+      name
+    }
+  }
+}
+`, context, variablesDict)).toEqual(OperationFactory.createProject(OperationFactory.createBgp([
+  OperationFactory.createPattern(
+    DataFactory.blankNode('b7'),
+    DataFactory.namedNode('http://example.org/hero'),
+    DataFactory.variable('hero'),
+  ),
+  OperationFactory.createPattern(
+    DataFactory.variable('hero'),
+    DataFactory.namedNode('http://example.org/episode'),
+    DataFactory.namedNode('http://example.org/types/jedi'),
+  ),
+  OperationFactory.createPattern(
+    DataFactory.variable('hero'),
+    DataFactory.namedNode('http://example.org/name'),
+    DataFactory.variable('hero_name'),
+  ),
+  OperationFactory.createPattern(
+    DataFactory.variable('hero'),
+    DataFactory.namedNode('http://example.org/friends'),
+    DataFactory.variable('hero_friends'),
+  ),
+  OperationFactory.createPattern(
+    DataFactory.variable('hero_friends'),
+    DataFactory.namedNode('http://example.org/name'),
+    DataFactory.variable('hero_friends_name'),
+)]), [
+  DataFactory.variable('hero_name'),
+  DataFactory.variable('hero_friends_name'),
+]));
+      });
     });
 
     describe('#indexFragments', () => {
@@ -362,6 +413,10 @@ fragment comparisonFields on Character {
             {
               kind: 'FragmentDefinition',
               name: { value: 'fragment1' },
+              typeCondition: {
+                kind: 'NamedType',
+                name: { kind: 'Name', value: 'Character' },
+              },
               selectionSet: {
                 kind: 'SelectionSet',
                 selections: [
@@ -374,6 +429,10 @@ fragment comparisonFields on Character {
           fragment1: {
             kind: 'FragmentDefinition',
             name: { value: 'fragment1' },
+            typeCondition: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'Character' },
+            },
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
@@ -392,6 +451,7 @@ fragment comparisonFields on Character {
           path: [ 'a' ],
           terminalVariables: [],
           fragmentDefinitions: {},
+          variablesDict: {},
         };
         return expect(converter.definitionToPattern(ctx,
           {
@@ -405,7 +465,7 @@ fragment comparisonFields on Character {
             },
           })).toEqual(OperationFactory.createBgp([
             OperationFactory.createPattern(
-              DataFactory.blankNode('b7'),
+              DataFactory.blankNode('b8'),
               DataFactory.namedNode('http://example.org/theField'),
               DataFactory.variable('a_theField'),
             ),
@@ -420,6 +480,7 @@ fragment comparisonFields on Character {
           path: [ 'a' ],
           terminalVariables: [],
           fragmentDefinitions: {},
+          variablesDict: {},
         };
         const subject = DataFactory.namedNode('theSubject');
         return expect(converter.selectionToPatterns(ctx, subject,
@@ -442,6 +503,7 @@ fragment comparisonFields on Character {
           path: [ 'a' ],
           terminalVariables: [],
           fragmentDefinitions: {},
+          variablesDict: {},
         };
         const subject = DataFactory.namedNode('theSubject');
         return expect(converter.selectionToPatterns(ctx, subject,
@@ -484,6 +546,7 @@ fragment comparisonFields on Character {
           path: [ 'a' ],
           terminalVariables: [],
           fragmentDefinitions: {},
+          variablesDict: {},
         };
         const subject = DataFactory.namedNode('theSubject');
         return expect(converter.selectionToPatterns(ctx, subject,
@@ -521,6 +584,7 @@ fragment comparisonFields on Character {
           path: [ 'a' ],
           terminalVariables: [],
           fragmentDefinitions: {},
+          variablesDict: {},
         };
         const subject = DataFactory.namedNode('theSubject');
         converter.selectionToPatterns(ctx, subject,
@@ -536,6 +600,7 @@ fragment comparisonFields on Character {
           path: [ 'a' ],
           terminalVariables: [],
           fragmentDefinitions: {},
+          variablesDict: {},
         };
         const subject = DataFactory.namedNode('theSubject');
         converter.selectionToPatterns(ctx, subject,
@@ -555,6 +620,7 @@ fragment comparisonFields on Character {
           path: [ 'a' ],
           terminalVariables: [],
           fragmentDefinitions: {},
+          variablesDict: {},
         };
         const subject = DataFactory.namedNode('theSubject');
         converter.selectionToPatterns(ctx, subject,
@@ -581,6 +647,7 @@ fragment comparisonFields on Character {
           path: [ 'a' ],
           terminalVariables: [],
           fragmentDefinitions: {},
+          variablesDict: {},
         };
         const subject = DataFactory.namedNode('theSubject');
         return expect(converter.selectionToPatterns(ctx, subject,
@@ -608,6 +675,10 @@ fragment comparisonFields on Character {
             fragment1: {
               kind: 'FragmentDefinition',
               name: { value: 'fragment1' },
+              typeCondition: {
+                kind: 'NamedType',
+                name: { kind: 'Name', value: 'Character' },
+              },
               selectionSet: {
                 kind: 'SelectionSet',
                 selections: [
@@ -616,6 +687,7 @@ fragment comparisonFields on Character {
               },
             },
           },
+          variablesDict: {},
         };
         const subject = DataFactory.namedNode('theSubject');
         return expect(converter.selectionToPatterns(ctx, subject,
@@ -634,19 +706,25 @@ fragment comparisonFields on Character {
 
     describe('#nameToVariable', () => {
       it('should convert a variable with an empty path', async () => {
-        const ctx = { context: {}, path: [], terminalVariables: [] };
+        const ctx = { context: {}, path: [], terminalVariables: [], fragmentDefinitions: {}, variablesDict: {} };
         return expect(converter.nameToVariable({ kind: 'Name', value: 'varName' }, ctx))
           .toEqual(DataFactory.namedNode('varName'));
       });
 
       it('should convert a variable with a single path element', async () => {
-        const ctx = { context: {}, path: [ 'abc' ], terminalVariables: [] };
+        const ctx = { context: {}, path: [ 'abc' ], terminalVariables: [], fragmentDefinitions: {}, variablesDict: {} };
         return expect(converter.nameToVariable({ kind: 'Name', value: 'varName' }, ctx))
           .toEqual(DataFactory.namedNode('abc_varName'));
       });
 
       it('should convert a variable with multiple path elements', async () => {
-        const ctx = { context: {}, path: [ 'abc', 'def', 'ghi' ], terminalVariables: [] };
+        const ctx = {
+          context: {},
+          path: [ 'abc', 'def', 'ghi' ],
+          terminalVariables: [],
+          fragmentDefinitions: {},
+          variablesDict: {},
+        };
         return expect(converter.nameToVariable({ kind: 'Name', value: 'varName' }, ctx))
           .toEqual(DataFactory.namedNode('abc_def_ghi_varName'));
       });
@@ -665,12 +743,24 @@ fragment comparisonFields on Character {
 
     describe('#valueToTerm', () => {
       const ctx = {
-        FOOT: 'http://example.org/types/foot',
+        context: { FOOT: 'http://example.org/types/foot' },
+        path: [],
+        terminalVariables: [],
+        fragmentDefinitions: {},
+        variablesDict: <IVariablesDictionary> {
+          myVar1: { kind: 'StringValue', value: 'myValue1' },
+          myVar2: { kind: 'StringValue', value: 'myValue2' },
+        },
       };
-      it('should convert a variable', async () => {
+      it('should convert a variable that is defined', async () => {
         return expect(converter.valueToTerm(
-          { kind: 'Variable', name: { kind: 'Name', value: 'myVar' } }, ctx))
-          .toEqual(DataFactory.variable('myVar'));
+          { kind: 'Variable', name: { kind: 'Name', value: 'myVar1' } }, ctx))
+          .toEqual(DataFactory.literal('myValue1'));
+      });
+
+      it('should error when a variable is not defined', async () => {
+        return expect(() => converter.valueToTerm(
+          { kind: 'Variable', name: { kind: 'Name', value: 'myVar3' } }, ctx)).toThrow();
       });
 
       it('should convert an int', async () => {

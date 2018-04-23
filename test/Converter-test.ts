@@ -325,7 +325,7 @@ fragment comparisonFields on Character {
 ]));
       });
 
-      it('it should convert a query with fragments', async () => {
+      it('it should convert a query with variables', async () => {
         const context = {
           hero: 'http://example.org/hero',
           episode: 'http://example.org/episode',
@@ -348,6 +348,54 @@ query HeroNameAndFriends($episode: Episode) {
 `, context, variablesDict)).toEqual(OperationFactory.createProject(OperationFactory.createBgp([
   OperationFactory.createPattern(
     DataFactory.blankNode('b7'),
+    DataFactory.namedNode('http://example.org/hero'),
+    DataFactory.variable('hero'),
+  ),
+  OperationFactory.createPattern(
+    DataFactory.variable('hero'),
+    DataFactory.namedNode('http://example.org/episode'),
+    DataFactory.namedNode('http://example.org/types/jedi'),
+  ),
+  OperationFactory.createPattern(
+    DataFactory.variable('hero'),
+    DataFactory.namedNode('http://example.org/name'),
+    DataFactory.variable('hero_name'),
+  ),
+  OperationFactory.createPattern(
+    DataFactory.variable('hero'),
+    DataFactory.namedNode('http://example.org/friends'),
+    DataFactory.variable('hero_friends'),
+  ),
+  OperationFactory.createPattern(
+    DataFactory.variable('hero_friends'),
+    DataFactory.namedNode('http://example.org/name'),
+    DataFactory.variable('hero_friends_name'),
+)]), [
+  DataFactory.variable('hero_name'),
+  DataFactory.variable('hero_friends_name'),
+]));
+      });
+
+      it('it should convert a query with variables with default values', async () => {
+        const context = {
+          hero: 'http://example.org/hero',
+          episode: 'http://example.org/episode',
+          JEDI: 'http://example.org/types/jedi',
+          name: 'http://example.org/name',
+          friends: 'http://example.org/friends',
+        };
+        return expect(converter.graphqlToSparqlAlgebra(`
+query HeroNameAndFriends($episode: Episode = JEDI) {
+  hero(episode: $episode) {
+    name
+    friends {
+      name
+    }
+  }
+}
+`, context)).toEqual(OperationFactory.createProject(OperationFactory.createBgp([
+  OperationFactory.createPattern(
+    DataFactory.blankNode('b8'),
     DataFactory.namedNode('http://example.org/hero'),
     DataFactory.variable('hero'),
   ),
@@ -465,7 +513,7 @@ query HeroNameAndFriends($episode: Episode) {
             },
           })).toEqual(OperationFactory.createBgp([
             OperationFactory.createPattern(
-              DataFactory.blankNode('b8'),
+              DataFactory.blankNode('b9'),
               DataFactory.namedNode('http://example.org/theField'),
               DataFactory.variable('a_theField'),
             ),

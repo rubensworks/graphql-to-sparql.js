@@ -89,7 +89,7 @@ export class Converter {
 
       const subject: RDF.Term = this.dataFactory.blankNode();
 
-      // TODO: variables, directives, selections
+      // TODO: variables, directives
 
       return this.operationFactory.createBgp([].concat.apply([], operationDefinition.selectionSet.selections
         .map(this.selectionToPatterns.bind(this, convertContext, subject))));

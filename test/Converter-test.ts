@@ -326,9 +326,73 @@ fragment comparisonFields on Character {
       });
     });
 
+    describe('#indexFragments', () => {
+      it('should create an empty index when there are no fragments', async () => {
+        return expect(converter.indexFragments({
+          kind: 'Document',
+          definitions: [
+            {
+              kind: 'OperationDefinition',
+              operation: 'query',
+              selectionSet: {
+                kind: 'SelectionSet',
+                selections: [
+                  { kind: 'Field', name: { kind: 'Name', value: 'theField' } },
+                ],
+              },
+            },
+          ],
+        })).toEqual({});
+      });
+
+      it('should create an empty index when there are fragments', async () => {
+        return expect(converter.indexFragments({
+          kind: 'Document',
+          definitions: [
+            {
+              kind: 'OperationDefinition',
+              operation: 'query',
+              selectionSet: {
+                kind: 'SelectionSet',
+                selections: [
+                  { kind: 'Field', name: { kind: 'Name', value: 'theField' } },
+                ],
+              },
+            },
+            {
+              kind: 'FragmentDefinition',
+              name: { value: 'fragment1' },
+              selectionSet: {
+                kind: 'SelectionSet',
+                selections: [
+                  { kind: 'Field', name: { kind: 'Name', value: 'theField' } },
+                ],
+              },
+            },
+          ],
+        })).toEqual({
+          fragment1: {
+            kind: 'FragmentDefinition',
+            name: { value: 'fragment1' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'theField' } },
+              ],
+            },
+          },
+        });
+      });
+    });
+
     describe('#definitionToPattern', () => {
       it('should convert an operation query definition node', async () => {
-        const ctx = { context: { theField: 'http://example.org/theField' }, path: [ 'a' ], terminalVariables: [] };
+        const ctx = {
+          context: { theField: 'http://example.org/theField' },
+          path: [ 'a' ],
+          terminalVariables: [],
+          fragmentDefinitions: {},
+        };
         return expect(converter.definitionToPattern(ctx,
           {
             kind: 'OperationDefinition',
@@ -351,7 +415,12 @@ fragment comparisonFields on Character {
 
     describe('#selectionToPatterns', () => {
       it('should convert a field selection node', async () => {
-        const ctx = { context: { theField: 'http://example.org/theField' }, path: [ 'a' ], terminalVariables: [] };
+        const ctx = {
+          context: { theField: 'http://example.org/theField' },
+          path: [ 'a' ],
+          terminalVariables: [],
+          fragmentDefinitions: {},
+        };
         const subject = DataFactory.namedNode('theSubject');
         return expect(converter.selectionToPatterns(ctx, subject,
           { kind: 'Field', name: { kind: 'Name', value: 'theField' } })).toEqual([
@@ -372,6 +441,7 @@ fragment comparisonFields on Character {
           },
           path: [ 'a' ],
           terminalVariables: [],
+          fragmentDefinitions: {},
         };
         const subject = DataFactory.namedNode('theSubject');
         return expect(converter.selectionToPatterns(ctx, subject,
@@ -413,6 +483,7 @@ fragment comparisonFields on Character {
           },
           path: [ 'a' ],
           terminalVariables: [],
+          fragmentDefinitions: {},
         };
         const subject = DataFactory.namedNode('theSubject');
         return expect(converter.selectionToPatterns(ctx, subject,
@@ -445,7 +516,12 @@ fragment comparisonFields on Character {
       });
 
       it('should terminate a field selection node without selection set', async () => {
-        const ctx = { context: { theField: 'http://example.org/theField' }, path: [ 'a' ], terminalVariables: [] };
+        const ctx = {
+          context: { theField: 'http://example.org/theField' },
+          path: [ 'a' ],
+          terminalVariables: [],
+          fragmentDefinitions: {},
+        };
         const subject = DataFactory.namedNode('theSubject');
         converter.selectionToPatterns(ctx, subject,
           { kind: 'Field', name: { kind: 'Name', value: 'theField' } });
@@ -455,7 +531,12 @@ fragment comparisonFields on Character {
       });
 
       it('should terminate a field selection node with an empty selection set', async () => {
-        const ctx = { context: { theField: 'http://example.org/theField' }, path: [ 'a' ], terminalVariables: [] };
+        const ctx = {
+          context: { theField: 'http://example.org/theField' },
+          path: [ 'a' ],
+          terminalVariables: [],
+          fragmentDefinitions: {},
+        };
         const subject = DataFactory.namedNode('theSubject');
         converter.selectionToPatterns(ctx, subject,
           {
@@ -469,7 +550,12 @@ fragment comparisonFields on Character {
       });
 
       it('should not terminate a field selection node with selection set', async () => {
-        const ctx = { context: { theField: 'http://example.org/theField' }, path: [ 'a' ], terminalVariables: [] };
+        const ctx = {
+          context: { theField: 'http://example.org/theField' },
+          path: [ 'a' ],
+          terminalVariables: [],
+          fragmentDefinitions: {},
+        };
         const subject = DataFactory.namedNode('theSubject');
         converter.selectionToPatterns(ctx, subject,
           {
@@ -494,6 +580,7 @@ fragment comparisonFields on Character {
           },
           path: [ 'a' ],
           terminalVariables: [],
+          fragmentDefinitions: {},
         };
         const subject = DataFactory.namedNode('theSubject');
         return expect(converter.selectionToPatterns(ctx, subject,
@@ -506,6 +593,40 @@ fragment comparisonFields on Character {
               subject,
               DataFactory.namedNode('http://example.org/theField'),
               DataFactory.variable('a_theAliasField'),
+            ),
+          ]);
+      });
+
+      it('should convert a fragment spread selection node', async () => {
+        const ctx = {
+          context: {
+            theField: 'http://example.org/theField',
+          },
+          path: [ 'a' ],
+          terminalVariables: [],
+          fragmentDefinitions: {
+            fragment1: {
+              kind: 'FragmentDefinition',
+              name: { value: 'fragment1' },
+              selectionSet: {
+                kind: 'SelectionSet',
+                selections: [
+                  { kind: 'Field', name: { kind: 'Name', value: 'theField' } },
+                ],
+              },
+            },
+          },
+        };
+        const subject = DataFactory.namedNode('theSubject');
+        return expect(converter.selectionToPatterns(ctx, subject,
+          {
+            kind: 'FragmentSpread',
+            name: { kind: 'Name', value: 'fragment1' },
+          })).toEqual([
+            OperationFactory.createPattern(
+              subject,
+              DataFactory.namedNode('http://example.org/theField'),
+              DataFactory.variable('a_theField'),
             ),
           ]);
       });

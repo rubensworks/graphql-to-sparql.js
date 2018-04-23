@@ -1,6 +1,8 @@
 import {
   BooleanValueNode,
-  DefinitionNode, DocumentNode, EnumValueNode, FieldNode, FloatValueNode, IntValueNode, NameNode,
+  DefinitionNode, DocumentNode, EnumValueNode, FieldNode, FloatValueNode, FragmentDefinitionNode, FragmentSpreadNode,
+  IntValueNode,
+  NameNode,
   OperationDefinitionNode, parse,
   SelectionNode,
   StringValueNode,
@@ -32,7 +34,12 @@ export class Converter {
   public graphqlToSparqlAlgebra(graphqlQuery: string, context: IContext): Algebra.Operation {
     const document: DocumentNode = parse(graphqlQuery);
 
-    const queryParseContext: IConvertContext = { path: [], terminalVariables: [], context };
+    const queryParseContext: IConvertContext = {
+      context,
+      fragmentDefinitions: this.indexFragments(document),
+      path: [],
+      terminalVariables: [],
+    };
     return this.operationFactory.createProject(
       <Algebra.Operation> document.definitions.map(this.definitionToPattern.bind(this, queryParseContext)).reduce(
       (prev: Algebra.Operation, current: Algebra.Operation) => {
@@ -41,6 +48,28 @@ export class Converter {
         }
         return this.operationFactory.createUnion(prev, current);
       }, null), queryParseContext.terminalVariables);
+  }
+
+  /**
+   * Create an index of all fragment definitions in the given document.
+   *
+   * This will assign a new array of definition nodes without fragment definition.
+   *
+   * @param {DocumentNode} document A document node.
+   * @return {{[p: string]: FragmentDefinitionNode}} An index of fragment definition nodes.
+   */
+  public indexFragments(document: DocumentNode): {[name: string]: FragmentDefinitionNode} {
+    const fragmentDefinitions: {[name: string]: FragmentDefinitionNode} = {};
+    const newDefinitions: DefinitionNode[] = [];
+    for (const definition of document.definitions) {
+      if (definition.kind === 'FragmentDefinition') {
+        fragmentDefinitions[definition.name.value] = definition;
+      } else {
+        newDefinitions.push(definition);
+      }
+    }
+    (<any> document).definitions = newDefinitions;
+    return fragmentDefinitions;
   }
 
   /**
@@ -60,7 +89,7 @@ export class Converter {
       return this.operationFactory.createBgp([].concat.apply([], operationDefinition.selectionSet.selections
         .map(this.selectionToPatterns.bind(this, convertContext, subject))));
     case 'FragmentDefinition':
-      throw new Error('Not implemented yet'); // TODO
+      throw new Error('Illegal state: fragment definitions must be indexed and removed before processing');
     default:
       throw new Error('Unsupported definition node: ' + definition.kind);
     }
@@ -75,7 +104,29 @@ export class Converter {
    */
   public selectionToPatterns(convertContext: IConvertContext, subject: RDF.Term,
                              selectionNode: SelectionNode): Algebra.Pattern[] {
+    let nest: boolean = true;
     switch (selectionNode.kind) {
+    case 'FragmentSpread':
+      const fragmentSpreadNode: FragmentSpreadNode = <FragmentSpreadNode> selectionNode;
+      const fragmentDefinitionNode: FragmentDefinitionNode = convertContext
+        .fragmentDefinitions[fragmentSpreadNode.name.value];
+      if (!fragmentDefinitionNode) {
+        throw new Error('Undefined fragment definition: ' + fragmentSpreadNode.name.value);
+      }
+
+      // TODO: handle typeCondition
+
+      const newFieldNode: FieldNode = {
+        alias: null,
+        arguments: null,
+        directives: fragmentDefinitionNode.directives,
+        kind: 'Field',
+        name: fragmentSpreadNode.name,
+        selectionSet: fragmentDefinitionNode.selectionSet,
+      };
+      nest = false;
+      selectionNode = newFieldNode;
+      // No break, continue as field.
     case 'Field':
       const fieldNode: FieldNode = <FieldNode> selectionNode;
       const predicate: RDF.NamedNode = this.valueToNamedNode(fieldNode.name.value, convertContext.context);
@@ -83,9 +134,12 @@ export class Converter {
       const object: RDF.Variable = this.nameToVariable(fieldNode.alias ? fieldNode.alias : fieldNode.name,
         convertContext);
       // Create at least a pattern for the parent node and the current path.
-      let patterns: Algebra.Pattern[] = [
-        this.operationFactory.createPattern(subject, predicate, object),
-      ];
+      let patterns: Algebra.Pattern[] = [];
+      if (nest) {
+        patterns = [
+          this.operationFactory.createPattern(subject, predicate, object),
+        ];
+      }
 
       // Create patterns for the node's arguments
       if (fieldNode.arguments && fieldNode.arguments.length) {
@@ -100,13 +154,13 @@ export class Converter {
       if (fieldNode.selectionSet && fieldNode.selectionSet.selections.length) {
         // Change path value when there was an alias on this node.
         const pathSubValue: string = fieldNode.alias ? fieldNode.alias.value : fieldNode.name.value;
-        const subConvertContext: IConvertContext = Object.assign(Object.assign({}, convertContext),
-          { path: convertContext.path.concat([pathSubValue]) });
+        const subConvertContext: IConvertContext = nest ? Object.assign(Object.assign({}, convertContext),
+          { path: convertContext.path.concat([pathSubValue]) }) : convertContext;
         for (const subPatterns of fieldNode.selectionSet.selections
-          .map(this.selectionToPatterns.bind(this, subConvertContext, object))) {
+          .map(this.selectionToPatterns.bind(this, subConvertContext, nest ? object : subject))) {
           patterns = patterns.concat(<Algebra.Pattern[]> subPatterns);
         }
-      } else {
+      } else if (nest) {
         // If no nested selection sets exist,
         // consider the object variable as a terminal variable that should be selected.
         convertContext.terminalVariables.push(object);
@@ -115,8 +169,6 @@ export class Converter {
       // TODO: directives
 
       return patterns;
-    case 'FragmentSpread':
-      throw new Error('Not implemented yet'); // TODO
     case 'InlineFragment':
       throw new Error('Not implemented yet'); // TODO
     }
@@ -193,6 +245,10 @@ export interface IConvertContext {
    * All variables that have no deeper child and should be selected withing the GraphQL query.
    */
   terminalVariables: RDF.Variable[];
+  /**
+   * All available fragment definitions.
+   */
+  fragmentDefinitions: {[name: string]: FragmentDefinitionNode};
 }
 
 /**

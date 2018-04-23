@@ -85,7 +85,12 @@ export class Converter {
       if (operationDefinition.operation !== 'query') {
         throw new Error('Unsupported definition operation: ' + operationDefinition.operation);
       }
+      // We ignore the query name, as SPARQL doesn't support naming queries.
+
       const subject: RDF.Term = this.dataFactory.blankNode();
+
+      // TODO: variables, directives, selections
+
       return this.operationFactory.createBgp([].concat.apply([], operationDefinition.selectionSet.selections
         .map(this.selectionToPatterns.bind(this, convertContext, subject))));
     case 'FragmentDefinition':

@@ -1,6 +1,8 @@
 import {
+  ArgumentNode,
   BooleanValueNode,
-  DefinitionNode, DocumentNode, EnumValueNode, FieldNode, FloatValueNode, FragmentDefinitionNode, FragmentSpreadNode,
+  DefinitionNode, DirectiveNode, DocumentNode, EnumValueNode, FieldNode, FloatValueNode, FragmentDefinitionNode,
+  FragmentSpreadNode,
   IntValueNode,
   NameNode,
   OperationDefinitionNode, parse,
@@ -46,6 +48,9 @@ export class Converter {
     return this.operationFactory.createProject(
       <Algebra.Operation> document.definitions.map(this.definitionToPattern.bind(this, queryParseContext)).reduce(
       (prev: Algebra.Operation, current: Algebra.Operation) => {
+        if (!current) {
+          return prev;
+        }
         if (!prev) {
           return current;
         }
@@ -81,7 +86,7 @@ export class Converter {
    * @param {DefinitionNode} definition A GraphQL definition node.
    * @return {Operation} A SPARQL algebra operation.
    */
-  public definitionToPattern(convertContext: IConvertContext, definition: DefinitionNode): Algebra.Operation {
+  public definitionToPattern(convertContext: IConvertContext, definition: DefinitionNode): Algebra.Operation | null {
     switch (definition.kind) {
     case 'OperationDefinition':
       const operationDefinition: OperationDefinitionNode = <OperationDefinitionNode> definition;
@@ -107,7 +112,14 @@ export class Converter {
         }
       }
 
-      // TODO: directives
+      // Directives
+      if (operationDefinition.directives) {
+        for (const directive of operationDefinition.directives) {
+          if (!this.handleDirective(directive, convertContext)) {
+            return null;
+          }
+        }
+      }
 
       return this.operationFactory.createBgp([].concat.apply([], operationDefinition.selectionSet.selections
         .map(this.selectionToPatterns.bind(this, convertContext, subject))));
@@ -173,6 +185,15 @@ export class Converter {
         }
       }
 
+      // Directives
+      if (fieldNode.directives) {
+        for (const directive of fieldNode.directives) {
+          if (!this.handleDirective(directive, convertContext)) {
+            return [];
+          }
+        }
+      }
+
       // Recursive call for nested selection sets
       if (fieldNode.selectionSet && fieldNode.selectionSet.selections.length) {
         // Change path value when there was an alias on this node.
@@ -188,8 +209,6 @@ export class Converter {
         // consider the object variable as a terminal variable that should be selected.
         convertContext.terminalVariables.push(object);
       }
-
-      // TODO: directives
 
       return patterns;
     case 'InlineFragment':
@@ -257,6 +276,51 @@ export class Converter {
     case 'ObjectValue':
       throw new Error('Not implemented yet'); // TODO
     }
+  }
+
+  /**
+   * Get an argument by name.
+   * This will throw an error if the argument could not be found.
+   * @param {ReadonlyArray<ArgumentNode>} args Arguments or null.
+   * @param {string} name The name of an argument.
+   * @return {ArgumentNode} The named argument.
+   */
+  public getArgument(args: ReadonlyArray<ArgumentNode> | null, name: string): ArgumentNode {
+    if (!args) {
+      throw new Error('No arguments were defined for the directive.');
+    }
+    for (const argument of args) {
+      if (argument.name.value === name) {
+        return argument;
+      }
+    }
+    throw new Error('Undefined argument: ' + name);
+  }
+
+  /**
+   * Handle a directive.
+   * @param {DirectiveNode} directive A directive.
+   * @param {IConvertContext} convertContext A convert context.
+   * @return {boolean} If processing of the active should continue.
+   */
+  public handleDirective(directive: DirectiveNode, convertContext: IConvertContext): boolean {
+    const arg: ArgumentNode = this.getArgument(directive.arguments, 'if');
+    const val: RDF.Term = this.valueToTerm(arg.value, convertContext);
+    switch (directive.name.value) {
+    case 'include':
+      if (val.termType === 'Literal' && val.value === 'false') {
+        return false;
+      }
+      break;
+    case 'skip':
+      if (val.termType === 'Literal' && val.value === 'true') {
+        return false;
+      }
+      break;
+    default:
+      throw new Error('Unsupported directive: ' + directive.name.value);
+    }
+    return true;
   }
 
 }

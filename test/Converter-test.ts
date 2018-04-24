@@ -1,3 +1,4 @@
+import {DirectiveNode} from "graphql";
 import * as DataFactory from "rdf-data-model";
 import {Factory, toSparql} from "sparqlalgebrajs";
 import {Converter, IVariablesDictionary} from "../lib/Converter";
@@ -423,6 +424,47 @@ query HeroNameAndFriends($episode: Episode = JEDI) {
   DataFactory.variable('hero_friends_name'),
 ]));
       });
+
+      it('it should convert a query with variables with directives', async () => {
+        const context = {
+          hero: 'http://example.org/hero',
+          episode: 'http://example.org/episode',
+          JEDI: 'http://example.org/types/jedi',
+          name: 'http://example.org/name',
+          friends: 'http://example.org/friends',
+        };
+        const variablesDict: IVariablesDictionary = {
+          episode: { kind: 'EnumValue', value: 'JEDI' },
+          withFriends: { kind: 'BooleanValue', value: false },
+        };
+        return expect(converter.graphqlToSparqlAlgebra(`
+query Hero($episode: Episode, $withFriends: Boolean!) {
+  hero(episode: $episode) {
+    name
+    friends @include(if: $withFriends) {
+      name
+    }
+  }
+}
+`, context, variablesDict)).toEqual(OperationFactory.createProject(OperationFactory.createBgp([
+  OperationFactory.createPattern(
+    DataFactory.blankNode('b9'),
+    DataFactory.namedNode('http://example.org/hero'),
+    DataFactory.variable('hero'),
+  ),
+  OperationFactory.createPattern(
+    DataFactory.variable('hero'),
+    DataFactory.namedNode('http://example.org/episode'),
+    DataFactory.namedNode('http://example.org/types/jedi'),
+  ),
+  OperationFactory.createPattern(
+    DataFactory.variable('hero'),
+    DataFactory.namedNode('http://example.org/name'),
+    DataFactory.variable('hero_name'),
+  )]), [
+    DataFactory.variable('hero_name'),
+  ]));
+      });
     });
 
     describe('#indexFragments', () => {
@@ -513,7 +555,45 @@ query HeroNameAndFriends($episode: Episode = JEDI) {
             },
           })).toEqual(OperationFactory.createBgp([
             OperationFactory.createPattern(
-              DataFactory.blankNode('b9'),
+              DataFactory.blankNode('b10'),
+              DataFactory.namedNode('http://example.org/theField'),
+              DataFactory.variable('a_theField'),
+            ),
+          ]));
+      });
+
+      it('should convert an operation query definition node with a directive', async () => {
+        const ctx = {
+          context: { theField: 'http://example.org/theField' },
+          path: [ 'a' ],
+          terminalVariables: [],
+          fragmentDefinitions: {},
+          variablesDict: <IVariablesDictionary> {
+            varTrue: { kind: 'BooleanValue', value: true },
+          },
+        };
+        return expect(converter.definitionToPattern(ctx,
+          {
+            kind: 'OperationDefinition',
+            operation: 'query',
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'theField' } },
+              ],
+            },
+            directives: [
+              { kind: 'Directive', name: { kind: 'Name', value: 'include' }, arguments: [
+                {
+                  kind: 'Argument',
+                  name: { kind: 'Name', value: 'if' },
+                  value: { kind: 'Variable', name: { kind: 'Name', value: 'varTrue' } },
+                },
+              ] },
+            ],
+          })).toEqual(OperationFactory.createBgp([
+            OperationFactory.createPattern(
+              DataFactory.blankNode('b11'),
               DataFactory.namedNode('http://example.org/theField'),
               DataFactory.variable('a_theField'),
             ),
@@ -750,6 +830,43 @@ query HeroNameAndFriends($episode: Episode = JEDI) {
             ),
           ]);
       });
+
+      it('should convert a field selection node with a directive', async () => {
+        const ctx = {
+          context: {
+            theField: 'http://example.org/theField',
+          },
+          path: [ 'a' ],
+          terminalVariables: [],
+          fragmentDefinitions: {},
+          variablesDict: <IVariablesDictionary> {
+            varTrue: { kind: 'BooleanValue', value: true },
+            varFalse: { kind: 'BooleanValue', value: false },
+          },
+        };
+        const subject = DataFactory.namedNode('theSubject');
+        return expect(converter.selectionToPatterns(ctx, subject,
+          {
+            alias: { kind: 'Name', value: 'theAliasField' },
+            kind: 'Field',
+            name: { kind: 'Name', value: 'theField' },
+            directives: [
+              { kind: 'Directive', name: { kind: 'Name', value: 'include' }, arguments: [
+                {
+                  kind: 'Argument',
+                  name: { kind: 'Name', value: 'if' },
+                  value: { kind: 'Variable', name: { kind: 'Name', value: 'varTrue' } },
+                },
+              ] },
+            ],
+          })).toEqual([
+            OperationFactory.createPattern(
+              subject,
+              DataFactory.namedNode('http://example.org/theField'),
+              DataFactory.variable('a_theAliasField'),
+            ),
+          ]);
+      });
     });
 
     describe('#nameToVariable', () => {
@@ -853,6 +970,93 @@ query HeroNameAndFriends($episode: Episode = JEDI) {
         return expect(converter.valueToTerm(
           { kind: 'EnumValue', value: 'FOOT' }, ctx))
           .toEqual(DataFactory.namedNode('http://example.org/types/foot'));
+      });
+    });
+
+    describe('#getArgument', () => {
+      it('should error on null arguments', async () => {
+        return expect(() => converter.getArgument(null, 'abc')).toThrow();
+      });
+
+      it('should error on an argument that is not present', async () => {
+        return expect(() => converter.getArgument([
+          { kind: 'Argument', name: { kind: 'Name', value: 'def' }, value: { kind: 'StringValue', value: 'val' } },
+        ], 'abc')).toThrow();
+      });
+
+      it('should return the named argument', async () => {
+        return expect(converter.getArgument([
+          { kind: 'Argument', name: { kind: 'Name', value: 'abc' }, value: { kind: 'StringValue', value: 'val' } },
+        ], 'abc')).toEqual(
+          { kind: 'Argument', name: { kind: 'Name', value: 'abc' }, value: { kind: 'StringValue', value: 'val' } });
+      });
+    });
+
+    describe('#handleDirective', () => {
+      const ctx = {
+        context: {},
+        path: [],
+        terminalVariables: [],
+        fragmentDefinitions: {},
+        variablesDict: <IVariablesDictionary> {
+          varTrue: { kind: 'BooleanValue', value: true },
+          varFalse: { kind: 'BooleanValue', value: false },
+        },
+      };
+      const includeTrue: DirectiveNode = { kind: 'Directive', name: { kind: 'Name', value: 'include' }, arguments: [
+        {
+          kind: 'Argument',
+          name: { kind: 'Name', value: 'if' },
+          value: { kind: 'Variable', name: { kind: 'Name', value: 'varTrue' } },
+        },
+      ] };
+      const includeFalse: DirectiveNode = { kind: 'Directive', name: { kind: 'Name', value: 'include' }, arguments: [
+        {
+          kind: 'Argument',
+          name: { kind: 'Name', value: 'if' },
+          value: { kind: 'Variable', name: { kind: 'Name', value: 'varFalse' } },
+        },
+      ] };
+      const skipTrue: DirectiveNode = { kind: 'Directive', name: { kind: 'Name', value: 'skip' }, arguments: [
+        {
+          kind: 'Argument',
+          name: { kind: 'Name', value: 'if' },
+          value: { kind: 'Variable', name: { kind: 'Name', value: 'varTrue' } },
+        },
+      ] };
+      const skipFalse: DirectiveNode = { kind: 'Directive', name: { kind: 'Name', value: 'skip' }, arguments: [
+        {
+          kind: 'Argument',
+          name: { kind: 'Name', value: 'if' },
+          value: { kind: 'Variable', name: { kind: 'Name', value: 'varFalse' } },
+        },
+      ] };
+      const unknownDirective: DirectiveNode = { kind: 'Directive', name: { kind: 'Name', value: 'unknow' }, arguments: [
+        {
+          kind: 'Argument',
+          name: { kind: 'Name', value: 'if' },
+          value: { kind: 'Variable', name: { kind: 'Name', value: 'varFalse' } },
+        },
+      ] };
+
+      it('should error on an unsupported directive', async () => {
+        return expect(() => converter.handleDirective(unknownDirective, ctx)).toThrow();
+      });
+
+      it('should return true on a true inclusion', async () => {
+        return expect(converter.handleDirective(includeTrue, ctx)).toBeTruthy();
+      });
+
+      it('should return false on a false inclusion', async () => {
+        return expect(converter.handleDirective(includeFalse, ctx)).toBeFalsy();
+      });
+
+      it('should return false on a true skip', async () => {
+        return expect(converter.handleDirective(skipTrue, ctx)).toBeFalsy();
+      });
+
+      it('should return true on a false skip', async () => {
+        return expect(converter.handleDirective(skipFalse, ctx)).toBeTruthy();
       });
     });
   });

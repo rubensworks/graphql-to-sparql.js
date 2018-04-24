@@ -3,11 +3,11 @@ import {
   BooleanValueNode,
   DefinitionNode, DirectiveNode, DocumentNode, EnumValueNode, FieldNode, FloatValueNode, FragmentDefinitionNode,
   FragmentSpreadNode,
-  IntValueNode,
-  NameNode,
+  IntValueNode, ListTypeNode, ListValueNode, NamedTypeNode,
+  NameNode, NonNullTypeNode,
   OperationDefinitionNode, parse,
   SelectionNode,
-  StringValueNode,
+  StringValueNode, TypeNode,
   ValueNode, VariableNode,
 } from "graphql";
 import * as DefaultDataFactory from "rdf-data-model";
@@ -44,6 +44,7 @@ export class Converter {
       path: [],
       terminalVariables: [],
       variablesDict: variablesDict || {},
+      variablesMetaDict: {},
     };
     return this.operationFactory.createProject(
       <Algebra.Operation> document.definitions.map(this.definitionToPattern.bind(this, queryParseContext)).reduce(
@@ -100,15 +101,26 @@ export class Converter {
       // Variables
       if (operationDefinition.variableDefinitions) {
         for (const variableDefinition of operationDefinition.variableDefinitions) {
+          const name: string = variableDefinition.variable.name.value;
           // Put the default value in the context if it hasn't been defined yet.
           if (variableDefinition.defaultValue) {
-            const name: string = variableDefinition.variable.name.value;
             if (!convertContext.variablesDict[name]) {
               convertContext.variablesDict[name] = variableDefinition.defaultValue;
             }
           }
 
-          // TODO: type
+          // Handle type
+          let typeNode: TypeNode = variableDefinition.type;
+          const mandatory: boolean = typeNode.kind === 'NonNullType';
+          if (mandatory) {
+            typeNode = (<NonNullTypeNode> typeNode).type;
+          }
+          const list: boolean = typeNode.kind === 'ListType';
+          if (list) {
+            typeNode = (<ListTypeNode> typeNode).type;
+          }
+          const type: string = (<NamedTypeNode> typeNode).name.value;
+          convertContext.variablesMetaDict[name] = { mandatory, list, type };
         }
       }
 
@@ -140,6 +152,7 @@ export class Converter {
   public selectionToPatterns(convertContext: IConvertContext, subject: RDF.Term,
                              selectionNode: SelectionNode): Algebra.Pattern[] {
     let nest: boolean = true;
+    let patterns: Algebra.Pattern[] = [];
     switch (selectionNode.kind) {
     case 'FragmentSpread':
       const fragmentSpreadNode: FragmentSpreadNode = <FragmentSpreadNode> selectionNode;
@@ -149,7 +162,14 @@ export class Converter {
         throw new Error('Undefined fragment definition: ' + fragmentSpreadNode.name.value);
       }
 
-      // TODO: handle typeCondition
+      // Handle type condition by adding an rdf:type pattern
+      // TODO: wrap in an OPTIONAL in case the subject is not of the given type
+      const typeName: string = fragmentDefinitionNode.typeCondition.name.value;
+      patterns.push(this.operationFactory.createPattern(
+        subject,
+        this.dataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
+        this.valueToNamedNode(typeName, convertContext.context)),
+      );
 
       const newFieldNode: FieldNode = {
         alias: null,
@@ -169,19 +189,17 @@ export class Converter {
       const object: RDF.Variable = this.nameToVariable(fieldNode.alias ? fieldNode.alias : fieldNode.name,
         convertContext);
       // Create at least a pattern for the parent node and the current path.
-      let patterns: Algebra.Pattern[] = [];
       if (nest) {
-        patterns = [
-          this.operationFactory.createPattern(subject, predicate, object),
-        ];
+        patterns.push(this.operationFactory.createPattern(subject, predicate, object));
       }
 
       // Create patterns for the node's arguments
       if (fieldNode.arguments && fieldNode.arguments.length) {
         for (const argument of fieldNode.arguments) {
+          const valueOutput = this.valueToTerm(argument.value, convertContext);
           patterns.push(this.operationFactory.createPattern(object,
             this.valueToNamedNode(argument.name.value, convertContext.context),
-            this.valueToTerm(argument.value, convertContext)));
+            valueOutput));
         }
       }
 
@@ -249,12 +267,46 @@ export class Converter {
       const variableNode: VariableNode = <VariableNode> valueNode;
       const id: string = variableNode.name.value;
       const value: ValueNode = convertContext.variablesDict[id];
+      const meta = convertContext.variablesMetaDict[id];
+
+      // Handle missing values
       if (!value) {
-        throw new Error('Undefined variable: ' + id);
+        if (!meta || meta.mandatory) {
+          throw new Error(`Undefined variable: ${id}`);
+        } else {
+          return this.valueToTerm({ kind: 'NullValue' }, convertContext);
+        }
       }
+
+      // Don't allow variables that refer to other variables
       if (value.kind === 'Variable') {
-        throw new Error('Variable refers to another variable: ' + id);
+        throw new Error(`Variable refers to another variable: ${id}`);
       }
+
+      if (meta) {
+        // Check the type
+        if (meta.list) {
+          // If we expect a list, check if we got a list.
+          if (value.kind !== 'ListValue') {
+            throw new Error(`Expected a list, but got ${value.kind} for ${id}`);
+          }
+          // Check the type in the list
+          if (meta.type) {
+            const listValue: ListValueNode = <ListValueNode> value;
+            for (const v of listValue.values) {
+              if (v.kind !== meta.type) {
+                throw new Error(`Expected ${meta.type}, but got ${v.kind} for ${id}`);
+              }
+            }
+          }
+        } else if (meta.type) {
+          // This is allowed to be different (?)
+          /*if (value.kind !== meta.type) {
+            throw new Error(`Expected ${meta.type}, but got ${value.kind} for ${id}`);
+          }*/
+        }
+      }
+
       return this.valueToTerm(value, convertContext);
     case 'IntValue':
       return this.dataFactory.literal((<IntValueNode> valueNode).value,
@@ -349,6 +401,10 @@ export interface IConvertContext {
    * A variable dictionary in case there are dynamic arguments in the query.
    */
   variablesDict: IVariablesDictionary;
+  /**
+   * A dictionary of variable metadata.
+   */
+  variablesMetaDict: IVariablesMetaDictionary;
 }
 
 /**
@@ -363,4 +419,11 @@ export interface IContext {
  */
 export interface IVariablesDictionary {
   [id: string]: ValueNode;
+}
+
+/**
+ * A dictionary of variable metadata.
+ */
+export interface IVariablesMetaDictionary {
+  [id: string]: { mandatory: boolean, list: boolean, type: string };
 }

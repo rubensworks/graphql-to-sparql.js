@@ -237,6 +237,7 @@ describe('Converter', () => {
           name: 'http://example.org/name',
           appearsIn: 'http://example.org/appearsIn',
           friends: 'http://example.org/friends',
+          Character: 'http://example.org/types/Character',
         };
         return expect(converter.graphqlToSparqlAlgebra(`
 {
@@ -268,6 +269,11 @@ fragment comparisonFields on Character {
   ),
   OperationFactory.createPattern(
     DataFactory.variable('leftComparison'),
+    DataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
+    DataFactory.namedNode('http://example.org/types/Character'),
+  ),
+  OperationFactory.createPattern(
+    DataFactory.variable('leftComparison'),
     DataFactory.namedNode('http://example.org/name'),
     DataFactory.variable('leftComparison_name'),
   ),
@@ -295,6 +301,11 @@ fragment comparisonFields on Character {
     DataFactory.variable('rightComparison'),
     DataFactory.namedNode('http://example.org/episode'),
     DataFactory.namedNode('http://example.org/types/jedi'),
+  ),
+  OperationFactory.createPattern(
+    DataFactory.variable('rightComparison'),
+    DataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
+    DataFactory.namedNode('http://example.org/types/Character'),
   ),
   OperationFactory.createPattern(
     DataFactory.variable('rightComparison'),
@@ -542,6 +553,7 @@ query Hero($episode: Episode, $withFriends: Boolean!) {
           terminalVariables: [],
           fragmentDefinitions: {},
           variablesDict: {},
+          variablesMetaDict: {},
         };
         return expect(converter.definitionToPattern(ctx,
           {
@@ -571,6 +583,7 @@ query Hero($episode: Episode, $withFriends: Boolean!) {
           variablesDict: <IVariablesDictionary> {
             varTrue: { kind: 'BooleanValue', value: true },
           },
+          variablesMetaDict: {},
         };
         return expect(converter.definitionToPattern(ctx,
           {
@@ -609,6 +622,7 @@ query Hero($episode: Episode, $withFriends: Boolean!) {
           terminalVariables: [],
           fragmentDefinitions: {},
           variablesDict: {},
+          variablesMetaDict: {},
         };
         const subject = DataFactory.namedNode('theSubject');
         return expect(converter.selectionToPatterns(ctx, subject,
@@ -632,6 +646,7 @@ query Hero($episode: Episode, $withFriends: Boolean!) {
           terminalVariables: [],
           fragmentDefinitions: {},
           variablesDict: {},
+          variablesMetaDict: {},
         };
         const subject = DataFactory.namedNode('theSubject');
         return expect(converter.selectionToPatterns(ctx, subject,
@@ -675,6 +690,7 @@ query Hero($episode: Episode, $withFriends: Boolean!) {
           terminalVariables: [],
           fragmentDefinitions: {},
           variablesDict: {},
+          variablesMetaDict: {},
         };
         const subject = DataFactory.namedNode('theSubject');
         return expect(converter.selectionToPatterns(ctx, subject,
@@ -713,6 +729,7 @@ query Hero($episode: Episode, $withFriends: Boolean!) {
           terminalVariables: [],
           fragmentDefinitions: {},
           variablesDict: {},
+          variablesMetaDict: {},
         };
         const subject = DataFactory.namedNode('theSubject');
         converter.selectionToPatterns(ctx, subject,
@@ -729,6 +746,7 @@ query Hero($episode: Episode, $withFriends: Boolean!) {
           terminalVariables: [],
           fragmentDefinitions: {},
           variablesDict: {},
+          variablesMetaDict: {},
         };
         const subject = DataFactory.namedNode('theSubject');
         converter.selectionToPatterns(ctx, subject,
@@ -749,6 +767,7 @@ query Hero($episode: Episode, $withFriends: Boolean!) {
           terminalVariables: [],
           fragmentDefinitions: {},
           variablesDict: {},
+          variablesMetaDict: {},
         };
         const subject = DataFactory.namedNode('theSubject');
         converter.selectionToPatterns(ctx, subject,
@@ -776,6 +795,7 @@ query Hero($episode: Episode, $withFriends: Boolean!) {
           terminalVariables: [],
           fragmentDefinitions: {},
           variablesDict: {},
+          variablesMetaDict: {},
         };
         const subject = DataFactory.namedNode('theSubject');
         return expect(converter.selectionToPatterns(ctx, subject,
@@ -796,6 +816,7 @@ query Hero($episode: Episode, $withFriends: Boolean!) {
         const ctx = {
           context: {
             theField: 'http://example.org/theField',
+            Character: 'http://example.org/types/Character',
           },
           path: [ 'a' ],
           terminalVariables: [],
@@ -816,6 +837,7 @@ query Hero($episode: Episode, $withFriends: Boolean!) {
             },
           },
           variablesDict: {},
+          variablesMetaDict: {},
         };
         const subject = DataFactory.namedNode('theSubject');
         return expect(converter.selectionToPatterns(ctx, subject,
@@ -823,6 +845,11 @@ query Hero($episode: Episode, $withFriends: Boolean!) {
             kind: 'FragmentSpread',
             name: { kind: 'Name', value: 'fragment1' },
           })).toEqual([
+            OperationFactory.createPattern(
+              subject,
+              DataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
+              DataFactory.namedNode('http://example.org/types/Character'),
+            ),
             OperationFactory.createPattern(
               subject,
               DataFactory.namedNode('http://example.org/theField'),
@@ -843,6 +870,7 @@ query Hero($episode: Episode, $withFriends: Boolean!) {
             varTrue: { kind: 'BooleanValue', value: true },
             varFalse: { kind: 'BooleanValue', value: false },
           },
+          variablesMetaDict: {},
         };
         const subject = DataFactory.namedNode('theSubject');
         return expect(converter.selectionToPatterns(ctx, subject,
@@ -889,6 +917,7 @@ query Hero($episode: Episode, $withFriends: Boolean!) {
           terminalVariables: [],
           fragmentDefinitions: {},
           variablesDict: {},
+          variablesMetaDict: {},
         };
         return expect(converter.nameToVariable({ kind: 'Name', value: 'varName' }, ctx))
           .toEqual(DataFactory.namedNode('abc_def_ghi_varName'));
@@ -915,6 +944,15 @@ query Hero($episode: Episode, $withFriends: Boolean!) {
         variablesDict: <IVariablesDictionary> {
           myVar1: { kind: 'StringValue', value: 'myValue1' },
           myVar2: { kind: 'StringValue', value: 'myValue2' },
+          myVar5: { kind: 'StringValue', value: 'myValue2' },
+          myVar6: { kind: 'BooleanValue', value: true },
+        },
+        variablesMetaDict: {
+          myVar1: { mandatory: true, list: false, type: 'StringValue' },
+          myVar2: { mandatory: true, list: false, type: 'IntValue' },
+          myVar4: { mandatory: true, list: false, type: 'StringValue' },
+          myVar5: { mandatory: true, list: true, type: 'StringValue' },
+          myVar6: { mandatory: true, list: true, type: 'StringValue' },
         },
       };
       it('should convert a variable that is defined', async () => {
@@ -923,9 +961,24 @@ query Hero($episode: Episode, $withFriends: Boolean!) {
           .toEqual(DataFactory.literal('myValue1'));
       });
 
-      it('should error when a variable is not defined', async () => {
+      it('should error when an unknown variable is not defined', async () => {
         return expect(() => converter.valueToTerm(
           { kind: 'Variable', name: { kind: 'Name', value: 'myVar3' } }, ctx)).toThrow();
+      });
+
+      it('should error when a mandatory variable is not defined', async () => {
+        return expect(() => converter.valueToTerm(
+          { kind: 'Variable', name: { kind: 'Name', value: 'myVar4' } }, ctx)).toThrow();
+      });
+
+      it('should error when a variable has no list type while it was expected', async () => {
+        return expect(() => converter.valueToTerm(
+          { kind: 'Variable', name: { kind: 'Name', value: 'myVar5' } }, ctx)).toThrow();
+      });
+
+      it('should error when a variable has an incorrect defined list type', async () => {
+        return expect(() => converter.valueToTerm(
+          { kind: 'Variable', name: { kind: 'Name', value: 'myVar6' } }, ctx)).toThrow();
       });
 
       it('should convert an int', async () => {
@@ -1002,6 +1055,7 @@ query Hero($episode: Episode, $withFriends: Boolean!) {
           varTrue: { kind: 'BooleanValue', value: true },
           varFalse: { kind: 'BooleanValue', value: false },
         },
+        variablesMetaDict: {},
       };
       const includeTrue: DirectiveNode = { kind: 'Directive', name: { kind: 'Name', value: 'include' }, arguments: [
         {

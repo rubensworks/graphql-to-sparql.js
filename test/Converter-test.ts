@@ -1016,7 +1016,8 @@ query Hero($episode: Episode, $withFriends: Boolean!) {
 
       it('should convert a null value', async () => {
         return expect(converter.valueToTerm(
-          { kind: 'NullValue' }, ctx).termType).toEqual('BlankNode');
+          { kind: 'NullValue' }, ctx))
+          .toEqual(DataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#nil'));
       });
 
       it('should convert an enum value', async () => {

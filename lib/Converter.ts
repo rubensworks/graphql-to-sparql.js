@@ -320,7 +320,7 @@ export class Converter {
       return this.dataFactory.literal((<BooleanValueNode> valueNode).value ? 'true' : 'false',
         this.dataFactory.namedNode('http://www.w3.org/2001/XMLSchema#boolean'));
     case 'NullValue':
-      return this.dataFactory.blankNode(); // TODO: Not sure about this one yet...
+      return this.dataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#nil');
     case 'EnumValue':
       return this.valueToNamedNode((<EnumValueNode> valueNode).value, convertContext.context);
     case 'ListValue':

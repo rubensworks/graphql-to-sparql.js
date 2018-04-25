@@ -958,7 +958,7 @@ query Hero($episode: Episode, $withFriends: Boolean!) {
       it('should convert a variable that is defined', async () => {
         return expect(converter.valueToTerm(
           { kind: 'Variable', name: { kind: 'Name', value: 'myVar1' } }, ctx))
-          .toEqual(DataFactory.literal('myValue1'));
+          .toEqual({ term: DataFactory.literal('myValue1') });
       });
 
       it('should error when an unknown variable is not defined', async () => {
@@ -984,46 +984,96 @@ query Hero($episode: Episode, $withFriends: Boolean!) {
       it('should convert an int', async () => {
         return expect(converter.valueToTerm(
           { kind: 'IntValue', value: '123' }, ctx))
-          .toEqual(DataFactory.literal('123',
-            DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#integer')));
+          .toEqual({ term: DataFactory.literal('123',
+            DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#integer')) });
       });
 
       it('should convert a float', async () => {
         return expect(converter.valueToTerm(
           { kind: 'FloatValue', value: '123.1' }, ctx))
-          .toEqual(DataFactory.literal('123.1',
-            DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#float')));
+          .toEqual({ term: DataFactory.literal('123.1',
+            DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#float')) });
       });
 
       it('should convert a string', async () => {
         return expect(converter.valueToTerm(
-          { kind: 'StringValue', value: 'abc' }, ctx)).toEqual(DataFactory.literal('abc'));
+          { kind: 'StringValue', value: 'abc' }, ctx)).toEqual({ term: DataFactory.literal('abc') });
       });
 
       it('should convert a true boolean', async () => {
         return expect(converter.valueToTerm(
           { kind: 'BooleanValue', value: true }, ctx))
-          .toEqual(DataFactory.literal('true',
-            DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#boolean')));
+          .toEqual({ term: DataFactory.literal('true',
+            DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#boolean')) });
       });
 
       it('should convert a false boolean', async () => {
         return expect(converter.valueToTerm(
           { kind: 'BooleanValue', value: false }, ctx))
-          .toEqual(DataFactory.literal('false',
-            DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#boolean')));
+          .toEqual({ term: DataFactory.literal('false',
+            DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#boolean')) });
       });
 
       it('should convert a null value', async () => {
         return expect(converter.valueToTerm(
           { kind: 'NullValue' }, ctx))
-          .toEqual(DataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#nil'));
+          .toEqual({ term: DataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#nil') });
       });
 
       it('should convert an enum value', async () => {
         return expect(converter.valueToTerm(
           { kind: 'EnumValue', value: 'FOOT' }, ctx))
-          .toEqual(DataFactory.namedNode('http://example.org/types/foot'));
+          .toEqual({ term: DataFactory.namedNode('http://example.org/types/foot') });
+      });
+
+      it('should convert a list value', async () => {
+        const out = converter.valueToTerm(
+          { kind: 'ListValue', values: [
+            { kind: 'BooleanValue', value: false },
+            { kind: 'BooleanValue', value: true },
+            { kind: 'BooleanValue', value: false },
+          ] }, ctx);
+        expect(out.term.termType).toEqual('BlankNode');
+        expect(out.auxiliaryPatterns.length).toEqual(6);
+
+        expect(out.auxiliaryPatterns[0].subject).toEqual(out.auxiliaryPatterns[1].subject);
+        expect(out.auxiliaryPatterns[0].subject.termType).toEqual('BlankNode');
+        expect(out.auxiliaryPatterns[0].predicate)
+          .toEqual(DataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#first'));
+        expect(out.auxiliaryPatterns[0].object)
+          .toEqual(DataFactory.literal('false',
+            DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#boolean')));
+        expect(out.auxiliaryPatterns[1].subject.termType).toEqual('BlankNode');
+        expect(out.auxiliaryPatterns[1].predicate)
+          .toEqual(DataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#rest'));
+        expect(out.auxiliaryPatterns[1].object.termType).toEqual('BlankNode');
+
+        expect(out.auxiliaryPatterns[1].object).toEqual(out.auxiliaryPatterns[2].subject);
+        expect(out.auxiliaryPatterns[2].subject).toEqual(out.auxiliaryPatterns[3].subject);
+        expect(out.auxiliaryPatterns[2].subject.termType).toEqual('BlankNode');
+        expect(out.auxiliaryPatterns[2].predicate)
+          .toEqual(DataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#first'));
+        expect(out.auxiliaryPatterns[2].object)
+          .toEqual(DataFactory.literal('true',
+            DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#boolean')));
+        expect(out.auxiliaryPatterns[3].subject.termType).toEqual('BlankNode');
+        expect(out.auxiliaryPatterns[3].predicate)
+          .toEqual(DataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#rest'));
+        expect(out.auxiliaryPatterns[3].object.termType).toEqual('BlankNode');
+
+        expect(out.auxiliaryPatterns[3].object).toEqual(out.auxiliaryPatterns[4].subject);
+        expect(out.auxiliaryPatterns[4].subject).toEqual(out.auxiliaryPatterns[5].subject);
+        expect(out.auxiliaryPatterns[4].subject.termType).toEqual('BlankNode');
+        expect(out.auxiliaryPatterns[4].predicate)
+          .toEqual(DataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#first'));
+        expect(out.auxiliaryPatterns[4].object)
+          .toEqual(DataFactory.literal('false',
+            DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#boolean')));
+        expect(out.auxiliaryPatterns[5].subject.termType).toEqual('BlankNode');
+        expect(out.auxiliaryPatterns[5].predicate)
+          .toEqual(DataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#rest'));
+        expect(out.auxiliaryPatterns[5].object)
+          .toEqual(DataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#nil'));
       });
     });
 

@@ -199,7 +199,10 @@ export class Converter {
           const valueOutput = this.valueToTerm(argument.value, convertContext);
           patterns.push(this.operationFactory.createPattern(object,
             this.valueToNamedNode(argument.name.value, convertContext.context),
-            valueOutput));
+            valueOutput.term));
+          if (valueOutput.auxiliaryPatterns) {
+            patterns = patterns.concat(valueOutput.auxiliaryPatterns);
+          }
         }
       }
 
@@ -261,7 +264,7 @@ export class Converter {
    * @param {IConvertContext} convertContext A convert context.
    * @return {Term} An RDF term.
    */
-  public valueToTerm(valueNode: ValueNode, convertContext: IConvertContext): RDF.Term {
+  public valueToTerm(valueNode: ValueNode, convertContext: IConvertContext): IValueToTermOutput {
     switch (valueNode.kind) {
     case 'Variable':
       const variableNode: VariableNode = <VariableNode> valueNode;
@@ -309,22 +312,54 @@ export class Converter {
 
       return this.valueToTerm(value, convertContext);
     case 'IntValue':
-      return this.dataFactory.literal((<IntValueNode> valueNode).value,
-        this.dataFactory.namedNode('http://www.w3.org/2001/XMLSchema#integer'));
+      return { term: this.dataFactory.literal((<IntValueNode> valueNode).value,
+        this.dataFactory.namedNode('http://www.w3.org/2001/XMLSchema#integer')) };
     case 'FloatValue':
-      return this.dataFactory.literal((<FloatValueNode> valueNode).value,
-        this.dataFactory.namedNode('http://www.w3.org/2001/XMLSchema#float'));
+      return { term: this.dataFactory.literal((<FloatValueNode> valueNode).value,
+        this.dataFactory.namedNode('http://www.w3.org/2001/XMLSchema#float')) };
     case 'StringValue':
-      return this.dataFactory.literal((<StringValueNode> valueNode).value);
+      return { term: this.dataFactory.literal((<StringValueNode> valueNode).value) };
     case 'BooleanValue':
-      return this.dataFactory.literal((<BooleanValueNode> valueNode).value ? 'true' : 'false',
-        this.dataFactory.namedNode('http://www.w3.org/2001/XMLSchema#boolean'));
+      return { term: this.dataFactory.literal((<BooleanValueNode> valueNode).value ? 'true' : 'false',
+        this.dataFactory.namedNode('http://www.w3.org/2001/XMLSchema#boolean')) };
     case 'NullValue':
-      return this.dataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#nil');
+      return { term: this.dataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#nil') };
     case 'EnumValue':
-      return this.valueToNamedNode((<EnumValueNode> valueNode).value, convertContext.context);
+      return { term: this.valueToNamedNode((<EnumValueNode> valueNode).value, convertContext.context) };
     case 'ListValue':
-      throw new Error('Not implemented yet'); // TODO
+      // TODO: add directive for allowing multiple links instead of an RDF list.
+      const listTerms: RDF.Term[] = [];
+      let auxiliaryPatterns: Algebra.Pattern[] = [];
+      // Create terms for list values
+      for (const v of (<ListValueNode> valueNode).values) {
+        const subValue = this.valueToTerm(v, convertContext);
+        listTerms.push(subValue.term);
+        if (subValue.auxiliaryPatterns) {
+          auxiliaryPatterns = auxiliaryPatterns.concat(subValue.auxiliaryPatterns);
+        }
+      }
+
+      // Create chained list structure
+      const firstListNode: RDF.Term = this.dataFactory.blankNode();
+      let listNode: RDF.Term = firstListNode;
+      let remaining: number = listTerms.length;
+      for (const term of listTerms) {
+        auxiliaryPatterns.push(this.operationFactory.createPattern(
+          listNode,
+          this.dataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#first'),
+          term,
+          ));
+        const nextListNode: RDF.Term = --remaining === 0
+          ? this.dataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#nil')
+          : this.dataFactory.blankNode();
+        auxiliaryPatterns.push(this.operationFactory.createPattern(
+          listNode,
+          this.dataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#rest'),
+          nextListNode,
+        ));
+        listNode = nextListNode;
+      }
+      return { term: firstListNode, auxiliaryPatterns };
     case 'ObjectValue':
       throw new Error('Not implemented yet'); // TODO
     }
@@ -357,7 +392,7 @@ export class Converter {
    */
   public handleDirective(directive: DirectiveNode, convertContext: IConvertContext): boolean {
     const arg: ArgumentNode = this.getArgument(directive.arguments, 'if');
-    const val: RDF.Term = this.valueToTerm(arg.value, convertContext);
+    const val: RDF.Term = this.valueToTerm(arg.value, convertContext).term;
     switch (directive.name.value) {
     case 'include':
       if (val.termType === 'Literal' && val.value === 'false') {
@@ -426,4 +461,12 @@ export interface IVariablesDictionary {
  */
 export interface IVariablesMetaDictionary {
   [id: string]: { mandatory: boolean, list: boolean, type: string };
+}
+
+/**
+ * The output of converting a value node to an RDF term.
+ */
+export interface IValueToTermOutput {
+  term: RDF.Term;
+  auxiliaryPatterns?: Algebra.Pattern[];
 }

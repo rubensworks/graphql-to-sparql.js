@@ -937,7 +937,12 @@ query Hero($episode: Episode, $withFriends: Boolean!) {
 
     describe('#valueToTerm', () => {
       const ctx = {
-        context: { FOOT: 'http://example.org/types/foot' },
+        context: {
+          FOOT: 'http://example.org/types/foot',
+          va: 'http://example.org/va',
+          vb: 'http://example.org/vb',
+          vc: 'http://example.org/vc',
+        },
         path: [],
         terminalVariables: [],
         fragmentDefinitions: {},
@@ -1074,6 +1079,38 @@ query Hero($episode: Episode, $withFriends: Boolean!) {
           .toEqual(DataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#rest'));
         expect(out.auxiliaryPatterns[5].object)
           .toEqual(DataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#nil'));
+      });
+
+      it('should convert an object value', async () => {
+        const out = converter.valueToTerm(
+          { kind: 'ObjectValue', fields: [
+            { kind: 'ObjectField', name: { kind: 'Name', value: 'va' }, value: { kind: 'BooleanValue', value: false } },
+            { kind: 'ObjectField', name: { kind: 'Name', value: 'vb' }, value: { kind: 'BooleanValue', value: true } },
+            { kind: 'ObjectField', name: { kind: 'Name', value: 'vc' }, value: { kind: 'BooleanValue', value: false } },
+          ] }, ctx);
+        expect(out.term.termType).toEqual('BlankNode');
+        expect(out.auxiliaryPatterns.length).toEqual(3);
+
+        expect(out.auxiliaryPatterns[0].subject).toEqual(out.term);
+        expect(out.auxiliaryPatterns[0].predicate)
+          .toEqual(DataFactory.namedNode('http://example.org/va'));
+        expect(out.auxiliaryPatterns[0].object)
+          .toEqual(DataFactory.literal('false',
+            DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#boolean')));
+
+        expect(out.auxiliaryPatterns[1].subject).toEqual(out.term);
+        expect(out.auxiliaryPatterns[1].predicate)
+          .toEqual(DataFactory.namedNode('http://example.org/vb'));
+        expect(out.auxiliaryPatterns[1].object)
+          .toEqual(DataFactory.literal('true',
+            DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#boolean')));
+
+        expect(out.auxiliaryPatterns[2].subject).toEqual(out.term);
+        expect(out.auxiliaryPatterns[2].predicate)
+          .toEqual(DataFactory.namedNode('http://example.org/vc'));
+        expect(out.auxiliaryPatterns[2].object)
+          .toEqual(DataFactory.literal('false',
+            DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#boolean')));
       });
     });
 

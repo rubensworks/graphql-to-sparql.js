@@ -4,7 +4,7 @@ import {
   DefinitionNode, DirectiveNode, DocumentNode, EnumValueNode, FieldNode, FloatValueNode, FragmentDefinitionNode,
   FragmentSpreadNode,
   IntValueNode, ListTypeNode, ListValueNode, NamedTypeNode,
-  NameNode, NonNullTypeNode,
+  NameNode, NonNullTypeNode, ObjectValueNode,
   OperationDefinitionNode, parse,
   SelectionNode,
   StringValueNode, TypeNode,
@@ -361,7 +361,19 @@ export class Converter {
       }
       return { term: firstListNode, auxiliaryPatterns };
     case 'ObjectValue':
-      throw new Error('Not implemented yet'); // TODO
+      // Convert object keys to predicates and values to objects, and link them both with a new blank node.
+      const subject = this.dataFactory.blankNode();
+      let auxiliaryObjectPatterns: Algebra.Pattern[] = [];
+      for (const field of (<ObjectValueNode> valueNode).fields) {
+        const predicate = this.valueToNamedNode(field.name.value, convertContext.context);
+        const subValue = this.valueToTerm(field.value, convertContext);
+        auxiliaryObjectPatterns.push(this.operationFactory.createPattern(
+          subject, predicate, subValue.term));
+        if (subValue.auxiliaryPatterns) {
+          auxiliaryObjectPatterns = auxiliaryObjectPatterns.concat(subValue.auxiliaryPatterns);
+        }
+      }
+      return { term: subject, auxiliaryPatterns: auxiliaryObjectPatterns };
     }
   }
 

@@ -1,6 +1,7 @@
 import {DirectiveNode} from "graphql";
 import * as DataFactory from "rdf-data-model";
-import {Factory, toSparql} from "sparqlalgebrajs";
+import * as RDF from "rdf-js";
+import {Factory} from "sparqlalgebrajs";
 import {Converter, IVariablesDictionary} from "../lib/Converter";
 
 // tslint:disable:object-literal-sort-keys
@@ -626,13 +627,14 @@ query Hero($episode: Episode, $withFriends: Boolean!) {
         };
         const subject = DataFactory.namedNode('theSubject');
         return expect(converter.selectionToPatterns(ctx, subject,
-          { kind: 'Field', name: { kind: 'Name', value: 'theField' } })).toEqual([
+          { kind: 'Field', name: { kind: 'Name', value: 'theField' } }))
+          .toEqual(OperationFactory.createBgp([
             OperationFactory.createPattern(
               subject,
               DataFactory.namedNode('http://example.org/theField'),
               DataFactory.variable('a_theField'),
             ),
-          ]);
+          ]));
       });
 
       it('should convert a field selection node with a selection set', async () => {
@@ -660,7 +662,7 @@ query Hero($episode: Episode, $withFriends: Boolean!) {
                 { kind: 'Field', name: { kind: 'Name', value: 'andAnotherField' } },
               ],
             },
-          })).toEqual([
+          })).toEqual(OperationFactory.createBgp([
             OperationFactory.createPattern(
               subject,
               DataFactory.namedNode('http://example.org/theField'),
@@ -676,7 +678,7 @@ query Hero($episode: Episode, $withFriends: Boolean!) {
               DataFactory.namedNode('http://example.org/andAnotherField'),
               DataFactory.variable('a_theField_andAnotherField'),
             ),
-          ]);
+          ]));
       });
 
       it('should convert a field selection node with arguments', async () => {
@@ -703,7 +705,7 @@ query Hero($episode: Episode, $withFriends: Boolean!) {
               { kind: 'Argument', name: { kind: 'Name', value: 'andAnotherField' },
                 value: { kind: 'StringValue', value: 'def' } },
             ],
-          })).toEqual([
+          })).toEqual(OperationFactory.createBgp([
             OperationFactory.createPattern(
               subject,
               DataFactory.namedNode('http://example.org/theField'),
@@ -719,7 +721,7 @@ query Hero($episode: Episode, $withFriends: Boolean!) {
               DataFactory.namedNode('http://example.org/andAnotherField'),
               DataFactory.literal('def'),
             ),
-          ]);
+          ]));
       });
 
       it('should terminate a field selection node without selection set', async () => {
@@ -803,13 +805,13 @@ query Hero($episode: Episode, $withFriends: Boolean!) {
             alias: { kind: 'Name', value: 'theAliasField' },
             kind: 'Field',
             name: { kind: 'Name', value: 'theField' },
-          })).toEqual([
+          })).toEqual(OperationFactory.createBgp([
             OperationFactory.createPattern(
               subject,
               DataFactory.namedNode('http://example.org/theField'),
               DataFactory.variable('a_theAliasField'),
             ),
-          ]);
+          ]));
       });
 
       it('should convert a fragment spread selection node', async () => {
@@ -844,7 +846,7 @@ query Hero($episode: Episode, $withFriends: Boolean!) {
           {
             kind: 'FragmentSpread',
             name: { kind: 'Name', value: 'fragment1' },
-          })).toEqual([
+          })).toEqual(OperationFactory.createBgp([
             OperationFactory.createPattern(
               subject,
               DataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
@@ -855,7 +857,7 @@ query Hero($episode: Episode, $withFriends: Boolean!) {
               DataFactory.namedNode('http://example.org/theField'),
               DataFactory.variable('a_theField'),
             ),
-          ]);
+          ]));
       });
 
       it('should convert a field selection node with a directive', async () => {
@@ -887,13 +889,75 @@ query Hero($episode: Episode, $withFriends: Boolean!) {
                 },
               ] },
             ],
-          })).toEqual([
+          })).toEqual(OperationFactory.createBgp([
             OperationFactory.createPattern(
               subject,
               DataFactory.namedNode('http://example.org/theField'),
               DataFactory.variable('a_theAliasField'),
             ),
-          ]);
+          ]));
+      });
+    });
+
+    describe('#joinOperations', () => {
+      it('should error on no patterns', async () => {
+        return expect(() => converter.joinOperations([]).toThrow());
+      });
+
+      it('should return the single passed operation', async () => {
+        return expect(converter.joinOperations([
+          OperationFactory.createBgp([]),
+        ])).toEqual(
+          OperationFactory.createBgp([]),
+        );
+      });
+
+      it('should return a BGP from 3 BGPs', async () => {
+        return expect(converter.joinOperations([
+          OperationFactory.createBgp([
+            OperationFactory.createPattern(<RDF.Term> <any> 'a1', <RDF.Term> <any> 'b1', <RDF.Term> <any> 'c1'),
+            OperationFactory.createPattern(<RDF.Term> <any> 'd1', <RDF.Term> <any> 'e1', <RDF.Term> <any> 'f1'),
+          ]),
+          OperationFactory.createBgp([
+            OperationFactory.createPattern(<RDF.Term> <any> 'a2', <RDF.Term> <any> 'b2', <RDF.Term> <any> 'c2'),
+            OperationFactory.createPattern(<RDF.Term> <any> 'd2', <RDF.Term> <any> 'e2', <RDF.Term> <any> 'f2'),
+          ]),
+          OperationFactory.createBgp([
+            OperationFactory.createPattern(<RDF.Term> <any> 'a3', <RDF.Term> <any> 'b3', <RDF.Term> <any> 'c3'),
+            OperationFactory.createPattern(<RDF.Term> <any> 'd3', <RDF.Term> <any> 'e3', <RDF.Term> <any> 'f3'),
+          ]),
+        ])).toEqual(
+          OperationFactory.createBgp([
+            OperationFactory.createPattern(<RDF.Term> <any> 'a1', <RDF.Term> <any> 'b1', <RDF.Term> <any> 'c1'),
+            OperationFactory.createPattern(<RDF.Term> <any> 'd1', <RDF.Term> <any> 'e1', <RDF.Term> <any> 'f1'),
+            OperationFactory.createPattern(<RDF.Term> <any> 'a2', <RDF.Term> <any> 'b2', <RDF.Term> <any> 'c2'),
+            OperationFactory.createPattern(<RDF.Term> <any> 'd2', <RDF.Term> <any> 'e2', <RDF.Term> <any> 'f2'),
+            OperationFactory.createPattern(<RDF.Term> <any> 'a3', <RDF.Term> <any> 'b3', <RDF.Term> <any> 'c3'),
+            OperationFactory.createPattern(<RDF.Term> <any> 'd3', <RDF.Term> <any> 'e3', <RDF.Term> <any> 'f3'),
+          ]),
+        );
+      });
+
+      it('should return a nested join when not all operations are BGPs', async () => {
+        return expect(converter.joinOperations([
+          OperationFactory.createUnion(null, null),
+          OperationFactory.createBgp([
+            OperationFactory.createPattern(<RDF.Term> <any> 'a2', <RDF.Term> <any> 'b2', <RDF.Term> <any> 'c2'),
+            OperationFactory.createPattern(<RDF.Term> <any> 'd2', <RDF.Term> <any> 'e2', <RDF.Term> <any> 'f2'),
+          ]),
+          OperationFactory.createLeftJoin(null, null),
+        ])).toEqual(
+          OperationFactory.createJoin(
+            OperationFactory.createUnion(null, null),
+            OperationFactory.createJoin(
+              OperationFactory.createBgp([
+                OperationFactory.createPattern(<RDF.Term> <any> 'a2', <RDF.Term> <any> 'b2', <RDF.Term> <any> 'c2'),
+                OperationFactory.createPattern(<RDF.Term> <any> 'd2', <RDF.Term> <any> 'e2', <RDF.Term> <any> 'f2'),
+              ]),
+              OperationFactory.createLeftJoin(null, null),
+            ),
+          ),
+        );
       });
     });
 

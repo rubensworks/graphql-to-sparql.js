@@ -133,8 +133,8 @@ export class Converter {
         }
       }
 
-      return this.operationFactory.createBgp([].concat.apply([], operationDefinition.selectionSet.selections
-        .map(this.selectionToPatterns.bind(this, convertContext, subject))));
+      return this.joinOperations(operationDefinition.selectionSet.selections
+        .map(this.selectionToPatterns.bind(this, convertContext, subject)));
     case 'FragmentDefinition':
       throw new Error('Illegal state: fragment definitions must be indexed and removed before processing');
     default:
@@ -150,7 +150,7 @@ export class Converter {
    * @return {Pattern[]} An array of quad patterns.
    */
   public selectionToPatterns(convertContext: IConvertContext, subject: RDF.Term,
-                             selectionNode: SelectionNode): Algebra.Pattern[] {
+                             selectionNode: SelectionNode): Algebra.Operation {
     let nest: boolean = true;
     let patterns: Algebra.Pattern[] = [];
     switch (selectionNode.kind) {
@@ -210,30 +210,62 @@ export class Converter {
       if (fieldNode.directives) {
         for (const directive of fieldNode.directives) {
           if (!this.handleDirective(directive, convertContext)) {
-            return [];
+            return this.operationFactory.createBgp([]);
           }
         }
       }
 
       // Recursive call for nested selection sets
+      let operation: Algebra.Operation = this.operationFactory.createBgp(patterns);
       if (fieldNode.selectionSet && fieldNode.selectionSet.selections.length) {
         // Change path value when there was an alias on this node.
         const pathSubValue: string = fieldNode.alias ? fieldNode.alias.value : fieldNode.name.value;
         const subConvertContext: IConvertContext = nest ? Object.assign(Object.assign({}, convertContext),
           { path: convertContext.path.concat([pathSubValue]) }) : convertContext;
-        for (const subPatterns of fieldNode.selectionSet.selections
-          .map(this.selectionToPatterns.bind(this, subConvertContext, nest ? object : subject))) {
-          patterns = patterns.concat(<Algebra.Pattern[]> subPatterns);
-        }
+        operation = this.joinOperations([operation].concat(fieldNode.selectionSet.selections
+          .map(this.selectionToPatterns.bind(this, subConvertContext, nest ? object : subject))));
       } else if (nest) {
         // If no nested selection sets exist,
         // consider the object variable as a terminal variable that should be selected.
         convertContext.terminalVariables.push(object);
       }
 
-      return patterns;
+      return operation;
     case 'InlineFragment':
       throw new Error('Not implemented yet'); // TODO
+    }
+  }
+
+  /**
+   * Join the given array of operations.
+   * If all operations are BGPs, then a single big BGP with all patterns from the given BGPs will be created.
+   * @param {Operation[]} operations An array of operations.
+   * @return {Operation} A single joined operation.
+   */
+  public joinOperations(operations: Algebra.Operation[]): Algebra.Operation {
+    if (!operations.length) {
+      throw new Error('Can not make a join of no operations');
+    }
+    if (operations.length === 1) {
+      return operations[0];
+    }
+
+    // Check if all operations are BGPs
+    let bgps: boolean = true;
+    for (const operation of operations) {
+      if (operation.type !== 'bgp') {
+        bgps = false;
+        break;
+      }
+    }
+
+    if (bgps) {
+      // Create a big BGP from all BGPs
+      return this.operationFactory.createBgp([].concat.apply([], operations
+        .map((op) => (<Algebra.Bgp> op).patterns)));
+    } else {
+      // Create nested joins
+      return operations.reverse().reduce((prev, cur) => prev ? this.operationFactory.createJoin(cur, prev) : cur, null);
     }
   }
 

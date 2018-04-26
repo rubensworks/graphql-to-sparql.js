@@ -152,6 +152,7 @@ export class Converter {
   public selectionToPatterns(convertContext: IConvertContext, subject: RDF.Term,
                              selectionNode: SelectionNode): Algebra.Operation {
     let nest: boolean = true;
+    let leftJoin: boolean = false;
     let patterns: Algebra.Pattern[] = [];
     switch (selectionNode.kind) {
     case 'FragmentSpread':
@@ -163,7 +164,6 @@ export class Converter {
       }
 
       // Handle type condition by adding an rdf:type pattern
-      // TODO: wrap in an OPTIONAL in case the subject is not of the given type
       const typeName: string = fragmentDefinitionNode.typeCondition.name.value;
       patterns.push(this.operationFactory.createPattern(
         subject,
@@ -180,6 +180,7 @@ export class Converter {
         selectionSet: fragmentDefinitionNode.selectionSet,
       };
       nest = false;
+      leftJoin = true; // Wrap in an OPTIONAL, as this pattern should only apply if the type applies
       selectionNode = newFieldNode;
       // No break, continue as field.
     case 'Field':
@@ -228,6 +229,10 @@ export class Converter {
         // If no nested selection sets exist,
         // consider the object variable as a terminal variable that should be selected.
         convertContext.terminalVariables.push(object);
+      }
+
+      if (leftJoin) {
+        operation = this.operationFactory.createLeftJoin(this.operationFactory.createBgp([]), operation);
       }
 
       return operation;

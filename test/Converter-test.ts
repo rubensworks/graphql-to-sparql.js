@@ -257,85 +257,104 @@ fragment comparisonFields on Character {
     name
   }
 }
-`, context)).toEqual(OperationFactory.createProject(OperationFactory.createBgp([
-  OperationFactory.createPattern(
-    DataFactory.blankNode('b6'),
-    DataFactory.namedNode('http://example.org/hero'),
-    DataFactory.variable('leftComparison'),
-  ),
-  OperationFactory.createPattern(
-    DataFactory.variable('leftComparison'),
-    DataFactory.namedNode('http://example.org/episode'),
-    DataFactory.namedNode('http://example.org/types/empire'),
-  ),
-  OperationFactory.createPattern(
-    DataFactory.variable('leftComparison'),
-    DataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
-    DataFactory.namedNode('http://example.org/types/Character'),
-  ),
-  OperationFactory.createPattern(
-    DataFactory.variable('leftComparison'),
-    DataFactory.namedNode('http://example.org/name'),
+`, context)).toEqual(OperationFactory.createProject(
+  OperationFactory.createJoin(
+    OperationFactory.createJoin(
+      OperationFactory.createBgp([
+        OperationFactory.createPattern(
+          DataFactory.blankNode('b6'),
+          DataFactory.namedNode('http://example.org/hero'),
+          DataFactory.variable('leftComparison'),
+        ),
+        OperationFactory.createPattern(
+          DataFactory.variable('leftComparison'),
+          DataFactory.namedNode('http://example.org/episode'),
+          DataFactory.namedNode('http://example.org/types/empire'),
+        ),
+      ]),
+      OperationFactory.createLeftJoin(
+        OperationFactory.createBgp([]),
+        OperationFactory.createBgp([
+          OperationFactory.createPattern(
+            DataFactory.variable('leftComparison'),
+            DataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
+            DataFactory.namedNode('http://example.org/types/Character'),
+          ),
+          OperationFactory.createPattern(
+            DataFactory.variable('leftComparison'),
+            DataFactory.namedNode('http://example.org/name'),
+            DataFactory.variable('leftComparison_name'),
+          ),
+          OperationFactory.createPattern(
+            DataFactory.variable('leftComparison'),
+            DataFactory.namedNode('http://example.org/appearsIn'),
+            DataFactory.variable('leftComparison_appearsIn'),
+          ),
+          OperationFactory.createPattern(
+            DataFactory.variable('leftComparison'),
+            DataFactory.namedNode('http://example.org/friends'),
+            DataFactory.variable('leftComparison_friends'),
+          ),
+          OperationFactory.createPattern(
+            DataFactory.variable('leftComparison_friends'),
+            DataFactory.namedNode('http://example.org/name'),
+            DataFactory.variable('leftComparison_friends_name'),
+          ),
+        ]),
+      ),
+    ),
+    OperationFactory.createJoin(
+      OperationFactory.createBgp([
+        OperationFactory.createPattern(
+          DataFactory.blankNode('b6'),
+          DataFactory.namedNode('http://example.org/hero'),
+          DataFactory.variable('rightComparison'),
+        ),
+        OperationFactory.createPattern(
+          DataFactory.variable('rightComparison'),
+          DataFactory.namedNode('http://example.org/episode'),
+          DataFactory.namedNode('http://example.org/types/jedi'),
+        ),
+      ]),
+      OperationFactory.createLeftJoin(
+        OperationFactory.createBgp([]),
+        OperationFactory.createBgp([
+          OperationFactory.createPattern(
+            DataFactory.variable('rightComparison'),
+            DataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
+            DataFactory.namedNode('http://example.org/types/Character'),
+          ),
+          OperationFactory.createPattern(
+            DataFactory.variable('rightComparison'),
+            DataFactory.namedNode('http://example.org/name'),
+            DataFactory.variable('rightComparison_name'),
+          ),
+          OperationFactory.createPattern(
+            DataFactory.variable('rightComparison'),
+            DataFactory.namedNode('http://example.org/appearsIn'),
+            DataFactory.variable('rightComparison_appearsIn'),
+          ),
+          OperationFactory.createPattern(
+            DataFactory.variable('rightComparison'),
+            DataFactory.namedNode('http://example.org/friends'),
+            DataFactory.variable('rightComparison_friends'),
+          ),
+          OperationFactory.createPattern(
+            DataFactory.variable('rightComparison_friends'),
+            DataFactory.namedNode('http://example.org/name'),
+            DataFactory.variable('rightComparison_friends_name'),
+          ),
+        ]),
+      ),
+    ),
+  ), [
     DataFactory.variable('leftComparison_name'),
-  ),
-  OperationFactory.createPattern(
-    DataFactory.variable('leftComparison'),
-    DataFactory.namedNode('http://example.org/appearsIn'),
     DataFactory.variable('leftComparison_appearsIn'),
-  ),
-  OperationFactory.createPattern(
-    DataFactory.variable('leftComparison'),
-    DataFactory.namedNode('http://example.org/friends'),
-    DataFactory.variable('leftComparison_friends'),
-  ),
-  OperationFactory.createPattern(
-    DataFactory.variable('leftComparison_friends'),
-    DataFactory.namedNode('http://example.org/name'),
     DataFactory.variable('leftComparison_friends_name'),
-  ),
-  OperationFactory.createPattern(
-    DataFactory.blankNode('b6'),
-    DataFactory.namedNode('http://example.org/hero'),
-    DataFactory.variable('rightComparison'),
-  ),
-  OperationFactory.createPattern(
-    DataFactory.variable('rightComparison'),
-    DataFactory.namedNode('http://example.org/episode'),
-    DataFactory.namedNode('http://example.org/types/jedi'),
-  ),
-  OperationFactory.createPattern(
-    DataFactory.variable('rightComparison'),
-    DataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
-    DataFactory.namedNode('http://example.org/types/Character'),
-  ),
-  OperationFactory.createPattern(
-    DataFactory.variable('rightComparison'),
-    DataFactory.namedNode('http://example.org/name'),
     DataFactory.variable('rightComparison_name'),
-  ),
-  OperationFactory.createPattern(
-    DataFactory.variable('rightComparison'),
-    DataFactory.namedNode('http://example.org/appearsIn'),
     DataFactory.variable('rightComparison_appearsIn'),
-  ),
-  OperationFactory.createPattern(
-    DataFactory.variable('rightComparison'),
-    DataFactory.namedNode('http://example.org/friends'),
-    DataFactory.variable('rightComparison_friends'),
-  ),
-  OperationFactory.createPattern(
-    DataFactory.variable('rightComparison_friends'),
-    DataFactory.namedNode('http://example.org/name'),
     DataFactory.variable('rightComparison_friends_name'),
-  ),
-]), [
-  DataFactory.variable('leftComparison_name'),
-  DataFactory.variable('leftComparison_appearsIn'),
-  DataFactory.variable('leftComparison_friends_name'),
-  DataFactory.variable('rightComparison_name'),
-  DataFactory.variable('rightComparison_appearsIn'),
-  DataFactory.variable('rightComparison_friends_name'),
-]));
+  ]));
       });
 
       it('it should convert a query with variables', async () => {
@@ -846,7 +865,9 @@ query Hero($episode: Episode, $withFriends: Boolean!) {
           {
             kind: 'FragmentSpread',
             name: { kind: 'Name', value: 'fragment1' },
-          })).toEqual(OperationFactory.createBgp([
+          })).toEqual(OperationFactory.createLeftJoin(
+          OperationFactory.createBgp([]),
+          OperationFactory.createBgp([
             OperationFactory.createPattern(
               subject,
               DataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
@@ -857,7 +878,8 @@ query Hero($episode: Episode, $withFriends: Boolean!) {
               DataFactory.namedNode('http://example.org/theField'),
               DataFactory.variable('a_theField'),
             ),
-          ]));
+          ]),
+        ));
       });
 
       it('should convert a field selection node with a directive', async () => {

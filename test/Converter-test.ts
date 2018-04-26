@@ -1049,7 +1049,7 @@ query Hero($episode: Episode, $withFriends: Boolean!) {
       it('should convert a variable that is defined', async () => {
         return expect(converter.valueToTerm(
           { kind: 'Variable', name: { kind: 'Name', value: 'myVar1' } }, ctx))
-          .toEqual({ term: DataFactory.literal('myValue1') });
+          .toEqual({ terms: [ DataFactory.literal('myValue1') ] });
       });
 
       it('should error when an unknown variable is not defined', async () => {
@@ -1075,56 +1075,74 @@ query Hero($episode: Episode, $withFriends: Boolean!) {
       it('should convert an int', async () => {
         return expect(converter.valueToTerm(
           { kind: 'IntValue', value: '123' }, ctx))
-          .toEqual({ term: DataFactory.literal('123',
-            DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#integer')) });
+          .toEqual({ terms: [ DataFactory.literal('123',
+            DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#integer')) ] });
       });
 
       it('should convert a float', async () => {
         return expect(converter.valueToTerm(
           { kind: 'FloatValue', value: '123.1' }, ctx))
-          .toEqual({ term: DataFactory.literal('123.1',
-            DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#float')) });
+          .toEqual({ terms: [ DataFactory.literal('123.1',
+            DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#float')) ] });
       });
 
       it('should convert a string', async () => {
         return expect(converter.valueToTerm(
-          { kind: 'StringValue', value: 'abc' }, ctx)).toEqual({ term: DataFactory.literal('abc') });
+          { kind: 'StringValue', value: 'abc' }, ctx))
+          .toEqual({ terms: [ DataFactory.literal('abc') ] });
       });
 
       it('should convert a true boolean', async () => {
         return expect(converter.valueToTerm(
           { kind: 'BooleanValue', value: true }, ctx))
-          .toEqual({ term: DataFactory.literal('true',
-            DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#boolean')) });
+          .toEqual({ terms: [ DataFactory.literal('true',
+            DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#boolean')) ] });
       });
 
       it('should convert a false boolean', async () => {
         return expect(converter.valueToTerm(
           { kind: 'BooleanValue', value: false }, ctx))
-          .toEqual({ term: DataFactory.literal('false',
-            DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#boolean')) });
+          .toEqual({ terms: [ DataFactory.literal('false',
+            DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#boolean')) ] });
       });
 
       it('should convert a null value', async () => {
         return expect(converter.valueToTerm(
           { kind: 'NullValue' }, ctx))
-          .toEqual({ term: DataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#nil') });
+          .toEqual({ terms: [ DataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#nil') ] });
       });
 
       it('should convert an enum value', async () => {
         return expect(converter.valueToTerm(
           { kind: 'EnumValue', value: 'FOOT' }, ctx))
-          .toEqual({ term: DataFactory.namedNode('http://example.org/types/foot') });
+          .toEqual({ terms: [ DataFactory.namedNode('http://example.org/types/foot') ] });
       });
 
-      it('should convert a list value', async () => {
+      it('should convert a list value in non-RDF-list-mode', async () => {
         const out = converter.valueToTerm(
           { kind: 'ListValue', values: [
             { kind: 'BooleanValue', value: false },
             { kind: 'BooleanValue', value: true },
             { kind: 'BooleanValue', value: false },
           ] }, ctx);
-        expect(out.term.termType).toEqual('BlankNode');
+        expect(out.terms).toEqual([
+          DataFactory.literal('false',
+            DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#boolean')),
+          DataFactory.literal('true',
+            DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#boolean')),
+          DataFactory.literal('false',
+            DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#boolean')),
+        ]);
+      });
+
+      it('should convert a list value in RDF-list-mode', async () => {
+        const out = new Converter({ arraysToRdfLists: true }).valueToTerm(
+          { kind: 'ListValue', values: [
+            { kind: 'BooleanValue', value: false },
+            { kind: 'BooleanValue', value: true },
+            { kind: 'BooleanValue', value: false },
+          ] }, ctx);
+        expect(out.terms[0].termType).toEqual('BlankNode');
         expect(out.auxiliaryPatterns.length).toEqual(6);
 
         expect(out.auxiliaryPatterns[0].subject).toEqual(out.auxiliaryPatterns[1].subject);
@@ -1174,24 +1192,24 @@ query Hero($episode: Episode, $withFriends: Boolean!) {
             { kind: 'ObjectField', name: { kind: 'Name', value: 'vb' }, value: { kind: 'BooleanValue', value: true } },
             { kind: 'ObjectField', name: { kind: 'Name', value: 'vc' }, value: { kind: 'BooleanValue', value: false } },
           ] }, ctx);
-        expect(out.term.termType).toEqual('BlankNode');
+        expect(out.terms[0].termType).toEqual('BlankNode');
         expect(out.auxiliaryPatterns.length).toEqual(3);
 
-        expect(out.auxiliaryPatterns[0].subject).toEqual(out.term);
+        expect(out.auxiliaryPatterns[0].subject).toEqual(out.terms[0]);
         expect(out.auxiliaryPatterns[0].predicate)
           .toEqual(DataFactory.namedNode('http://example.org/va'));
         expect(out.auxiliaryPatterns[0].object)
           .toEqual(DataFactory.literal('false',
             DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#boolean')));
 
-        expect(out.auxiliaryPatterns[1].subject).toEqual(out.term);
+        expect(out.auxiliaryPatterns[1].subject).toEqual(out.terms[0]);
         expect(out.auxiliaryPatterns[1].predicate)
           .toEqual(DataFactory.namedNode('http://example.org/vb'));
         expect(out.auxiliaryPatterns[1].object)
           .toEqual(DataFactory.literal('true',
             DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#boolean')));
 
-        expect(out.auxiliaryPatterns[2].subject).toEqual(out.term);
+        expect(out.auxiliaryPatterns[2].subject).toEqual(out.terms[0]);
         expect(out.auxiliaryPatterns[2].predicate)
           .toEqual(DataFactory.namedNode('http://example.org/vc'));
         expect(out.auxiliaryPatterns[2].object)

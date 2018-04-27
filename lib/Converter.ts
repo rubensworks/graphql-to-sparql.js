@@ -221,6 +221,13 @@ export class Converter {
    */
   public fieldToOperation(convertContext: IConvertContext, subject: RDF.Term, fieldNode: FieldNode,
                           pushTerminalVariables: boolean, auxiliaryPatterns?: Algebra.Pattern[]): Algebra.Operation {
+    if (pushTerminalVariables) {
+      const operationOverride = this.handleMetaField(convertContext, subject, fieldNode, auxiliaryPatterns);
+      if (operationOverride) {
+        return operationOverride;
+      }
+    }
+
     let patterns: Algebra.Pattern[] = auxiliaryPatterns ? auxiliaryPatterns.concat([]) : [];
     const predicate: RDF.NamedNode = this.valueToNamedNode(fieldNode.name.value, convertContext.context);
     // Aliases change the variable name (and path name)
@@ -272,6 +279,33 @@ export class Converter {
     }
 
     return operation;
+  }
+
+  /**
+   * Check if the given node is a meta field, for things like introspection.
+   * If so, return a new operation for this, otherwise, null is returned.
+   * @param {IConvertContext} convertContext A convert context.
+   * @param {Term} subject The subject.
+   * @param {FieldNode} fieldNode The field node to convert.
+   * @param {Pattern[]} auxiliaryPatterns Optional patterns that should be part of the BGP.
+   * @return {Operation} An operation or null.
+   */
+  public handleMetaField(convertContext: IConvertContext, subject: RDF.Term, fieldNode: FieldNode,
+                         auxiliaryPatterns?: Algebra.Pattern[]): Algebra.Operation {
+    // TODO: in the future, we should add support for GraphQL wide range of introspection features:
+    // http://graphql.org/learn/introspection/
+    if (fieldNode.name.value === '__typename') {
+      // Aliases change the variable name (and path name)
+      const object: RDF.Variable = this.nameToVariable(fieldNode.alias ? fieldNode.alias : fieldNode.name,
+        convertContext);
+      convertContext.terminalVariables.push(object);
+      return this.operationFactory.createBgp([
+        this.operationFactory.createPattern(
+          subject, this.dataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'), object,
+        ),
+      ].concat(auxiliaryPatterns || []));
+    }
+    return null;
   }
 
   /**

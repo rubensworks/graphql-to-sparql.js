@@ -1050,6 +1050,33 @@ query HeroForEpisode($ep: Episode!) {
           ]),
         ));
       });
+
+      it('should convert the __typename meta field', async () => {
+        const ctx = {
+          context: {
+            theField: 'http://example.org/theField',
+            Character: 'http://example.org/types/Character',
+          },
+          path: [ 'a' ],
+          terminalVariables: [],
+          fragmentDefinitions: {},
+          variablesDict: {},
+          variablesMetaDict: {},
+        };
+        const subject = DataFactory.namedNode('theSubject');
+        return expect(converter.selectionToPatterns(ctx, subject,
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: '__typename' },
+          })).toEqual(
+          OperationFactory.createBgp([
+            OperationFactory.createPattern(
+              subject,
+              DataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
+              DataFactory.variable('a___typename'),
+            ),
+          ]));
+      });
     });
 
     describe('#joinOperations', () => {

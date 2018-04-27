@@ -496,6 +496,94 @@ query Hero($episode: Episode, $withFriends: Boolean!) {
     DataFactory.variable('hero_name'),
   ]));
       });
+
+      it('it should convert a query with inline fragments', async () => {
+        const context = {
+          hero: 'http://example.org/hero',
+          episode: 'http://example.org/episode',
+          JEDI: 'http://example.org/types/jedi',
+          Droid: 'http://example.org/types/droid',
+          Human: 'http://example.org/types/human',
+          name: 'http://example.org/name',
+          primaryFunction: 'http://example.org/primaryFunction',
+          height: 'http://example.org/height',
+        };
+        const variablesDict: IVariablesDictionary = {
+          ep: {kind: 'EnumValue', value: 'JEDI'},
+        };
+        return expect(converter.graphqlToSparqlAlgebra(`
+query HeroForEpisode($ep: Episode!) {
+  hero(episode: $ep) {
+    name
+    ... on Droid {
+      primaryFunction
+    }
+    ... on Human {
+      height
+    }
+  }
+}
+`, context, variablesDict)).toEqual(OperationFactory.createProject(
+          OperationFactory.createJoin(
+            OperationFactory.createBgp([
+              OperationFactory.createPattern(
+                DataFactory.blankNode('b10'),
+                DataFactory.namedNode('http://example.org/hero'),
+                DataFactory.variable('hero'),
+              ),
+              OperationFactory.createPattern(
+                DataFactory.variable('hero'),
+                DataFactory.namedNode('http://example.org/episode'),
+                DataFactory.namedNode('http://example.org/types/jedi'),
+              ),
+            ]),
+            OperationFactory.createJoin(
+              OperationFactory.createBgp([
+                OperationFactory.createPattern(
+                  DataFactory.variable('hero'),
+                  DataFactory.namedNode('http://example.org/name'),
+                  DataFactory.variable('hero_name'),
+                ),
+              ]),
+              OperationFactory.createJoin(
+                OperationFactory.createLeftJoin(
+                  OperationFactory.createBgp([]),
+                  OperationFactory.createBgp([
+                    OperationFactory.createPattern(
+                      DataFactory.variable('hero'),
+                      DataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
+                      DataFactory.namedNode('http://example.org/types/droid'),
+                    ),
+                    OperationFactory.createPattern(
+                      DataFactory.variable('hero'),
+                      DataFactory.namedNode('http://example.org/primaryFunction'),
+                      DataFactory.variable('hero_primaryFunction'),
+                    ),
+                  ]),
+                ),
+                OperationFactory.createLeftJoin(
+                  OperationFactory.createBgp([]),
+                  OperationFactory.createBgp([
+                    OperationFactory.createPattern(
+                      DataFactory.variable('hero'),
+                      DataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
+                      DataFactory.namedNode('http://example.org/types/human'),
+                    ),
+                    OperationFactory.createPattern(
+                      DataFactory.variable('hero'),
+                      DataFactory.namedNode('http://example.org/height'),
+                      DataFactory.variable('hero_height'),
+                    ),
+                  ]),
+                ),
+              ),
+            ),
+          ), [
+            DataFactory.variable('hero_name'),
+            DataFactory.variable('hero_primaryFunction'),
+            DataFactory.variable('hero_height'),
+          ]));
+      });
     });
 
     describe('#indexFragments', () => {
@@ -587,7 +675,7 @@ query Hero($episode: Episode, $withFriends: Boolean!) {
             },
           })).toEqual(OperationFactory.createBgp([
             OperationFactory.createPattern(
-              DataFactory.blankNode('b10'),
+              DataFactory.blankNode('b11'),
               DataFactory.namedNode('http://example.org/theField'),
               DataFactory.variable('a_theField'),
             ),
@@ -626,7 +714,7 @@ query Hero($episode: Episode, $withFriends: Boolean!) {
             ],
           })).toEqual(OperationFactory.createBgp([
             OperationFactory.createPattern(
-              DataFactory.blankNode('b11'),
+              DataFactory.blankNode('b12'),
               DataFactory.namedNode('http://example.org/theField'),
               DataFactory.variable('a_theField'),
             ),
@@ -918,6 +1006,49 @@ query Hero($episode: Episode, $withFriends: Boolean!) {
               DataFactory.variable('a_theAliasField'),
             ),
           ]));
+      });
+
+      it('should convert an inline fragment spread selection node', async () => {
+        const ctx = {
+          context: {
+            theField: 'http://example.org/theField',
+            Character: 'http://example.org/types/Character',
+          },
+          path: [ 'a' ],
+          terminalVariables: [],
+          fragmentDefinitions: {},
+          variablesDict: {},
+          variablesMetaDict: {},
+        };
+        const subject = DataFactory.namedNode('theSubject');
+        return expect(converter.selectionToPatterns(ctx, subject,
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'Character' },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'theField' } },
+              ],
+            },
+          })).toEqual(OperationFactory.createLeftJoin(
+          OperationFactory.createBgp([]),
+          OperationFactory.createBgp([
+            OperationFactory.createPattern(
+              subject,
+              DataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
+              DataFactory.namedNode('http://example.org/types/Character'),
+            ),
+            OperationFactory.createPattern(
+              subject,
+              DataFactory.namedNode('http://example.org/theField'),
+              DataFactory.variable('a_theField'),
+            ),
+          ]),
+        ));
       });
     });
 

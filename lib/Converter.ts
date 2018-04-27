@@ -2,7 +2,7 @@ import {
   ArgumentNode,
   BooleanValueNode,
   DefinitionNode, DirectiveNode, DocumentNode, EnumValueNode, FieldNode, FloatValueNode, FragmentDefinitionNode,
-  FragmentSpreadNode,
+  FragmentSpreadNode, InlineFragmentNode,
   IntValueNode, ListTypeNode, ListValueNode, NamedTypeNode,
   NameNode, NonNullTypeNode, ObjectValueNode,
   OperationDefinitionNode, parse,
@@ -154,9 +154,6 @@ export class Converter {
    */
   public selectionToPatterns(convertContext: IConvertContext, subject: RDF.Term,
                              selectionNode: SelectionNode): Algebra.Operation {
-    let nest: boolean = true;
-    let leftJoin: boolean = false;
-    let patterns: Algebra.Pattern[] = [];
     switch (selectionNode.kind) {
     case 'FragmentSpread':
       const fragmentSpreadNode: FragmentSpreadNode = <FragmentSpreadNode> selectionNode;
@@ -166,83 +163,115 @@ export class Converter {
         throw new Error('Undefined fragment definition: ' + fragmentSpreadNode.name.value);
       }
 
-      // Handle type condition by adding an rdf:type pattern
-      const typeName: string = fragmentDefinitionNode.typeCondition.name.value;
-      patterns.push(this.operationFactory.createPattern(
-        subject,
-        this.dataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
-        this.valueToNamedNode(typeName, convertContext.context)),
-      );
-
-      const newFieldNode: FieldNode = {
-        alias: null,
-        arguments: null,
-        directives: fragmentDefinitionNode.directives,
-        kind: 'Field',
-        name: fragmentSpreadNode.name,
-        selectionSet: fragmentDefinitionNode.selectionSet,
-      };
-      nest = false;
-      leftJoin = true; // Wrap in an OPTIONAL, as this pattern should only apply if the type applies
-      selectionNode = newFieldNode;
-      // No break, continue as field.
-    case 'Field':
-      const fieldNode: FieldNode = <FieldNode> selectionNode;
-      const predicate: RDF.NamedNode = this.valueToNamedNode(fieldNode.name.value, convertContext.context);
-      // Aliases change the variable name (and path name)
-      const object: RDF.Variable = this.nameToVariable(fieldNode.alias ? fieldNode.alias : fieldNode.name,
-        convertContext);
-      // Create at least a pattern for the parent node and the current path.
-      if (nest) {
-        patterns.push(this.operationFactory.createPattern(subject, predicate, object));
-      }
-
-      // Create patterns for the node's arguments
-      if (fieldNode.arguments && fieldNode.arguments.length) {
-        for (const argument of fieldNode.arguments) {
-          const valueOutput = this.valueToTerm(argument.value, convertContext);
-          for (const term of valueOutput.terms) {
-            patterns.push(this.operationFactory.createPattern(object,
-              this.valueToNamedNode(argument.name.value, convertContext.context), term));
-          }
-          if (valueOutput.auxiliaryPatterns) {
-            patterns = patterns.concat(valueOutput.auxiliaryPatterns);
-          }
-        }
-      }
-
-      // Directives
-      if (fieldNode.directives) {
-        for (const directive of fieldNode.directives) {
-          if (!this.handleDirective(directive, convertContext)) {
-            return this.operationFactory.createBgp([]);
-          }
-        }
-      }
-
-      // Recursive call for nested selection sets
-      let operation: Algebra.Operation = this.operationFactory.createBgp(patterns);
-      if (fieldNode.selectionSet && fieldNode.selectionSet.selections.length) {
-        // Change path value when there was an alias on this node.
-        const pathSubValue: string = fieldNode.alias ? fieldNode.alias.value : fieldNode.name.value;
-        const subConvertContext: IConvertContext = nest ? Object.assign(Object.assign({}, convertContext),
-          { path: convertContext.path.concat([pathSubValue]) }) : convertContext;
-        operation = this.joinOperations([operation].concat(fieldNode.selectionSet.selections
-          .map(this.selectionToPatterns.bind(this, subConvertContext, nest ? object : subject))));
-      } else if (nest) {
-        // If no nested selection sets exist,
-        // consider the object variable as a terminal variable that should be selected.
-        convertContext.terminalVariables.push(object);
-      }
-
-      if (leftJoin) {
-        operation = this.operationFactory.createLeftJoin(this.operationFactory.createBgp([]), operation);
-      }
-
-      return operation;
+      // Wrap in an OPTIONAL, as this pattern should only apply if the type applies
+      return this.operationFactory.createLeftJoin(
+        this.operationFactory.createBgp([]),
+        this.fieldToOperation(convertContext, subject, {
+          alias: null,
+          arguments: null,
+          directives: fragmentDefinitionNode.directives,
+          kind: 'Field',
+          name: fragmentSpreadNode.name,
+          selectionSet: fragmentDefinitionNode.selectionSet,
+        }, false,
+          [ this.newTypePattern(subject, fragmentDefinitionNode.typeCondition, convertContext) ]));
     case 'InlineFragment':
-      throw new Error('Not implemented yet'); // TODO
+      const inlineFragmentNode: InlineFragmentNode = <InlineFragmentNode> selectionNode;
+
+      // Wrap in an OPTIONAL, as this pattern should only apply if the type applies
+      return this.operationFactory.createLeftJoin(
+        this.operationFactory.createBgp([]),
+        this.fieldToOperation(convertContext, subject, {
+          alias: null,
+          arguments: null,
+          directives: inlineFragmentNode.directives,
+          kind: 'Field',
+          name: { kind: 'Name', value: subject.value },
+          selectionSet: inlineFragmentNode.selectionSet,
+        }, false,
+          inlineFragmentNode.typeCondition
+            ? [ this.newTypePattern(subject, inlineFragmentNode.typeCondition, convertContext) ] : []));
+    case 'Field':
+      return this.fieldToOperation(convertContext, subject, <FieldNode> selectionNode, true);
     }
+  }
+
+  /**
+   * Create a pattern with an rdf:type predicate.
+   * @param {Term} subject The subject.
+   * @param {NamedTypeNode} typeCondition The object name.
+   * @param {IConvertContext} convertContext A convert context.
+   * @return {Pattern} A pattern.
+   */
+  public newTypePattern(subject: RDF.Term, typeCondition: NamedTypeNode, convertContext: IConvertContext) {
+    return this.operationFactory.createPattern(
+      subject,
+      this.dataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
+      this.valueToNamedNode(typeCondition.name.value, convertContext.context));
+  }
+
+  /**
+   * Convert a field node to an operation.
+   * @param {IConvertContext} convertContext A convert context.
+   * @param {Term} subject The subject.
+   * @param {FieldNode} fieldNode The field node to convert.
+   * @param {boolean} pushTerminalVariables If terminal variables should be created.
+   * @param {Pattern[]} auxiliaryPatterns Optional patterns that should be part of the BGP.
+   * @return {Operation} The reslting operation.
+   */
+  public fieldToOperation(convertContext: IConvertContext, subject: RDF.Term, fieldNode: FieldNode,
+                          pushTerminalVariables: boolean, auxiliaryPatterns?: Algebra.Pattern[]): Algebra.Operation {
+    let patterns: Algebra.Pattern[] = auxiliaryPatterns ? auxiliaryPatterns.concat([]) : [];
+    const predicate: RDF.NamedNode = this.valueToNamedNode(fieldNode.name.value, convertContext.context);
+    // Aliases change the variable name (and path name)
+    const object: RDF.Variable = this.nameToVariable(fieldNode.alias ? fieldNode.alias : fieldNode.name,
+      convertContext);
+    // Create at least a pattern for the parent node and the current path.
+    if (pushTerminalVariables) {
+      patterns.push(this.operationFactory.createPattern(subject, predicate, object));
+    }
+
+    // Create patterns for the node's arguments
+    if (fieldNode.arguments && fieldNode.arguments.length) {
+      for (const argument of fieldNode.arguments) {
+        const valueOutput = this.valueToTerm(argument.value, convertContext);
+        for (const term of valueOutput.terms) {
+          patterns.push(this.operationFactory.createPattern(object,
+            this.valueToNamedNode(argument.name.value, convertContext.context), term));
+        }
+        if (valueOutput.auxiliaryPatterns) {
+          patterns = patterns.concat(valueOutput.auxiliaryPatterns);
+        }
+      }
+    }
+
+    // Directives
+    if (fieldNode.directives) {
+      for (const directive of fieldNode.directives) {
+        if (!this.handleDirective(directive, convertContext)) {
+          return this.operationFactory.createBgp([]);
+        }
+      }
+    }
+
+    // Recursive call for nested selection sets
+    let operation: Algebra.Operation = this.operationFactory.createBgp(patterns);
+    if (fieldNode.selectionSet && fieldNode.selectionSet.selections.length) {
+      // Change path value when there was an alias on this node.
+      const pathSubValue: string = fieldNode.alias ? fieldNode.alias.value : fieldNode.name.value;
+      const subConvertContext: IConvertContext = pushTerminalVariables
+        ? Object.assign(Object.assign({}, convertContext),
+        { path: convertContext.path.concat([pathSubValue]) })
+        : convertContext;
+      operation = this.joinOperations([operation].concat(fieldNode.selectionSet.selections
+        .map(this.selectionToPatterns.bind(this, subConvertContext, pushTerminalVariables ? object : subject))));
+    } else if (pushTerminalVariables) {
+      // If no nested selection sets exist,
+      // consider the object variable as a terminal variable that should be selected.
+      convertContext.terminalVariables.push(object);
+    }
+
+    return operation;
   }
 
   /**

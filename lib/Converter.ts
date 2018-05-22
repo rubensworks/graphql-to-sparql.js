@@ -22,6 +22,7 @@ export class Converter {
   private readonly dataFactory: RDF.DataFactory;
   private readonly operationFactory: Factory;
   private readonly arraysToRdfLists: boolean;
+  private expressionVariableCounter: number = 0;
 
   constructor(settings?: IConverterSettings) {
     settings = settings || {};
@@ -49,8 +50,9 @@ export class Converter {
       variablesDict: variablesDict || {},
       variablesMetaDict: {},
     };
-    return this.operationFactory.createProject(
-      <Algebra.Operation> document.definitions.map(this.definitionToPattern.bind(this, queryParseContext)).reduce(
+
+    return this.operationFactory.createProject(<Algebra.Operation> document.definitions.map(
+      this.definitionToPattern.bind(this, queryParseContext)).reduce(
       (prev: Algebra.Operation, current: Algebra.Operation) => {
         if (!current) {
           return prev;
@@ -237,6 +239,7 @@ export class Converter {
     // Aliases change the variable name (and path name)
     const object: RDF.Variable = this.nameToVariable(fieldNode.alias ? fieldNode.alias : fieldNode.name,
       convertContext);
+
     // Create at least a pattern for the parent node and the current path.
     if (pushTerminalVariables) {
       patterns.push(this.operationFactory.createPattern(subject, predicate, object));
@@ -286,8 +289,52 @@ export class Converter {
         ? Object.assign(Object.assign({}, convertContext),
         { path: convertContext.path.concat([pathSubValue]) })
         : convertContext;
-      operation = this.joinOperations([operation].concat(fieldNode.selectionSet.selections
+
+      // If the magic keyword 'totalCount' is present, include a count aggregator.
+      let totalCount: boolean = false;
+      const selections: ReadonlyArray<SelectionNode> = fieldNode.selectionSet.selections
+        .filter((selection) => {
+          if (selection.kind === 'Field' && selection.name.value === 'totalCount') {
+            totalCount = true;
+            return false;
+          }
+          return true;
+        });
+
+      let joinedOperation = this.joinOperations([operation].concat(selections
         .map(this.selectionToPatterns.bind(this, subConvertContext, pushTerminalVariables ? object : subject))));
+
+      // Modify the operation if there was a count selection
+      if (totalCount) {
+        // Create to a count aggregation
+        const expressionVariable = this.dataFactory.variable('var' + this.expressionVariableCounter++);
+        const countOverVariable: RDF.Variable = this.dataFactory.variable(object.value + '_totalCount');
+        const aggregator: Algebra.BoundAggregate = this.operationFactory.createBoundAggregate(expressionVariable,
+          'count', this.operationFactory.createTermExpression(object), false);
+
+        const countProject = this.operationFactory.createProject(
+          this.operationFactory.createExtend(
+            this.operationFactory.createGroup(operation, [], [aggregator]), countOverVariable,
+            this.operationFactory.createTermExpression(expressionVariable),
+          ),
+          [countOverVariable],
+        );
+        convertContext.terminalVariables.push(countOverVariable);
+
+        // If no other selections exist (next to totalCount),
+        // then we just return the count operations as-is,
+        // otherwise, we join the count operation with all other selections
+        if (!selections.length) {
+          joinedOperation = countProject;
+        } else {
+          joinedOperation = this.operationFactory.createJoin(
+            this.operationFactory.createProject(joinedOperation, []),
+            countProject,
+          );
+        }
+      }
+
+      operation = joinedOperation;
     } else if (pushTerminalVariables) {
       // If no nested selection sets exist,
       // consider the object variable as a terminal variable that should be selected.

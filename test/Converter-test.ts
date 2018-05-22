@@ -635,6 +635,131 @@ query HeroForEpisode($ep: Episode!) {
             DataFactory.variable('hero_height'),
           ]));
       });
+
+      it('it should convert a query with a single totalCount select', async () => {
+        const context = {
+          hero: 'http://example.org/hero',
+          episode: 'http://example.org/episode',
+          JEDI: 'http://example.org/types/jedi',
+          name: 'http://example.org/name',
+          friends: 'http://example.org/friends',
+        };
+        return expect(converter.graphqlToSparqlAlgebra(`
+{
+  hero {
+    friends {
+      totalCount
+    }
+  }
+}
+`, context)).toEqual(OperationFactory.createProject(
+          OperationFactory.createJoin(
+            OperationFactory.createBgp([
+              OperationFactory.createPattern(
+                DataFactory.blankNode('b12'),
+                DataFactory.namedNode('http://example.org/hero'),
+                DataFactory.variable('hero'),
+              ),
+            ]),
+            OperationFactory.createProject(
+              OperationFactory.createExtend(
+                OperationFactory.createGroup(
+                  OperationFactory.createBgp([
+                    OperationFactory.createPattern(
+                      DataFactory.variable('hero'),
+                      DataFactory.namedNode('http://example.org/friends'),
+                      DataFactory.variable('hero_friends'),
+                    )],
+                  ),
+                  [],
+                  [OperationFactory.createBoundAggregate(
+                    DataFactory.variable('var0'),
+                    'count',
+                    OperationFactory.createTermExpression(DataFactory.variable('hero_friends')),
+                    false,
+                  )],
+                ),
+                DataFactory.variable('hero_friends_totalCount'),
+                OperationFactory.createTermExpression(DataFactory.variable('var0')),
+              ),
+              [DataFactory.variable('hero_friends_totalCount')],
+            ),
+          ), [
+            DataFactory.variable('hero_friends_totalCount'),
+          ]));
+      });
+
+      it('it should convert a query with a totalCount and a regular select', async () => {
+        const context = {
+          hero: 'http://example.org/hero',
+          episode: 'http://example.org/episode',
+          JEDI: 'http://example.org/types/jedi',
+          name: 'http://example.org/name',
+          friends: 'http://example.org/friends',
+        };
+        return expect(converter.graphqlToSparqlAlgebra(`
+{
+  hero {
+    friends {
+      name
+      totalCount
+    }
+  }
+}
+`, context)).toEqual(OperationFactory.createProject(
+          OperationFactory.createJoin(
+            OperationFactory.createBgp([
+              OperationFactory.createPattern(
+                DataFactory.blankNode('b13'),
+                DataFactory.namedNode('http://example.org/hero'),
+                DataFactory.variable('hero'),
+              ),
+            ]),
+            OperationFactory.createJoin(
+              OperationFactory.createProject(
+                OperationFactory.createBgp([
+                  OperationFactory.createPattern(
+                    DataFactory.variable('hero'),
+                    DataFactory.namedNode('http://example.org/friends'),
+                    DataFactory.variable('hero_friends'),
+                  ),
+                  OperationFactory.createPattern(
+                    DataFactory.variable('hero_friends'),
+                    DataFactory.namedNode('http://example.org/name'),
+                    DataFactory.variable('hero_friends_name'),
+                  ),
+                ]),
+                [],
+              ),
+              OperationFactory.createProject(
+                OperationFactory.createExtend(
+                  OperationFactory.createGroup(
+                    OperationFactory.createBgp([
+                      OperationFactory.createPattern(
+                        DataFactory.variable('hero'),
+                        DataFactory.namedNode('http://example.org/friends'),
+                        DataFactory.variable('hero_friends'),
+                      )],
+                    ),
+                    [],
+                    [OperationFactory.createBoundAggregate(
+                      DataFactory.variable('var0'),
+                      'count',
+                      OperationFactory.createTermExpression(DataFactory.variable('hero_friends')),
+                      false,
+                    )],
+                  ),
+                  DataFactory.variable('hero_friends_totalCount'),
+                  OperationFactory.createTermExpression(DataFactory.variable('var0')),
+                ),
+                [DataFactory.variable('hero_friends_totalCount')],
+              ),
+            ),
+          ), [
+            DataFactory.variable('hero_friends_name'),
+            DataFactory.variable('hero_friends_totalCount'),
+          ]));
+      });
     });
 
     describe('#indexFragments', () => {
@@ -726,7 +851,7 @@ query HeroForEpisode($ep: Episode!) {
             },
           })).toEqual(OperationFactory.createBgp([
             OperationFactory.createPattern(
-              DataFactory.blankNode('b12'),
+              DataFactory.blankNode('b14'),
               DataFactory.namedNode('http://example.org/theField'),
               DataFactory.variable('a_theField'),
             ),
@@ -765,7 +890,7 @@ query HeroForEpisode($ep: Episode!) {
             ],
           })).toEqual(OperationFactory.createBgp([
             OperationFactory.createPattern(
-              DataFactory.blankNode('b13'),
+              DataFactory.blankNode('b15'),
               DataFactory.namedNode('http://example.org/theField'),
               DataFactory.variable('a_theField'),
             ),

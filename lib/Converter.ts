@@ -221,6 +221,10 @@ export class Converter {
    */
   public fieldToOperation(convertContext: IConvertContext, subject: RDF.Term, fieldNode: FieldNode,
                           pushTerminalVariables: boolean, auxiliaryPatterns?: Algebra.Pattern[]): Algebra.Operation {
+    // Offset and limit can be changed using the magic arguments 'first' and 'offset'.
+    let offset = 0;
+    let limit;
+
     if (pushTerminalVariables) {
       const operationOverride = this.handleMetaField(convertContext, subject, fieldNode, auxiliaryPatterns);
       if (operationOverride) {
@@ -241,13 +245,25 @@ export class Converter {
     // Create patterns for the node's arguments
     if (fieldNode.arguments && fieldNode.arguments.length) {
       for (const argument of fieldNode.arguments) {
-        const valueOutput = this.valueToTerm(argument.value, convertContext);
-        for (const term of valueOutput.terms) {
-          patterns.push(this.operationFactory.createPattern(object,
-            this.valueToNamedNode(argument.name.value, convertContext.context), term));
-        }
-        if (valueOutput.auxiliaryPatterns) {
-          patterns = patterns.concat(valueOutput.auxiliaryPatterns);
+        if (argument.name.value === 'first') {
+          if (argument.value.kind !== 'IntValue') {
+            throw new Error('Invalid value type for \'first\' argument: ' + argument.value.kind);
+          }
+          limit = parseInt((<IntValueNode> argument.value).value, 10);
+        } else if (argument.name.value === 'offset') {
+          if (argument.value.kind !== 'IntValue') {
+            throw new Error('Invalid value type for \'offset\' argument: ' + argument.value.kind);
+          }
+          offset = parseInt((<IntValueNode> argument.value).value, 10);
+        } else {
+          const valueOutput = this.valueToTerm(argument.value, convertContext);
+          for (const term of valueOutput.terms) {
+            patterns.push(this.operationFactory.createPattern(object,
+              this.valueToNamedNode(argument.name.value, convertContext.context), term));
+          }
+          if (valueOutput.auxiliaryPatterns) {
+            patterns = patterns.concat(valueOutput.auxiliaryPatterns);
+          }
         }
       }
     }
@@ -276,6 +292,12 @@ export class Converter {
       // If no nested selection sets exist,
       // consider the object variable as a terminal variable that should be selected.
       convertContext.terminalVariables.push(object);
+    }
+
+    // Wrap the operation in a slice if a 'first' or 'offset' argument was provided.
+    if (offset || limit) {
+      operation = this.operationFactory
+        .createSlice(this.operationFactory.createProject(operation, []), offset, limit);
     }
 
     return operation;

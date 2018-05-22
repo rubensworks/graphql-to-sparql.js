@@ -78,6 +78,57 @@ describe('Converter', () => {
 ]));
       });
 
+      it('it should convert a query with first and offset arguments', async () => {
+        const context = {
+          hero: 'http://example.org/hero',
+          name: 'http://example.org/name',
+          friends: 'http://example.org/friends',
+        };
+        return expect(converter.graphqlToSparqlAlgebra(`
+{
+  hero {
+    name
+    friends(first:2 offset:10) {
+      name
+    }
+  }
+}
+`, context)).toEqual(OperationFactory.createProject(
+          OperationFactory.createJoin(
+            OperationFactory.createBgp([
+              OperationFactory.createPattern(
+                DataFactory.blankNode('b3'),
+                DataFactory.namedNode('http://example.org/hero'),
+                DataFactory.variable('hero'),
+              ),
+            ]),
+            OperationFactory.createJoin(
+              OperationFactory.createBgp([
+                OperationFactory.createPattern(
+                  DataFactory.variable('hero'),
+                  DataFactory.namedNode('http://example.org/name'),
+                  DataFactory.variable('hero_name'),
+                ),
+              ]),
+              OperationFactory.createSlice(OperationFactory.createProject(OperationFactory.createBgp([
+                OperationFactory.createPattern(
+                  DataFactory.variable('hero'),
+                  DataFactory.namedNode('http://example.org/friends'),
+                  DataFactory.variable('hero_friends'),
+                ),
+                OperationFactory.createPattern(
+                  DataFactory.variable('hero_friends'),
+                  DataFactory.namedNode('http://example.org/name'),
+                  DataFactory.variable('hero_friends_name'),
+                ),
+              ]), []), 10, 2),
+            ),
+          ), [
+            DataFactory.variable('hero_name'),
+            DataFactory.variable('hero_friends_name'),
+          ]));
+      });
+
       it('it should convert a query with nested elements', async () => {
         const context = {
           human: 'http://example.org/human',
@@ -97,7 +148,7 @@ describe('Converter', () => {
 }
 `, context)).toEqual(OperationFactory.createProject(OperationFactory.createBgp([
   OperationFactory.createPattern(
-    DataFactory.blankNode('b3'),
+    DataFactory.blankNode('b4'),
     DataFactory.namedNode('http://example.org/human'),
     DataFactory.variable('human'),
   ),
@@ -145,7 +196,7 @@ describe('Converter', () => {
 }
 `, context)).toEqual(OperationFactory.createProject(OperationFactory.createBgp([
   OperationFactory.createPattern(
-    DataFactory.blankNode('b4'),
+    DataFactory.blankNode('b5'),
     DataFactory.namedNode('http://example.org/human'),
     DataFactory.variable('human'),
   ),
@@ -194,7 +245,7 @@ describe('Converter', () => {
 }
 `, context)).toEqual(OperationFactory.createProject(OperationFactory.createBgp([
   OperationFactory.createPattern(
-    DataFactory.blankNode('b5'),
+    DataFactory.blankNode('b6'),
     DataFactory.namedNode('http://example.org/hero'),
     DataFactory.variable('empireHero'),
   ),
@@ -209,7 +260,7 @@ describe('Converter', () => {
     DataFactory.variable('empireHero_name'),
   ),
   OperationFactory.createPattern(
-    DataFactory.blankNode('b5'),
+    DataFactory.blankNode('b6'),
     DataFactory.namedNode('http://example.org/hero'),
     DataFactory.variable('jediHero'),
   ),
@@ -262,7 +313,7 @@ fragment comparisonFields on Character {
     OperationFactory.createJoin(
       OperationFactory.createBgp([
         OperationFactory.createPattern(
-          DataFactory.blankNode('b6'),
+          DataFactory.blankNode('b7'),
           DataFactory.namedNode('http://example.org/hero'),
           DataFactory.variable('leftComparison'),
         ),
@@ -306,7 +357,7 @@ fragment comparisonFields on Character {
     OperationFactory.createJoin(
       OperationFactory.createBgp([
         OperationFactory.createPattern(
-          DataFactory.blankNode('b6'),
+          DataFactory.blankNode('b7'),
           DataFactory.namedNode('http://example.org/hero'),
           DataFactory.variable('rightComparison'),
         ),
@@ -379,7 +430,7 @@ query HeroNameAndFriends($episode: Episode) {
 }
 `, context, variablesDict)).toEqual(OperationFactory.createProject(OperationFactory.createBgp([
   OperationFactory.createPattern(
-    DataFactory.blankNode('b7'),
+    DataFactory.blankNode('b8'),
     DataFactory.namedNode('http://example.org/hero'),
     DataFactory.variable('hero'),
   ),
@@ -427,7 +478,7 @@ query HeroNameAndFriends($episode: Episode = JEDI) {
 }
 `, context)).toEqual(OperationFactory.createProject(OperationFactory.createBgp([
   OperationFactory.createPattern(
-    DataFactory.blankNode('b8'),
+    DataFactory.blankNode('b9'),
     DataFactory.namedNode('http://example.org/hero'),
     DataFactory.variable('hero'),
   ),
@@ -479,7 +530,7 @@ query Hero($episode: Episode, $withFriends: Boolean!) {
 }
 `, context, variablesDict)).toEqual(OperationFactory.createProject(OperationFactory.createBgp([
   OperationFactory.createPattern(
-    DataFactory.blankNode('b9'),
+    DataFactory.blankNode('b10'),
     DataFactory.namedNode('http://example.org/hero'),
     DataFactory.variable('hero'),
   ),
@@ -527,7 +578,7 @@ query HeroForEpisode($ep: Episode!) {
           OperationFactory.createJoin(
             OperationFactory.createBgp([
               OperationFactory.createPattern(
-                DataFactory.blankNode('b10'),
+                DataFactory.blankNode('b11'),
                 DataFactory.namedNode('http://example.org/hero'),
                 DataFactory.variable('hero'),
               ),
@@ -675,7 +726,7 @@ query HeroForEpisode($ep: Episode!) {
             },
           })).toEqual(OperationFactory.createBgp([
             OperationFactory.createPattern(
-              DataFactory.blankNode('b11'),
+              DataFactory.blankNode('b12'),
               DataFactory.namedNode('http://example.org/theField'),
               DataFactory.variable('a_theField'),
             ),
@@ -714,7 +765,7 @@ query HeroForEpisode($ep: Episode!) {
             ],
           })).toEqual(OperationFactory.createBgp([
             OperationFactory.createPattern(
-              DataFactory.blankNode('b12'),
+              DataFactory.blankNode('b13'),
               DataFactory.namedNode('http://example.org/theField'),
               DataFactory.variable('a_theField'),
             ),

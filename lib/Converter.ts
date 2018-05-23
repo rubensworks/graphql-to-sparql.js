@@ -22,6 +22,7 @@ export class Converter {
   private readonly dataFactory: RDF.DataFactory;
   private readonly operationFactory: Factory;
   private readonly arraysToRdfLists: boolean;
+  private readonly variableDelimiter: string;
   private expressionVariableCounter: number = 0;
 
   constructor(settings?: IConverterSettings) {
@@ -29,6 +30,7 @@ export class Converter {
     this.dataFactory = settings.dataFactory || DefaultDataFactory;
     this.operationFactory = new Factory(this.dataFactory);
     this.arraysToRdfLists = settings.arraysToRdfLists;
+    this.variableDelimiter = settings.variableDelimiter || '_';
   }
 
   /**
@@ -308,7 +310,8 @@ export class Converter {
       if (totalCount) {
         // Create to a count aggregation
         const expressionVariable = this.dataFactory.variable('var' + this.expressionVariableCounter++);
-        const countOverVariable: RDF.Variable = this.dataFactory.variable(object.value + '_totalCount');
+        const countOverVariable: RDF.Variable = this.dataFactory
+          .variable(object.value + this.variableDelimiter + 'totalCount');
         const aggregator: Algebra.BoundAggregate = this.operationFactory.createBoundAggregate(expressionVariable,
           'count', this.operationFactory.createTermExpression(object), false);
 
@@ -417,7 +420,8 @@ export class Converter {
    * @return {Variable} A variable.
    */
   public nameToVariable(name: NameNode, convertContext: IConvertContext): RDF.Variable {
-    return this.dataFactory.variable((convertContext.path.length ? convertContext.path.join('_') + '_' : '')
+    return this.dataFactory.variable((convertContext.path.length
+      ? convertContext.path.join(this.variableDelimiter) + this.variableDelimiter : '')
       + name.value);
   }
 
@@ -623,6 +627,11 @@ export interface IConverterSettings {
    * Otherwise (default), arrays will be converted to multiple predicate-object links.
    */
   arraysToRdfLists?: boolean;
+  /**
+   * The string to join variable names by.
+   * Defaults to '_'.
+   */
+  variableDelimiter?: string;
 }
 
 /**

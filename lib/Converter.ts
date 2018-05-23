@@ -23,6 +23,7 @@ export class Converter {
   private readonly operationFactory: Factory;
   private readonly arraysToRdfLists: boolean;
   private readonly variableDelimiter: string;
+  private readonly requireContext: boolean;
   private expressionVariableCounter: number = 0;
 
   constructor(settings?: IConverterSettings) {
@@ -31,6 +32,7 @@ export class Converter {
     this.operationFactory = new Factory(this.dataFactory);
     this.arraysToRdfLists = settings.arraysToRdfLists;
     this.variableDelimiter = settings.variableDelimiter || '_';
+    this.requireContext = settings.requireContext;
   }
 
   /**
@@ -432,6 +434,9 @@ export class Converter {
    * @return {NamedNode} A named node.
    */
   public valueToNamedNode(value: string, context: IContext): RDF.NamedNode {
+    if (this.requireContext && !context[value]) {
+      throw new Error('No context entry was found for ' + value);
+    }
     return this.dataFactory.namedNode(context[value] || value);
   }
 
@@ -632,6 +637,11 @@ export interface IConverterSettings {
    * Defaults to '_'.
    */
   variableDelimiter?: string;
+  /**
+   * If the use of a context is required.
+   * If false, and GraphQL nodes are not present in the context, an error will be thrown.
+   */
+  requireContext?: boolean;
 }
 
 /**

@@ -239,13 +239,13 @@ export class Converter {
     }
 
     let patterns: Algebra.Pattern[] = auxiliaryPatterns ? auxiliaryPatterns.concat([]) : [];
-    const predicate: RDF.NamedNode = this.valueToNamedNode(fieldNode.name.value, convertContext.context);
     // Aliases change the variable name (and path name)
     const object: RDF.Variable = this.nameToVariable(fieldNode.alias ? fieldNode.alias : fieldNode.name,
       convertContext);
 
     // Create at least a pattern for the parent node and the current path.
     if (pushTerminalVariables) {
+      const predicate: RDF.NamedNode = this.valueToNamedNode(fieldNode.name.value, convertContext.context);
       patterns.push(this.operationFactory.createPattern(subject, predicate, object));
     }
 
@@ -639,7 +639,7 @@ export interface IConverterSettings {
   variableDelimiter?: string;
   /**
    * If the use of a context is required.
-   * If false, and GraphQL nodes are not present in the context, an error will be thrown.
+   * If true, and GraphQL nodes are not present in the context, an error will be thrown.
    */
   requireContext?: boolean;
 }

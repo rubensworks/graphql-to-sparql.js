@@ -263,7 +263,7 @@ export class Converter {
           }
           offset = parseInt((<IntValueNode> argument.value).value, 10);
         } else {
-          const valueOutput = this.valueToTerm(argument.value, convertContext);
+          const valueOutput = this.valueToTerm(argument.value, convertContext, argument.name.value);
           for (const term of valueOutput.terms) {
             patterns.push(this.operationFactory.createPattern(object,
               this.valueToNamedNode(argument.name.value, convertContext.context), term));
@@ -434,19 +434,25 @@ export class Converter {
    * @return {NamedNode} A named node.
    */
   public valueToNamedNode(value: string, context: IContext): RDF.NamedNode {
-    if (this.requireContext && !context[value]) {
+    let contextValue: any = context[value];
+    if (this.requireContext && !contextValue) {
       throw new Error('No context entry was found for ' + value);
     }
-    return this.dataFactory.namedNode(context[value] || value);
+    if (contextValue && !(typeof contextValue === 'string')) {
+      contextValue = contextValue['@id'];
+    }
+    return this.dataFactory.namedNode(contextValue || value);
   }
 
   /**
    * Convert a GraphQL value into an RDF term.
    * @param {ValueNode} valueNode A GraphQL value node.
    * @param {IConvertContext} convertContext A convert context.
+   * @param {string} argumentName The name of the argument this value is created for.
+   *                              This might influence the literal language or datatype.
    * @return {Term} An RDF term.
    */
-  public valueToTerm(valueNode: ValueNode, convertContext: IConvertContext): IValueToTermOutput {
+  public valueToTerm(valueNode: ValueNode, convertContext: IConvertContext, argumentName: string): IValueToTermOutput {
     switch (valueNode.kind) {
     case 'Variable':
       const variableNode: VariableNode = <VariableNode> valueNode;
@@ -459,7 +465,7 @@ export class Converter {
         if (!meta || meta.mandatory) {
           throw new Error(`Undefined variable: ${id}`);
         } else {
-          return this.valueToTerm({ kind: 'NullValue' }, convertContext);
+          return this.valueToTerm({ kind: 'NullValue' }, convertContext, argumentName);
         }
       }
 
@@ -492,7 +498,7 @@ export class Converter {
         }
       }
 
-      return this.valueToTerm(value, convertContext);
+      return this.valueToTerm(value, convertContext, argumentName);
     case 'IntValue':
       return { terms: [ this.dataFactory.literal((<IntValueNode> valueNode).value,
         this.dataFactory.namedNode('http://www.w3.org/2001/XMLSchema#integer')) ] };
@@ -500,7 +506,17 @@ export class Converter {
       return { terms: [ this.dataFactory.literal((<FloatValueNode> valueNode).value,
         this.dataFactory.namedNode('http://www.w3.org/2001/XMLSchema#float')) ] };
     case 'StringValue':
-      return { terms: [ this.dataFactory.literal((<StringValueNode> valueNode).value) ] };
+      const contextEntry: any = convertContext.context[argumentName];
+      let language: string = null;
+      let datatype: RDF.NamedNode = null;
+      if (contextEntry && typeof contextEntry !== 'string') {
+        if (contextEntry['@language']) {
+          language = contextEntry['@language'];
+        } else if (contextEntry['@type']) {
+          datatype = this.dataFactory.namedNode(contextEntry['@type']);
+        }
+      }
+      return { terms: [ this.dataFactory.literal((<StringValueNode> valueNode).value, language || datatype) ] };
     case 'BooleanValue':
       return { terms: [ this.dataFactory.literal((<BooleanValueNode> valueNode).value ? 'true' : 'false',
         this.dataFactory.namedNode('http://www.w3.org/2001/XMLSchema#boolean')) ] };
@@ -513,7 +529,7 @@ export class Converter {
       let auxiliaryPatterns: Algebra.Pattern[] = [];
       // Create terms for list values
       for (const v of (<ListValueNode> valueNode).values) {
-        const subValue = this.valueToTerm(v, convertContext);
+        const subValue = this.valueToTerm(v, convertContext, argumentName);
         for (const term of subValue.terms) {
           listTerms.push(term);
         }
@@ -556,7 +572,7 @@ export class Converter {
       let auxiliaryObjectPatterns: Algebra.Pattern[] = [];
       for (const field of (<ObjectValueNode> valueNode).fields) {
         const predicate = this.valueToNamedNode(field.name.value, convertContext.context);
-        const subValue = this.valueToTerm(field.value, convertContext);
+        const subValue = this.valueToTerm(field.value, convertContext, argumentName);
         for (const term of subValue.terms) {
           auxiliaryObjectPatterns.push(this.operationFactory.createPattern(subject, predicate, term));
         }
@@ -595,7 +611,7 @@ export class Converter {
    */
   public handleDirective(directive: DirectiveNode, convertContext: IConvertContext): boolean {
     const arg: ArgumentNode = this.getArgument(directive.arguments, 'if');
-    const subValue = this.valueToTerm(arg.value, convertContext);
+    const subValue = this.valueToTerm(arg.value, convertContext, arg.name.value);
     if (subValue.terms.length !== 1) {
       throw new Error(`Can not apply a directive with a list: ${subValue.terms}`);
     }

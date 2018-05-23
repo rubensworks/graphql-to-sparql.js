@@ -1353,6 +1353,11 @@ query HeroForEpisode($ep: Episode!) {
         return expect(converter.valueToNamedNode('abc', { abc: 'http://example.org/abc' }))
           .toEqual(DataFactory.namedNode('http://example.org/abc'));
       });
+
+      it('should expand a value that is in the context as an object', async () => {
+        return expect(converter.valueToNamedNode('abc', { abc: { '@id': 'http://example.org/abc' } }))
+          .toEqual(DataFactory.namedNode('http://example.org/abc'));
+      });
     });
 
     describe('#valueToTerm', () => {
@@ -1362,6 +1367,8 @@ query HeroForEpisode($ep: Episode!) {
           va: 'http://example.org/va',
           vb: 'http://example.org/vb',
           vc: 'http://example.org/vc',
+          va_en: { '@id': 'http://example.org/va', "@language": "en" },
+          va_datetime: { '@id': 'http://example.org/va', "@type": "http://www.w3.org/2001/XMLSchema#dateTime" },
         },
         path: [],
         terminalVariables: [],
@@ -1382,73 +1389,86 @@ query HeroForEpisode($ep: Episode!) {
       };
       it('should convert a variable that is defined', async () => {
         return expect(converter.valueToTerm(
-          { kind: 'Variable', name: { kind: 'Name', value: 'myVar1' } }, ctx))
+          { kind: 'Variable', name: { kind: 'Name', value: 'myVar1' } }, ctx, 'va'))
           .toEqual({ terms: [ DataFactory.literal('myValue1') ] });
       });
 
       it('should error when an unknown variable is not defined', async () => {
         return expect(() => converter.valueToTerm(
-          { kind: 'Variable', name: { kind: 'Name', value: 'myVar3' } }, ctx)).toThrow();
+          { kind: 'Variable', name: { kind: 'Name', value: 'myVar3' } }, ctx, 'va')).toThrow();
       });
 
       it('should error when a mandatory variable is not defined', async () => {
         return expect(() => converter.valueToTerm(
-          { kind: 'Variable', name: { kind: 'Name', value: 'myVar4' } }, ctx)).toThrow();
+          { kind: 'Variable', name: { kind: 'Name', value: 'myVar4' } }, ctx, 'va')).toThrow();
       });
 
       it('should error when a variable has no list type while it was expected', async () => {
         return expect(() => converter.valueToTerm(
-          { kind: 'Variable', name: { kind: 'Name', value: 'myVar5' } }, ctx)).toThrow();
+          { kind: 'Variable', name: { kind: 'Name', value: 'myVar5' } }, ctx, 'va')).toThrow();
       });
 
       it('should error when a variable has an incorrect defined list type', async () => {
         return expect(() => converter.valueToTerm(
-          { kind: 'Variable', name: { kind: 'Name', value: 'myVar6' } }, ctx)).toThrow();
+          { kind: 'Variable', name: { kind: 'Name', value: 'myVar6' } }, ctx, 'va')).toThrow();
       });
 
       it('should convert an int', async () => {
         return expect(converter.valueToTerm(
-          { kind: 'IntValue', value: '123' }, ctx))
+          { kind: 'IntValue', value: '123' }, ctx, 'va'))
           .toEqual({ terms: [ DataFactory.literal('123',
             DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#integer')) ] });
       });
 
       it('should convert a float', async () => {
         return expect(converter.valueToTerm(
-          { kind: 'FloatValue', value: '123.1' }, ctx))
+          { kind: 'FloatValue', value: '123.1' }, ctx, 'va'))
           .toEqual({ terms: [ DataFactory.literal('123.1',
             DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#float')) ] });
       });
 
       it('should convert a string', async () => {
         return expect(converter.valueToTerm(
-          { kind: 'StringValue', value: 'abc' }, ctx))
+          { kind: 'StringValue', value: 'abc' }, ctx, 'va'))
           .toEqual({ terms: [ DataFactory.literal('abc') ] });
+      });
+
+      it('should convert a languaged string', async () => {
+        return expect(converter.valueToTerm(
+          { kind: 'StringValue', value: 'abc' }, ctx, 'va_en'))
+          .toEqual({ terms: [ DataFactory.literal('abc', 'en') ] });
+      });
+
+      it('should convert a datatyped string', async () => {
+        return expect(converter.valueToTerm(
+          { kind: 'StringValue', value: 'abc' }, ctx, 'va_datetime'))
+          .toEqual({ terms: [ DataFactory.literal('abc', DataFactory
+            .namedNode('http://www.w3.org/2001/XMLSchema#dateTime')) ] });
       });
 
       it('should convert a true boolean', async () => {
         return expect(converter.valueToTerm(
-          { kind: 'BooleanValue', value: true }, ctx))
+          { kind: 'BooleanValue', value: true }, ctx, 'va'))
           .toEqual({ terms: [ DataFactory.literal('true',
             DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#boolean')) ] });
       });
 
       it('should convert a false boolean', async () => {
         return expect(converter.valueToTerm(
-          { kind: 'BooleanValue', value: false }, ctx))
+          { kind: 'BooleanValue', value: false }, ctx, 'va'))
           .toEqual({ terms: [ DataFactory.literal('false',
             DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#boolean')) ] });
       });
 
       it('should convert a null value', async () => {
         return expect(converter.valueToTerm(
-          { kind: 'NullValue' }, ctx))
+          { kind: 'NullValue' }, ctx, 'va'))
           .toEqual({ terms: [ DataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#nil') ] });
       });
 
       it('should convert an enum value', async () => {
         return expect(converter.valueToTerm(
-          { kind: 'EnumValue', value: 'FOOT' }, ctx))
+          { kind: 'EnumValue', value: 'FOOT' }, ctx, 'va'))
           .toEqual({ terms: [ DataFactory.namedNode('http://example.org/types/foot') ] });
       });
 
@@ -1458,7 +1478,7 @@ query HeroForEpisode($ep: Episode!) {
             { kind: 'BooleanValue', value: false },
             { kind: 'BooleanValue', value: true },
             { kind: 'BooleanValue', value: false },
-          ] }, ctx);
+          ] }, ctx, 'va');
         expect(out.terms).toEqual([
           DataFactory.literal('false',
             DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#boolean')),
@@ -1475,7 +1495,7 @@ query HeroForEpisode($ep: Episode!) {
             { kind: 'BooleanValue', value: false },
             { kind: 'BooleanValue', value: true },
             { kind: 'BooleanValue', value: false },
-          ] }, ctx);
+          ] }, ctx, 'va');
         expect(out.terms[0].termType).toEqual('BlankNode');
         expect(out.auxiliaryPatterns.length).toEqual(6);
 
@@ -1525,7 +1545,7 @@ query HeroForEpisode($ep: Episode!) {
             { kind: 'ObjectField', name: { kind: 'Name', value: 'va' }, value: { kind: 'BooleanValue', value: false } },
             { kind: 'ObjectField', name: { kind: 'Name', value: 'vb' }, value: { kind: 'BooleanValue', value: true } },
             { kind: 'ObjectField', name: { kind: 'Name', value: 'vc' }, value: { kind: 'BooleanValue', value: false } },
-          ] }, ctx);
+          ] }, ctx, 'va');
         expect(out.terms[0].termType).toEqual('BlankNode');
         expect(out.auxiliaryPatterns.length).toEqual(3);
 

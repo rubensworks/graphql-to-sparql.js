@@ -481,6 +481,20 @@ SELECT ?hero_name ?hero_friends_name ?hero_friends_totalCount WHERE {
 }
 ```
 
+### Selecting by value
+
+While this is not a default feature of GraphQL,
+this library allows you to select by certain values of properties.
+This is done using the `_` argument, which takes a value.
+
+GraphQL:
+```graphql
+{
+  name(_:'Han Solo')
+  description
+}
+```
+
 ## License
 This software is written by [Ruben Taelman](http://rubensworks.net/).
 

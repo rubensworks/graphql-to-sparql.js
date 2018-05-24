@@ -243,6 +243,28 @@ export class Converter {
     const object: RDF.Variable = this.nameToVariable(fieldNode.alias ? fieldNode.alias : fieldNode.name,
       convertContext);
 
+    // Check if there is a '_' argument
+    // We do this before handling all other arguments so that the order of final triple patterns is sane.
+    let setValueArgument: ArgumentNode = null;
+    if (fieldNode.arguments && fieldNode.arguments.length) {
+      for (const argument of fieldNode.arguments) {
+        if (argument.name.value === '_') {
+          // '_'-arguments do not create an additional predicate link, but set the value directly.
+          setValueArgument = argument;
+          pushTerminalVariables = false;
+          break;
+        }
+      }
+      if (setValueArgument) {
+        const valueOutput = this.valueToTerm(setValueArgument.value, convertContext, fieldNode.name.value);
+        valueOutput.terms.forEach((term) => patterns.push(this
+          .createTriplePattern(subject, fieldNode.name, term, convertContext.context)));
+        if (valueOutput.auxiliaryPatterns) {
+          patterns = patterns.concat(valueOutput.auxiliaryPatterns);
+        }
+      }
+    }
+
     // Create at least a pattern for the parent node and the current path.
     if (pushTerminalVariables) {
       patterns.push(this.createTriplePattern(subject, fieldNode.name, object, convertContext.context));
@@ -251,7 +273,9 @@ export class Converter {
     // Create patterns for the node's arguments
     if (fieldNode.arguments && fieldNode.arguments.length) {
       for (const argument of fieldNode.arguments) {
-        if (argument.name.value === 'first') {
+        if (argument.name.value === '_') {
+          // no-op
+        } else if (argument.name.value === 'first') {
           if (argument.value.kind !== 'IntValue') {
             throw new Error('Invalid value type for \'first\' argument: ' + argument.value.kind);
           }

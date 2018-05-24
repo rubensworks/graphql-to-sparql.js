@@ -364,6 +364,10 @@ export class Converter {
   public createTriplePattern(subject: RDF.Term, predicateName: NameNode, object: RDF.Term,
                              context: IContext): Algebra.Pattern {
     const predicate: RDF.NamedNode = this.valueToNamedNode(predicateName.value, context);
+    if (context && context[predicateName.value]
+      && (<any> context[predicateName.value])['@reverse'] === predicate.value) {
+      return this.operationFactory.createPattern(object, predicate, subject);
+    }
     return this.operationFactory.createPattern(subject, predicate, object);
   }
 
@@ -451,7 +455,7 @@ export class Converter {
       throw new Error('No context entry was found for ' + value);
     }
     if (contextValue && !(typeof contextValue === 'string')) {
-      contextValue = contextValue['@id'];
+      contextValue = contextValue['@id'] || contextValue['@reverse'];
     }
     return this.dataFactory.namedNode(contextValue || value);
   }

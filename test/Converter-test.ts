@@ -1577,8 +1577,16 @@ query HeroForEpisode($ep: Episode!) {
         const s = DataFactory.namedNode('s');
         const p = { kind: 'Name', value: 'p' };
         const o = DataFactory.namedNode('o');
-        return expect(converter.createTriplePattern(s, p, o, {}))
-          .toEqual(OperationFactory.createPattern(s, DataFactory.namedNode('p'), o));
+        return expect(converter.createTriplePattern(s, p, o, { p: 'myP' }))
+          .toEqual(OperationFactory.createPattern(s, DataFactory.namedNode('myP'), o));
+      });
+
+      it('should create a triple pattern for a reversed context', async () => {
+        const s = DataFactory.namedNode('s');
+        const p = { kind: 'Name', value: 'p' };
+        const o = DataFactory.namedNode('o');
+        return expect(converter.createTriplePattern(s, p, o, { p: { '@reverse': 'myP' } }))
+          .toEqual(OperationFactory.createPattern(o, DataFactory.namedNode('myP'), s));
       });
     });
 

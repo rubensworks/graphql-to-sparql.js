@@ -6,13 +6,14 @@ import {
   IntValueNode, ListTypeNode, ListValueNode, NamedTypeNode,
   NameNode, NonNullTypeNode, ObjectValueNode,
   OperationDefinitionNode, parse,
-  SelectionNode,
+  SelectionNode, SelectionSetNode,
   StringValueNode, TypeNode,
   ValueNode, VariableNode,
 } from "graphql";
 import * as DefaultDataFactory from "rdf-data-model";
 import * as RDF from "rdf-js";
 import {Algebra, Factory} from "sparqlalgebrajs";
+import {Operation} from "sparqlalgebrajs/lib/algebra";
 
 /**
  * Translate GraphQL queries into SPARQL algebra.
@@ -142,13 +143,37 @@ export class Converter {
         }
       }
 
-      return this.joinOperations(operationDefinition.selectionSet.selections
-        .map(this.selectionToPatterns.bind(this, convertContext, subject)));
+      return this.joinSelection(subject, convertContext, operationDefinition.selectionSet.selections);
     case 'FragmentDefinition':
       throw new Error('Illegal state: fragment definitions must be indexed and removed before processing');
     default:
       throw new Error('Unsupported definition node: ' + definition.kind);
     }
+  }
+
+  /**
+   * Map and join the given selections.
+   * @param {Term} subject The subject to start from.
+   * @param {IConvertContext} convertContext The convert context.
+   * @param {ReadonlyArray<SelectionNode>} selections The selection nodes.
+   * @return {Operation} The resulting operation.
+   */
+  public joinSelection(subject: RDF.Term, convertContext: IConvertContext, selections: ReadonlyArray<SelectionNode>) {
+    const mappedSelections: IJoinableOperation[] = selections.map(this.selectionToPatterns
+      .bind(this, convertContext, subject));
+    const innerJoins: IJoinableOperation[] = mappedSelections.filter((j) => j.type === JoinType.INNER);
+    let leftJoins: IJoinableOperation[] = mappedSelections.filter((j) => j.type === JoinType.LEFT);
+    if (!innerJoins.length) {
+      if (leftJoins.length === 1) {
+        leftJoins = (<IJoinableOperation[]> [{ operation: this.operationFactory.createBgp([]), type: JoinType.LEFT }]).concat(leftJoins);
+      }
+      return this.joinOperations(leftJoins.map((j) => j.operation), JoinType.LEFT);
+    }
+    let joined: Algebra.Operation = this.joinOperations(innerJoins.map((j) => j.operation), JoinType.INNER);
+    if (leftJoins.length) {
+      joined = this.joinOperations([joined].concat((leftJoins.map((j) => j.operation))), JoinType.LEFT);
+    }
+    return joined;
   }
 
   /**
@@ -159,7 +184,7 @@ export class Converter {
    * @return {Pattern[]} An array of quad patterns.
    */
   public selectionToPatterns(convertContext: IConvertContext, subject: RDF.Term,
-                             selectionNode: SelectionNode): Algebra.Operation {
+                             selectionNode: SelectionNode): IJoinableOperation {
     switch (selectionNode.kind) {
     case 'FragmentSpread':
       const fragmentSpreadNode: FragmentSpreadNode = <FragmentSpreadNode> selectionNode;
@@ -170,9 +195,8 @@ export class Converter {
       }
 
       // Wrap in an OPTIONAL, as this pattern should only apply if the type applies
-      return this.operationFactory.createLeftJoin(
-        this.operationFactory.createBgp([]),
-        this.fieldToOperation(convertContext, subject, {
+      return {
+        operation: this.fieldToOperation(convertContext, subject, {
           alias: null,
           arguments: null,
           directives: fragmentDefinitionNode.directives,
@@ -180,14 +204,15 @@ export class Converter {
           name: fragmentSpreadNode.name,
           selectionSet: fragmentDefinitionNode.selectionSet,
         }, false,
-          [ this.newTypePattern(subject, fragmentDefinitionNode.typeCondition, convertContext) ]));
+          [ this.newTypePattern(subject, fragmentDefinitionNode.typeCondition, convertContext) ]),
+        type: JoinType.LEFT,
+      };
     case 'InlineFragment':
       const inlineFragmentNode: InlineFragmentNode = <InlineFragmentNode> selectionNode;
 
       // Wrap in an OPTIONAL, as this pattern should only apply if the type applies
-      return this.operationFactory.createLeftJoin(
-        this.operationFactory.createBgp([]),
-        this.fieldToOperation(convertContext, subject, {
+      return {
+        operation: this.fieldToOperation(convertContext, subject, {
           alias: null,
           arguments: null,
           directives: inlineFragmentNode.directives,
@@ -196,9 +221,14 @@ export class Converter {
           selectionSet: inlineFragmentNode.selectionSet,
         }, false,
           inlineFragmentNode.typeCondition
-            ? [ this.newTypePattern(subject, inlineFragmentNode.typeCondition, convertContext) ] : []));
+            ? [ this.newTypePattern(subject, inlineFragmentNode.typeCondition, convertContext) ] : []),
+        type: JoinType.LEFT,
+      };
     case 'Field':
-      return this.fieldToOperation(convertContext, subject, <FieldNode> selectionNode, true);
+      return {
+        operation: this.fieldToOperation(convertContext, subject, <FieldNode> selectionNode, true),
+        type: JoinType.INNER,
+      };
     }
   }
 
@@ -327,8 +357,8 @@ export class Converter {
           return true;
         });
 
-      let joinedOperation = this.joinOperations([operation].concat(selections
-        .map(this.selectionToPatterns.bind(this, subConvertContext, pushTerminalVariables ? object : subject))));
+      let joinedOperation = selections.length ? this.joinOperations([operation, this.joinSelection(
+        pushTerminalVariables ? object : subject, subConvertContext, selections)], JoinType.INNER) : operation;
 
       // Modify the operation if there was a count selection
       if (totalCount) {
@@ -426,9 +456,10 @@ export class Converter {
    * Join the given array of operations.
    * If all operations are BGPs, then a single big BGP with all patterns from the given BGPs will be created.
    * @param {Operation[]} operations An array of operations.
+   * @param {JoinType} joinType The join type, defaults to inner join.
    * @return {Operation} A single joined operation.
    */
-  public joinOperations(operations: Algebra.Operation[]): Algebra.Operation {
+  public joinOperations(operations: Algebra.Operation[], joinType?: JoinType): Algebra.Operation {
     if (!operations.length) {
       throw new Error('Can not make a join of no operations');
     }
@@ -436,13 +467,17 @@ export class Converter {
       return operations[0];
     }
 
-    // Check if all operations are BGPs
+    // Check if all operations are BGPs, and concat them if we have an inner join
     let bgps: boolean = true;
-    for (const operation of operations) {
-      if (operation.type !== 'bgp') {
-        bgps = false;
-        break;
+    if (!joinType || joinType === <JoinType> JoinType.INNER) {
+      for (const operation of operations) {
+        if (operation.type !== 'bgp') {
+          bgps = false;
+          break;
+        }
       }
+    } else {
+      bgps = false;
     }
 
     if (bgps) {
@@ -451,7 +486,10 @@ export class Converter {
         .map((op) => (<Algebra.Bgp> op).patterns)));
     } else {
       // Create nested joins
-      return operations.reverse().reduce((prev, cur) => prev ? this.operationFactory.createJoin(cur, prev) : cur, null);
+      return operations.reverse().reduce((prev, cur) => {
+        return prev ? joinType === JoinType.LEFT ? this.operationFactory.createLeftJoin(cur, prev)
+          : this.operationFactory.createJoin(cur, prev) : cur;
+      }, null);
     }
   }
 
@@ -757,4 +795,26 @@ export interface IVariablesMetaDictionary {
 export interface IValueToTermOutput {
   terms: RDF.Term[];
   auxiliaryPatterns?: Algebra.Pattern[];
+}
+
+/**
+ * An operation that can be joined with other operations.
+ */
+export interface IJoinableOperation {
+  /**
+   * The join type.
+   */
+  type: JoinType;
+  /**
+   * The operation.
+   */
+  operation: Algebra.Operation;
+}
+
+/**
+ * A join type.
+ */
+export enum JoinType {
+  INNER,
+  LEFT,
 }

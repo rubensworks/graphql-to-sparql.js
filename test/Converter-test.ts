@@ -2,7 +2,7 @@ import {DirectiveNode} from "graphql";
 import * as DataFactory from "rdf-data-model";
 import * as RDF from "rdf-js";
 import {Factory} from "sparqlalgebrajs";
-import {Converter, IVariablesDictionary} from "../lib/Converter";
+import {Converter, IVariablesDictionary, JoinType} from "../lib/Converter";
 
 // tslint:disable:object-literal-sort-keys
 
@@ -911,13 +911,13 @@ query HeroForEpisode($ep: Episode!) {
         const subject = DataFactory.namedNode('theSubject');
         return expect(converter.selectionToPatterns(ctx, subject,
           { kind: 'Field', name: { kind: 'Name', value: 'theField' } }))
-          .toEqual(OperationFactory.createBgp([
+          .toEqual({ operation: OperationFactory.createBgp([
             OperationFactory.createPattern(
               subject,
               DataFactory.namedNode('http://example.org/theField'),
               DataFactory.variable('a_theField'),
             ),
-          ]));
+          ]), type: JoinType.INNER });
       });
 
       it('should convert a field selection node with a selection set', async () => {
@@ -945,7 +945,7 @@ query HeroForEpisode($ep: Episode!) {
                 { kind: 'Field', name: { kind: 'Name', value: 'andAnotherField' } },
               ],
             },
-          })).toEqual(OperationFactory.createBgp([
+          })).toEqual({ operation: OperationFactory.createBgp([
             OperationFactory.createPattern(
               subject,
               DataFactory.namedNode('http://example.org/theField'),
@@ -961,7 +961,7 @@ query HeroForEpisode($ep: Episode!) {
               DataFactory.namedNode('http://example.org/andAnotherField'),
               DataFactory.variable('a_theField_andAnotherField'),
             ),
-          ]));
+          ]), type: JoinType.INNER });
       });
 
       it('should convert a field selection node with arguments', async () => {
@@ -988,7 +988,7 @@ query HeroForEpisode($ep: Episode!) {
               { kind: 'Argument', name: { kind: 'Name', value: 'andAnotherField' },
                 value: { kind: 'StringValue', value: 'def' } },
             ],
-          })).toEqual(OperationFactory.createBgp([
+          })).toEqual({ operation: OperationFactory.createBgp([
             OperationFactory.createPattern(
               subject,
               DataFactory.namedNode('http://example.org/theField'),
@@ -1004,7 +1004,7 @@ query HeroForEpisode($ep: Episode!) {
               DataFactory.namedNode('http://example.org/andAnotherField'),
               DataFactory.literal('def'),
             ),
-          ]));
+          ]), type: JoinType.INNER });
       });
 
       it('should terminate a field selection node without selection set', async () => {
@@ -1088,13 +1088,13 @@ query HeroForEpisode($ep: Episode!) {
             alias: { kind: 'Name', value: 'theAliasField' },
             kind: 'Field',
             name: { kind: 'Name', value: 'theField' },
-          })).toEqual(OperationFactory.createBgp([
+          })).toEqual({ operation: OperationFactory.createBgp([
             OperationFactory.createPattern(
               subject,
               DataFactory.namedNode('http://example.org/theField'),
               DataFactory.variable('a_theAliasField'),
             ),
-          ]));
+          ]), type: JoinType.INNER });
       });
 
       it('should convert a fragment spread selection node', async () => {
@@ -1129,9 +1129,7 @@ query HeroForEpisode($ep: Episode!) {
           {
             kind: 'FragmentSpread',
             name: { kind: 'Name', value: 'fragment1' },
-          })).toEqual(OperationFactory.createLeftJoin(
-          OperationFactory.createBgp([]),
-          OperationFactory.createBgp([
+          })).toEqual({ operation: OperationFactory.createBgp([
             OperationFactory.createPattern(
               subject,
               DataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
@@ -1142,8 +1140,7 @@ query HeroForEpisode($ep: Episode!) {
               DataFactory.namedNode('http://example.org/theField'),
               DataFactory.variable('a_theField'),
             ),
-          ]),
-        ));
+          ]), type: JoinType.LEFT });
       });
 
       it('should convert a field selection node with a directive', async () => {
@@ -1175,13 +1172,13 @@ query HeroForEpisode($ep: Episode!) {
                 },
               ] },
             ],
-          })).toEqual(OperationFactory.createBgp([
+          })).toEqual({ operation: OperationFactory.createBgp([
             OperationFactory.createPattern(
               subject,
               DataFactory.namedNode('http://example.org/theField'),
               DataFactory.variable('a_theAliasField'),
             ),
-          ]));
+          ]), type: JoinType.INNER });
       });
 
       it('should convert an inline fragment spread selection node', async () => {
@@ -1210,9 +1207,7 @@ query HeroForEpisode($ep: Episode!) {
                 { kind: 'Field', name: { kind: 'Name', value: 'theField' } },
               ],
             },
-          })).toEqual(OperationFactory.createLeftJoin(
-          OperationFactory.createBgp([]),
-          OperationFactory.createBgp([
+          })).toEqual({ operation: OperationFactory.createBgp([
             OperationFactory.createPattern(
               subject,
               DataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
@@ -1223,8 +1218,7 @@ query HeroForEpisode($ep: Episode!) {
               DataFactory.namedNode('http://example.org/theField'),
               DataFactory.variable('a_theField'),
             ),
-          ]),
-        ));
+          ]), type: JoinType.LEFT });
       });
 
       it('should convert the __typename meta field', async () => {
@@ -1244,14 +1238,14 @@ query HeroForEpisode($ep: Episode!) {
           {
             kind: 'Field',
             name: { kind: 'Name', value: '__typename' },
-          })).toEqual(
+          })).toEqual({ operation:
           OperationFactory.createBgp([
             OperationFactory.createPattern(
               subject,
               DataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
               DataFactory.variable('a___typename'),
             ),
-          ]));
+          ]), type: JoinType.INNER });
       });
     });
 

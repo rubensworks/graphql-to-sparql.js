@@ -1572,6 +1572,16 @@ query HeroForEpisode($ep: Episode!) {
       });
     });
 
+    describe('#createTriplePattern', () => {
+      it('should create a triple pattern for a normal context', async () => {
+        const s = DataFactory.namedNode('s');
+        const p = { kind: 'Name', value: 'p' };
+        const o = DataFactory.namedNode('o');
+        return expect(converter.createTriplePattern(s, p, o, {}))
+          .toEqual(OperationFactory.createPattern(s, DataFactory.namedNode('p'), o));
+      });
+    });
+
     describe('#getArgument', () => {
       it('should error on null arguments', async () => {
         return expect(() => converter.getArgument(null, 'abc')).toThrow();

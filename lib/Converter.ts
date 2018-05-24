@@ -245,8 +245,7 @@ export class Converter {
 
     // Create at least a pattern for the parent node and the current path.
     if (pushTerminalVariables) {
-      const predicate: RDF.NamedNode = this.valueToNamedNode(fieldNode.name.value, convertContext.context);
-      patterns.push(this.operationFactory.createPattern(subject, predicate, object));
+      patterns.push(this.createTriplePattern(subject, fieldNode.name, object, convertContext.context));
     }
 
     // Create patterns for the node's arguments
@@ -265,8 +264,7 @@ export class Converter {
         } else {
           const valueOutput = this.valueToTerm(argument.value, convertContext, argument.name.value);
           for (const term of valueOutput.terms) {
-            patterns.push(this.operationFactory.createPattern(object,
-              this.valueToNamedNode(argument.name.value, convertContext.context), term));
+            patterns.push(this.createTriplePattern(object, argument.name, term, convertContext.context));
           }
           if (valueOutput.auxiliaryPatterns) {
             patterns = patterns.concat(valueOutput.auxiliaryPatterns);
@@ -353,6 +351,20 @@ export class Converter {
     }
 
     return operation;
+  }
+
+  /**
+   * Create a triple pattern when the predicate is a name node that needs to be translated using the context.
+   * @param {Term} subject The subject.
+   * @param {NameNode} predicateName The name node for the predicate.
+   * @param {Term} object The object.
+   * @param {IContext} context A context.
+   * @return {Pattern} A triple pattern.
+   */
+  public createTriplePattern(subject: RDF.Term, predicateName: NameNode, object: RDF.Term,
+                             context: IContext): Algebra.Pattern {
+    const predicate: RDF.NamedNode = this.valueToNamedNode(predicateName.value, context);
+    return this.operationFactory.createPattern(subject, predicate, object);
   }
 
   /**
@@ -574,7 +586,7 @@ export class Converter {
         const predicate = this.valueToNamedNode(field.name.value, convertContext.context);
         const subValue = this.valueToTerm(field.value, convertContext, argumentName);
         for (const term of subValue.terms) {
-          auxiliaryObjectPatterns.push(this.operationFactory.createPattern(subject, predicate, term));
+          auxiliaryObjectPatterns.push(this.createTriplePattern(subject, field.name, term, convertContext.context));
         }
         if (subValue.auxiliaryPatterns) {
           auxiliaryObjectPatterns = auxiliaryObjectPatterns.concat(subValue.auxiliaryPatterns);

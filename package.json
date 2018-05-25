@@ -4,6 +4,7 @@
   "description": "Converts GraphQL queries to SPARQL queries",
   "keywords": [
     "graphql",
+    "graphqlld",
     "sparql",
     "query",
     "rdf",

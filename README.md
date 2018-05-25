@@ -6,6 +6,7 @@
 
 A utility package that allows you to convert GraphQL queries to SPARQL or SPARQL algebra,
 using a (simplied) [JSON-LD context](https://www.w3.org/TR/json-ld/#the-context).
+Such queries are also known as GraphQL-LD queries.
 
 Supported JSON-LD context features:
 * Key-value mapping between shorthands and URIs.

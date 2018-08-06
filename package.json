@@ -61,7 +61,7 @@
       "js"
     ],
     "collectCoverage": true,
-    "mapCoverage": true
+    "testEnvironment": "node"
   },
   "scripts": {
     "test": "jest ${1}",

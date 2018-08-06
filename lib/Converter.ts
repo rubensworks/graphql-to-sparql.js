@@ -1,3 +1,4 @@
+import * as DefaultDataFactory from "@rdfjs/data-model";
 import {
   ArgumentNode,
   BooleanValueNode,
@@ -10,7 +11,6 @@ import {
   StringValueNode, TypeNode,
   ValueNode, VariableNode,
 } from "graphql";
-import * as DefaultDataFactory from "rdf-data-model";
 import * as RDF from "rdf-js";
 import {Algebra, Factory} from "sparqlalgebrajs";
 

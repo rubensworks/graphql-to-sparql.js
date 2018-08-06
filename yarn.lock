@@ -2,6 +2,10 @@
 # yarn lockfile v1
 
 
+"@rdfjs/data-model@^1.1.0":
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/@rdfjs/data-model/-/data-model-1.1.0.tgz#15d9c5b7b8166893696565aefb65bad95da3fd99"
+
 "@types/graphql@^0.13.0":
   version "0.13.0"
   resolved "https://registry.yarnpkg.com/@types/graphql/-/graphql-0.13.0.tgz#78a33a7f429a06a64714817d9130d578e0f35ecb"
@@ -18,13 +22,7 @@
   version "9.6.5"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-9.6.5.tgz#ee700810fdf49ac1c399fc5980b7559b3e5a381d"
 
-"@types/rdf-data-model@^1.0.1":
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/@types/rdf-data-model/-/rdf-data-model-1.0.1.tgz#fbf643cac7a08cacc502dbad063ea3eacddcd36f"
-  dependencies:
-    "@types/rdf-js" "*"
-
-"@types/rdf-js@*", "@types/rdf-js@^1.0.1":
+"@types/rdf-js@^1.0.1":
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/@types/rdf-js/-/rdf-js-1.0.1.tgz#312e8478b608c3e2f66d3a2cae0c96c052c495a6"
   dependencies:

@@ -73,7 +73,7 @@
     "prepare": "npm run build"
   },
   "dependencies": {
-    "graphql": "^0.13.2",
+    "graphql": "^14.0.0",
     "minimist": "^1.2.0",
     "@rdfjs/data-model": "^1.1.0",
     "sparqlalgebrajs": "^1.0.1"

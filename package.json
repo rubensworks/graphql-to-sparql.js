@@ -43,14 +43,19 @@
     "coveralls": "^3.0.0",
     "jest": "^23.4.1",
     "pre-commit": "^1.2.2",
-    "ts-jest": "^23.0.1",
+    "ts-jest": "^23.10.3",
     "tslint": "^5.8.0",
     "tslint-eslint-rules": "^5.3.1",
     "typescript": "^2.6.2"
   },
   "jest": {
+    "globals": {
+      "ts-jest": {
+        "tsConfig": "test/tsconfig.json"
+      }
+    },
     "transform": {
-      "^.+\\.ts$": "<rootDir>/node_modules/ts-jest/preprocessor.js"
+      "^.+\\.ts$": "ts-jest"
     },
     "transformIgnorePatterns": [
       "[/\\\\]node_modules[/\\\\].+\\.(js|jsx)$"

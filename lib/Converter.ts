@@ -734,7 +734,7 @@ export interface IConvertContext {
  * A JSON-LD context.
  */
 export interface IContext {
-  [id: string]: string;
+  [id: string]: string | any;
 }
 
 /**

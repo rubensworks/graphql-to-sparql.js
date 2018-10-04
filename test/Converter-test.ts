@@ -1,8 +1,8 @@
 import * as DataFactory from "@rdfjs/data-model";
-import {DirectiveNode} from "graphql";
+import {DirectiveNode, DocumentNode, NameNode} from "graphql";
 import * as RDF from "rdf-js";
 import {Factory} from "sparqlalgebrajs";
-import {Converter, IVariablesDictionary} from "../lib/Converter";
+import {Converter, IConvertContext, IVariablesDictionary} from "../lib/Converter";
 
 // tslint:disable:object-literal-sort-keys
 
@@ -782,11 +782,12 @@ query HeroForEpisode($ep: Episode!) {
       });
 
       it('should create an empty index when there are fragments', async () => {
-        return expect(converter.indexFragments({
+        return expect(converter.indexFragments(<DocumentNode> {
           kind: 'Document',
           definitions: [
             {
               kind: 'OperationDefinition',
+              name: { kind: 'Name', value: 'op' },
               operation: 'query',
               selectionSet: {
                 kind: 'SelectionSet',
@@ -794,6 +795,8 @@ query HeroForEpisode($ep: Episode!) {
                   { kind: 'Field', name: { kind: 'Name', value: 'theField' } },
                 ],
               },
+              variableDefinitions: [],
+              directives: [],
             },
             {
               kind: 'FragmentDefinition',
@@ -1098,7 +1101,7 @@ query HeroForEpisode($ep: Episode!) {
       });
 
       it('should convert a fragment spread selection node', async () => {
-        const ctx = {
+        const ctx: IConvertContext = {
           context: {
             theField: 'http://example.org/theField',
             Character: 'http://example.org/types/Character',
@@ -1108,7 +1111,7 @@ query HeroForEpisode($ep: Episode!) {
           fragmentDefinitions: {
             fragment1: {
               kind: 'FragmentDefinition',
-              name: { value: 'fragment1' },
+              name: { kind: 'Name', value: 'fragment1' },
               typeCondition: {
                 kind: 'NamedType',
                 name: { kind: 'Name', value: 'Character' },
@@ -1319,13 +1322,27 @@ query HeroForEpisode($ep: Episode!) {
 
     describe('#nameToVariable', () => {
       it('should convert a variable with an empty path', async () => {
-        const ctx = { context: {}, path: [], terminalVariables: [], fragmentDefinitions: {}, variablesDict: {} };
+        const ctx: IConvertContext = {
+          context: {},
+          path: [],
+          terminalVariables: [],
+          fragmentDefinitions: {},
+          variablesDict: {},
+          variablesMetaDict: {},
+        };
         return expect(converter.nameToVariable({ kind: 'Name', value: 'varName' }, ctx))
           .toEqual(DataFactory.namedNode('varName'));
       });
 
       it('should convert a variable with a single path element', async () => {
-        const ctx = { context: {}, path: [ 'abc' ], terminalVariables: [], fragmentDefinitions: {}, variablesDict: {} };
+        const ctx: IConvertContext = {
+          context: {},
+          path: [ 'abc' ],
+          terminalVariables: [],
+          fragmentDefinitions: {},
+          variablesDict: {},
+          variablesMetaDict: {},
+        };
         return expect(converter.nameToVariable({ kind: 'Name', value: 'varName' }, ctx))
           .toEqual(DataFactory.namedNode('abc_varName'));
       });
@@ -1361,7 +1378,7 @@ query HeroForEpisode($ep: Episode!) {
     });
 
     describe('#valueToTerm', () => {
-      const ctx = {
+      const ctx: IConvertContext = {
         context: {
           FOOT: 'http://example.org/types/foot',
           va: 'http://example.org/va',
@@ -1575,7 +1592,7 @@ query HeroForEpisode($ep: Episode!) {
     describe('#createTriplePattern', () => {
       it('should create a triple pattern for a normal context', async () => {
         const s = DataFactory.namedNode('s');
-        const p = { kind: 'Name', value: 'p' };
+        const p: NameNode = { kind: 'Name', value: 'p' };
         const o = DataFactory.namedNode('o');
         return expect(converter.createTriplePattern(s, p, o, { p: 'myP' }))
           .toEqual(OperationFactory.createPattern(s, DataFactory.namedNode('myP'), o));
@@ -1583,7 +1600,7 @@ query HeroForEpisode($ep: Episode!) {
 
       it('should create a triple pattern for a reversed context', async () => {
         const s = DataFactory.namedNode('s');
-        const p = { kind: 'Name', value: 'p' };
+        const p: NameNode = { kind: 'Name', value: 'p' };
         const o = DataFactory.namedNode('o');
         return expect(converter.createTriplePattern(s, p, o, { p: { '@reverse': 'myP' } }))
           .toEqual(OperationFactory.createPattern(o, DataFactory.namedNode('myP'), s));

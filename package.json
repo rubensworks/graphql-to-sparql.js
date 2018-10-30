@@ -39,7 +39,7 @@
     "@types/graphql": "^14.0.0",
     "@types/jest": "^23.3.0",
     "@types/minimist": "^1.2.0",
-    "@types/rdf-js": "^1.0.1",
+    "@types/rdf-js": "^2.0.0",
     "coveralls": "^3.0.0",
     "jest": "^23.4.1",
     "pre-commit": "^1.2.2",

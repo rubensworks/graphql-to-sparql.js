@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+<a name="v1.4.0"></a>
+## [v1.4.0](https://github.com/rubensworks/graphql-to-sparql.js/compare/v1.3.1...v1.4.0) - 2018-11-08
+
+### Changed
+* [Update to generic RDFJS typings](https://github.com/rubensworks/graphql-to-sparql.js/commit/95213c794afdcb20a97d9a5a1bc20b4f7570d9e3)
+
 <a name="v1.3.2"></a>
 ## [v1.3.2](https://github.com/rubensworks/graphql-to-sparql.js/compare/v1.3.1...v1.3.2) - 2018-11-08
 

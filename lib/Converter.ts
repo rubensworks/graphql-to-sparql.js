@@ -210,7 +210,7 @@ export class Converter {
    * @return {Pattern} A pattern.
    */
   public newTypePattern(subject: RDF.Term, typeCondition: NamedTypeNode, convertContext: IConvertContext) {
-    return this.operationFactory.createPattern(
+    return this.operationFactory.createPattern<RDF.BaseQuad>(
       subject,
       this.dataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
       this.valueToNamedNode(typeCondition.name.value, convertContext.context));
@@ -390,9 +390,9 @@ export class Converter {
     const predicate: RDF.NamedNode = this.valueToNamedNode(predicateName.value, context);
     if (context && context[predicateName.value]
       && (<any> context[predicateName.value])['@reverse'] === predicate.value) {
-      return this.operationFactory.createPattern(object, predicate, subject);
+      return this.operationFactory.createPattern<RDF.BaseQuad>(object, predicate, subject);
     }
-    return this.operationFactory.createPattern(subject, predicate, object);
+    return this.operationFactory.createPattern<RDF.BaseQuad>(subject, predicate, object);
   }
 
   /**
@@ -414,7 +414,7 @@ export class Converter {
         convertContext);
       convertContext.terminalVariables.push(object);
       return this.operationFactory.createBgp([
-        this.operationFactory.createPattern(
+        this.operationFactory.createPattern<RDF.BaseQuad>(
           subject, this.dataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'), object,
         ),
       ].concat(auxiliaryPatterns || []));
@@ -586,7 +586,7 @@ export class Converter {
         let listNode: RDF.Term = firstListNode;
         let remaining: number = listTerms.length;
         for (const term of listTerms) {
-          auxiliaryPatterns.push(this.operationFactory.createPattern(
+          auxiliaryPatterns.push(this.operationFactory.createPattern<RDF.BaseQuad>(
             listNode,
             this.dataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#first'),
             term,

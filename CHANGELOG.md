@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+<a name="v1.4.1"></a>
+## [v1.4.1](https://github.com/rubensworks/graphql-to-sparql.js/compare/v1.4.0...v1.4.1) - 2018-11-09
+
+### Changed
+* [Update to SPARQL Algebra 1.3.1](https://github.com/rubensworks/graphql-to-sparql.js/commit/da9f82d7abbf81f84106234d36c38657676f1894)
+
 <a name="v1.4.0"></a>
 ## [v1.4.0](https://github.com/rubensworks/graphql-to-sparql.js/compare/v1.3.1...v1.4.0) - 2018-11-08
 

@@ -3855,10 +3855,10 @@ source-map@^0.6.0, source-map@~0.6.1:
   resolved "https://registry.yarnpkg.com/source-map/-/source-map-0.6.1.tgz#74722af32e9614e9c287a8d0bbde48b5e2f1a263"
   integrity sha512-UjgapumWlbMhkBgzT7Ykc5YXUT46F0iKu8SGXq0bcwP5dz/h0Plj6enJqjz1Zbq2l5WaqYnrVbwWOWMyF3F47g==
 
-sparqlalgebrajs@^1.2.0:
-  version "1.2.0"
-  resolved "https://registry.yarnpkg.com/sparqlalgebrajs/-/sparqlalgebrajs-1.2.0.tgz#c561fa9bfad05863779b587ca48433e65d046a52"
-  integrity sha512-k2s8pOZiUyKa42bnwuDk1KvIZ7wkCXSQECW+5Px2JEReFu4cX4+084txOLAU7dpxeF9oEK1PWo1yzKl9xSlEGw==
+sparqlalgebrajs@^1.3.1:
+  version "1.3.1"
+  resolved "https://registry.yarnpkg.com/sparqlalgebrajs/-/sparqlalgebrajs-1.3.1.tgz#17e86695807f9b3d4ead98c079498d930deb1ff2"
+  integrity sha512-sG7lrzOW4Yk0bWXL5pt8DoA4eMHweLuYDif1sF0tOC412rftTKxD8HtoZybHORiBXylfFMl7OQsrh0GVjAnmZg==
   dependencies:
     "@rdfjs/data-model" "^1.1.1"
     lodash.isequal "^4.5.0"

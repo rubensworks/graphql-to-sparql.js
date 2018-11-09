@@ -1274,36 +1274,36 @@ query HeroForEpisode($ep: Episode!) {
       it('should return a BGP from 3 BGPs', async () => {
         return expect(converter.joinOperations([
           OperationFactory.createBgp([
-            OperationFactory.createPattern<RDF.BaseQuad>(<RDF.Term> <any> 'a1', <RDF.Term> <any> 'b1',
+            OperationFactory.createPattern(<RDF.Term> <any> 'a1', <RDF.Term> <any> 'b1',
               <RDF.Term> <any> 'c1'),
-            OperationFactory.createPattern<RDF.BaseQuad>(<RDF.Term> <any> 'd1', <RDF.Term> <any> 'e1',
+            OperationFactory.createPattern(<RDF.Term> <any> 'd1', <RDF.Term> <any> 'e1',
               <RDF.Term> <any> 'f1'),
           ]),
           OperationFactory.createBgp([
-            OperationFactory.createPattern<RDF.BaseQuad>(<RDF.Term> <any> 'a2', <RDF.Term> <any> 'b2',
+            OperationFactory.createPattern(<RDF.Term> <any> 'a2', <RDF.Term> <any> 'b2',
               <RDF.Term> <any> 'c2'),
-            OperationFactory.createPattern<RDF.BaseQuad>(<RDF.Term> <any> 'd2', <RDF.Term> <any> 'e2',
+            OperationFactory.createPattern(<RDF.Term> <any> 'd2', <RDF.Term> <any> 'e2',
               <RDF.Term> <any> 'f2'),
           ]),
           OperationFactory.createBgp([
-            OperationFactory.createPattern<RDF.BaseQuad>(<RDF.Term> <any> 'a3', <RDF.Term> <any> 'b3',
+            OperationFactory.createPattern(<RDF.Term> <any> 'a3', <RDF.Term> <any> 'b3',
               <RDF.Term> <any> 'c3'),
-            OperationFactory.createPattern<RDF.BaseQuad>(<RDF.Term> <any> 'd3', <RDF.Term> <any> 'e3',
+            OperationFactory.createPattern(<RDF.Term> <any> 'd3', <RDF.Term> <any> 'e3',
               <RDF.Term> <any> 'f3'),
           ]),
         ])).toEqual(
           OperationFactory.createBgp([
-            OperationFactory.createPattern<RDF.BaseQuad>(<RDF.Term> <any> 'a1', <RDF.Term> <any> 'b1',
+            OperationFactory.createPattern(<RDF.Term> <any> 'a1', <RDF.Term> <any> 'b1',
               <RDF.Term> <any> 'c1'),
-            OperationFactory.createPattern<RDF.BaseQuad>(<RDF.Term> <any> 'd1', <RDF.Term> <any> 'e1',
+            OperationFactory.createPattern(<RDF.Term> <any> 'd1', <RDF.Term> <any> 'e1',
               <RDF.Term> <any> 'f1'),
-            OperationFactory.createPattern<RDF.BaseQuad>(<RDF.Term> <any> 'a2', <RDF.Term> <any> 'b2',
+            OperationFactory.createPattern(<RDF.Term> <any> 'a2', <RDF.Term> <any> 'b2',
               <RDF.Term> <any> 'c2'),
-            OperationFactory.createPattern<RDF.BaseQuad>(<RDF.Term> <any> 'd2', <RDF.Term> <any> 'e2',
+            OperationFactory.createPattern(<RDF.Term> <any> 'd2', <RDF.Term> <any> 'e2',
               <RDF.Term> <any> 'f2'),
-            OperationFactory.createPattern<RDF.BaseQuad>(<RDF.Term> <any> 'a3', <RDF.Term> <any> 'b3',
+            OperationFactory.createPattern(<RDF.Term> <any> 'a3', <RDF.Term> <any> 'b3',
               <RDF.Term> <any> 'c3'),
-            OperationFactory.createPattern<RDF.BaseQuad>(<RDF.Term> <any> 'd3', <RDF.Term> <any> 'e3',
+            OperationFactory.createPattern(<RDF.Term> <any> 'd3', <RDF.Term> <any> 'e3',
               <RDF.Term> <any> 'f3'),
           ]),
         );
@@ -1313,9 +1313,9 @@ query HeroForEpisode($ep: Episode!) {
         return expect(converter.joinOperations([
           OperationFactory.createUnion(null, null),
           OperationFactory.createBgp([
-            OperationFactory.createPattern<RDF.BaseQuad>(<RDF.Term> <any> 'a2', <RDF.Term> <any> 'b2',
+            OperationFactory.createPattern(<RDF.Term> <any> 'a2', <RDF.Term> <any> 'b2',
               <RDF.Term> <any> 'c2'),
-            OperationFactory.createPattern<RDF.BaseQuad>(<RDF.Term> <any> 'd2', <RDF.Term> <any> 'e2',
+            OperationFactory.createPattern(<RDF.Term> <any> 'd2', <RDF.Term> <any> 'e2',
               <RDF.Term> <any> 'f2'),
           ]),
           OperationFactory.createLeftJoin(null, null),
@@ -1324,9 +1324,9 @@ query HeroForEpisode($ep: Episode!) {
             OperationFactory.createUnion(null, null),
             OperationFactory.createJoin(
               OperationFactory.createBgp([
-                OperationFactory.createPattern<RDF.BaseQuad>(<RDF.Term> <any> 'a2', <RDF.Term> <any> 'b2',
+                OperationFactory.createPattern(<RDF.Term> <any> 'a2', <RDF.Term> <any> 'b2',
                   <RDF.Term> <any> 'c2'),
-                OperationFactory.createPattern<RDF.BaseQuad>(<RDF.Term> <any> 'd2', <RDF.Term> <any> 'e2',
+                OperationFactory.createPattern(<RDF.Term> <any> 'd2', <RDF.Term> <any> 'e2',
                   <RDF.Term> <any> 'f2'),
               ]),
               OperationFactory.createLeftJoin(null, null),

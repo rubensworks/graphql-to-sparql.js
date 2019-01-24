@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+<a name="v1.5.0"></a>
+## [v1.5.0](https://github.com/rubensworks/graphql-to-sparql.js/compare/v1.4.1...v1.5.0) - 2019-01-24
+
+### Changed
+* [Convert blank nodes to variables, #19](https://github.com/rubensworks/graphql-to-sparql.js/commit/d5fbe9bb63eb8566cf105f32949101f6d64fbdfc)
+
 <a name="v1.4.1"></a>
 ## [v1.4.1](https://github.com/rubensworks/graphql-to-sparql.js/compare/v1.4.0...v1.4.1) - 2018-11-09
 

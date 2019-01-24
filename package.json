@@ -1,6 +1,6 @@
 {
   "name": "graphql-to-sparql",
-  "version": "1.4.1",
+  "version": "1.5.0",
   "description": "Converts GraphQL queries to SPARQL queries",
   "keywords": [
     "graphql",

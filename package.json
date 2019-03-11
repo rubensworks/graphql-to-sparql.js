@@ -40,7 +40,7 @@
     "@types/jest": "^24.0.0",
     "@types/minimist": "^1.2.0",
     "coveralls": "^3.0.0",
-    "jest": "^23.4.1",
+    "jest": "^24.3.0",
     "manual-git-changelog": "^1.0.1",
     "pre-commit": "^1.2.2",
     "ts-jest": "^24.0.0",

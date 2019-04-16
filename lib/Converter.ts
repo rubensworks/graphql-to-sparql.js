@@ -11,6 +11,7 @@ import {
   StringValueNode, TypeNode,
   ValueNode, VariableNode,
 } from "graphql";
+import {ContextParser, IJsonLdContextNormalized, JsonLdContext} from "jsonld-context-parser";
 import * as RDF from "rdf-js";
 import {Algebra, Factory, Util} from "sparqlalgebrajs";
 
@@ -21,6 +22,7 @@ export class Converter {
 
   private readonly dataFactory: RDF.DataFactory;
   private readonly operationFactory: Factory;
+  private readonly contextParser: ContextParser;
   private readonly arraysToRdfLists: boolean;
   private readonly variableDelimiter: string;
   private readonly requireContext: boolean;
@@ -30,6 +32,7 @@ export class Converter {
     settings = settings || {};
     this.dataFactory = settings.dataFactory || DefaultDataFactory;
     this.operationFactory = new Factory(this.dataFactory);
+    this.contextParser = new ContextParser();
     this.arraysToRdfLists = settings.arraysToRdfLists;
     this.variableDelimiter = settings.variableDelimiter || '_';
     this.requireContext = settings.requireContext;
@@ -40,10 +43,22 @@ export class Converter {
    * @param {string} graphqlQuery A GraphQL query string.
    * @param {IContext} context A JSON-LD context.
    * @param {IVariablesDictionary} variablesDict A variables dictionary.
-   * @return {Operation}
+   * @return {Promise<Operation>} A promise resolving to an operation.
    */
-  public graphqlToSparqlAlgebra(graphqlQuery: string, context: IContext,
-                                variablesDict?: IVariablesDictionary): Algebra.Operation {
+  public async graphqlToSparqlAlgebra(graphqlQuery: string, context: JsonLdContext,
+                                      variablesDict?: IVariablesDictionary): Promise<Algebra.Operation> {
+    return this.graphqlToSparqlAlgebraRawContext(graphqlQuery, await this.contextParser.parse(context), variablesDict);
+  }
+
+  /**
+   * Translates a GraphQL query into SPARQL algebra.
+   * @param {string} graphqlQuery A GraphQL query string.
+   * @param {IContext} context A JSON-LD context.
+   * @param {IVariablesDictionary} variablesDict A variables dictionary.
+   * @return {Operation} An operation.
+   */
+  public graphqlToSparqlAlgebraRawContext(graphqlQuery: string, context: IJsonLdContextNormalized,
+                                          variablesDict?: IVariablesDictionary): Algebra.Operation {
     const document: DocumentNode = parse(graphqlQuery);
 
     const queryParseContext: IConvertContext = {
@@ -389,7 +404,7 @@ export class Converter {
    * @return {Pattern} A triple pattern.
    */
   public createTriplePattern(subject: RDF.Term, predicateName: NameNode, object: RDF.Term,
-                             context: IContext): Algebra.Pattern {
+                             context: IJsonLdContextNormalized): Algebra.Pattern {
     const predicate: RDF.NamedNode = this.valueToNamedNode(predicateName.value, context);
     if (context && context[predicateName.value]
       && (<any> context[predicateName.value])['@reverse'] === predicate.value) {
@@ -476,7 +491,7 @@ export class Converter {
    * @param {IContext} context A JSON-LD context.
    * @return {NamedNode} A named node.
    */
-  public valueToNamedNode(value: string, context: IContext): RDF.NamedNode {
+  public valueToNamedNode(value: string, context: IJsonLdContextNormalized): RDF.NamedNode {
     let contextValue: any = context[value];
     if (this.requireContext && !contextValue) {
       throw new Error('No context entry was found for ' + value);
@@ -762,7 +777,7 @@ export interface IConvertContext {
   /**
    * A JSON-LD context.
    */
-  context: IContext;
+  context: IJsonLdContextNormalized;
   /**
    * The current JSON path within the GraphQL query.
    */
@@ -783,13 +798,6 @@ export interface IConvertContext {
    * A dictionary of variable metadata.
    */
   variablesMetaDict: IVariablesMetaDictionary;
-}
-
-/**
- * A JSON-LD context.
- */
-export interface IContext {
-  [id: string]: string | any;
 }
 
 /**

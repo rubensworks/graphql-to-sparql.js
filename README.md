@@ -5,15 +5,15 @@
 [![npm version](https://badge.fury.io/js/graphql-to-sparql.svg)](https://www.npmjs.com/package/graphql-to-sparql) [![Greenkeeper badge](https://badges.greenkeeper.io/rubensworks/graphql-to-sparql.js.svg)](https://greenkeeper.io/)
 
 A utility package that allows you to convert GraphQL queries to SPARQL or SPARQL algebra,
-using a (simplied) [JSON-LD context](https://www.w3.org/TR/json-ld/#the-context).
+using a [JSON-LD context](https://www.w3.org/TR/json-ld/#the-context).
 Such queries are also known as GraphQL-LD queries.
 
 Supported JSON-LD context features:
 * Key-value mapping between shorthands and URIs.
-* `@type`
-* `@language`
-* `@id`
-* `@reverse`
+* `@type`: Sets the RDF datatype.
+* `@language`: Sets the RDF language.
+* `@id`: Identifies the IRI of a term.
+* `@reverse` Reverses the direction of a property.
 
 ## Install
 
@@ -34,7 +34,7 @@ The programmatic API can be invoked as follows:
 ```javascript
 const Converter = require('graphql-to-sparql').Converter;
 
-const algebra = new Converter().graphqlToSparqlAlgebra('{ hero { name } }', {
+const algebra = await new Converter().graphqlToSparqlAlgebra('{ hero { name } }', {
   "hero": "http://example.org/hero",
   "name": "http://example.org/name",
   "friends": "http://example.org/friends"

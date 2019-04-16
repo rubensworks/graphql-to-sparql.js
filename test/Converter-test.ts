@@ -23,7 +23,7 @@ describe('Converter', () => {
           human: 'http://example.org/human',
           name: 'http://example.org/name',
         };
-        return expect(converter.graphqlToSparqlAlgebra(`
+        return expect(await converter.graphqlToSparqlAlgebra(`
 {
   human {
     name
@@ -51,7 +51,7 @@ describe('Converter', () => {
           id: 'http://example.org/id',
           name: 'http://example.org/name',
         };
-        return expect(converter.graphqlToSparqlAlgebra(`
+        return expect(await converter.graphqlToSparqlAlgebra(`
 {
   human(id: "1000") {
     name
@@ -84,7 +84,7 @@ describe('Converter', () => {
           name: 'http://example.org/name',
           friends: 'http://example.org/friends',
         };
-        return expect(converter.graphqlToSparqlAlgebra(`
+        return expect(await converter.graphqlToSparqlAlgebra(`
 {
   hero {
     name
@@ -136,7 +136,7 @@ describe('Converter', () => {
           name: 'http://example.org/name',
           friends: 'http://example.org/friends',
         };
-        return expect(converter.graphqlToSparqlAlgebra(`
+        return expect(await converter.graphqlToSparqlAlgebra(`
 {
   human(id: "1000") {
     name
@@ -187,7 +187,7 @@ describe('Converter', () => {
           unit: 'http://example.org/unit',
           FOOT: 'http://example.org/types/foot',
         };
-        return expect(converter.graphqlToSparqlAlgebra(`
+        return expect(await converter.graphqlToSparqlAlgebra(`
 {
   human(id: "1000") {
     name
@@ -234,7 +234,7 @@ describe('Converter', () => {
           JEDI: 'http://example.org/types/jedi',
           name: 'http://example.org/name',
         };
-        return expect(converter.graphqlToSparqlAlgebra(`
+        return expect(await converter.graphqlToSparqlAlgebra(`
 {
   empireHero: hero(episode: EMPIRE) {
     name
@@ -291,7 +291,7 @@ describe('Converter', () => {
           friends: 'http://example.org/friends',
           Character: 'http://example.org/types/Character',
         };
-        return expect(converter.graphqlToSparqlAlgebra(`
+        return expect(await converter.graphqlToSparqlAlgebra(`
 {
   leftComparison: hero(episode: EMPIRE) {
     ...comparisonFields
@@ -419,7 +419,7 @@ fragment comparisonFields on Character {
         const variablesDict: IVariablesDictionary = {
           episode: { kind: 'EnumValue', value: 'JEDI' },
         };
-        return expect(converter.graphqlToSparqlAlgebra(`
+        return expect(await converter.graphqlToSparqlAlgebra(`
 query HeroNameAndFriends($episode: Episode) {
   hero(episode: $episode) {
     name
@@ -467,7 +467,7 @@ query HeroNameAndFriends($episode: Episode) {
           name: 'http://example.org/name',
           friends: 'http://example.org/friends',
         };
-        return expect(converter.graphqlToSparqlAlgebra(`
+        return expect(await converter.graphqlToSparqlAlgebra(`
 query HeroNameAndFriends($episode: Episode = JEDI) {
   hero(episode: $episode) {
     name
@@ -519,7 +519,7 @@ query HeroNameAndFriends($episode: Episode = JEDI) {
           episode: { kind: 'EnumValue', value: 'JEDI' },
           withFriends: { kind: 'BooleanValue', value: false },
         };
-        return expect(converter.graphqlToSparqlAlgebra(`
+        return expect(await converter.graphqlToSparqlAlgebra(`
 query Hero($episode: Episode, $withFriends: Boolean!) {
   hero(episode: $episode) {
     name
@@ -562,7 +562,7 @@ query Hero($episode: Episode, $withFriends: Boolean!) {
         const variablesDict: IVariablesDictionary = {
           ep: {kind: 'EnumValue', value: 'JEDI'},
         };
-        return expect(converter.graphqlToSparqlAlgebra(`
+        return expect(await converter.graphqlToSparqlAlgebra(`
 query HeroForEpisode($ep: Episode!) {
   hero(episode: $ep) {
     name
@@ -644,7 +644,7 @@ query HeroForEpisode($ep: Episode!) {
           name: 'http://example.org/name',
           friends: 'http://example.org/friends',
         };
-        return expect(converter.graphqlToSparqlAlgebra(`
+        return expect(await converter.graphqlToSparqlAlgebra(`
 {
   hero {
     friends {
@@ -697,7 +697,7 @@ query HeroForEpisode($ep: Episode!) {
           name: 'http://example.org/name',
           friends: 'http://example.org/friends',
         };
-        return expect(converter.graphqlToSparqlAlgebra(`
+        return expect(await converter.graphqlToSparqlAlgebra(`
 {
   hero {
     friends {
@@ -759,6 +759,35 @@ query HeroForEpisode($ep: Episode!) {
             DataFactory.variable('hero_friends_name'),
             DataFactory.variable('hero_friends_totalCount'),
           ]));
+      });
+
+      it('it should convert a simple query with a complex context', async () => {
+        const context = {
+          '@vocab': 'http://example.org/',
+          'ex': '#',
+          'human': { '@id': 'ex:human' },
+          'name': 'ex:name',
+        };
+        return expect(await converter.graphqlToSparqlAlgebra(`
+{
+  human {
+    name
+  }
+}
+`, context)).toEqual(OperationFactory.createProject(OperationFactory.createBgp([
+  OperationFactory.createPattern(
+    DataFactory.blankNode('b14'),
+    DataFactory.namedNode('http://example.org/#human'),
+    DataFactory.variable('human'),
+  ),
+  OperationFactory.createPattern(
+    DataFactory.variable('human'),
+    DataFactory.namedNode('http://example.org/#name'),
+    DataFactory.variable('human_name'),
+  ),
+]), [
+  DataFactory.variable('human_name'),
+]));
       });
     });
 
@@ -854,7 +883,7 @@ query HeroForEpisode($ep: Episode!) {
             },
           })).toEqual(OperationFactory.createBgp([
             OperationFactory.createPattern(
-              DataFactory.blankNode('b14'),
+              DataFactory.blankNode('b15'),
               DataFactory.namedNode('http://example.org/theField'),
               DataFactory.variable('a_theField'),
             ),
@@ -893,7 +922,7 @@ query HeroForEpisode($ep: Episode!) {
             ],
           })).toEqual(OperationFactory.createBgp([
             OperationFactory.createPattern(
-              DataFactory.blankNode('b15'),
+              DataFactory.blankNode('b16'),
               DataFactory.namedNode('http://example.org/theField'),
               DataFactory.variable('a_theField'),
             ),

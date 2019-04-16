@@ -10,7 +10,7 @@ import {
   SelectionNode,
   StringValueNode, TypeNode,
   ValueNode, VariableNode,
-} from "graphql";
+} from "graphql/language";
 import {ContextParser, IJsonLdContextNormalized, JsonLdContext} from "jsonld-context-parser";
 import * as RDF from "rdf-js";
 import {Algebra, Factory, Util} from "sparqlalgebrajs";

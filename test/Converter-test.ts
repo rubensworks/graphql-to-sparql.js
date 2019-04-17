@@ -866,6 +866,7 @@ query HeroForEpisode($ep: Episode!) {
         const ctx = {
           context: { theField: 'http://example.org/theField' },
           path: [ 'a' ],
+          subject: DataFactory.namedNode('subject'),
           terminalVariables: [],
           fragmentDefinitions: {},
           variablesDict: {},
@@ -883,7 +884,7 @@ query HeroForEpisode($ep: Episode!) {
             },
           })).toEqual(OperationFactory.createBgp([
             OperationFactory.createPattern(
-              DataFactory.blankNode('b15'),
+              DataFactory.namedNode('subject'),
               DataFactory.namedNode('http://example.org/theField'),
               DataFactory.variable('a_theField'),
             ),
@@ -894,6 +895,7 @@ query HeroForEpisode($ep: Episode!) {
         const ctx = {
           context: { theField: 'http://example.org/theField' },
           path: [ 'a' ],
+          subject: DataFactory.namedNode('subject'),
           terminalVariables: [],
           fragmentDefinitions: {},
           variablesDict: <IVariablesDictionary> {
@@ -922,7 +924,7 @@ query HeroForEpisode($ep: Episode!) {
             ],
           })).toEqual(OperationFactory.createBgp([
             OperationFactory.createPattern(
-              DataFactory.blankNode('b16'),
+              DataFactory.namedNode('subject'),
               DataFactory.namedNode('http://example.org/theField'),
               DataFactory.variable('a_theField'),
             ),
@@ -932,16 +934,17 @@ query HeroForEpisode($ep: Episode!) {
 
     describe('#selectionToPatterns', () => {
       it('should convert a field selection node', async () => {
+        const subject = DataFactory.namedNode('theSubject');
         const ctx = {
           context: { theField: 'http://example.org/theField' },
           path: [ 'a' ],
+          subject,
           terminalVariables: [],
           fragmentDefinitions: {},
           variablesDict: {},
           variablesMetaDict: {},
         };
-        const subject = DataFactory.namedNode('theSubject');
-        return expect(converter.selectionToPatterns(ctx, subject,
+        return expect(converter.selectionToPatterns(ctx,
           { kind: 'Field', name: { kind: 'Name', value: 'theField' } }))
           .toEqual(OperationFactory.createBgp([
             OperationFactory.createPattern(
@@ -953,6 +956,7 @@ query HeroForEpisode($ep: Episode!) {
       });
 
       it('should convert a field selection node with a selection set', async () => {
+        const subject = DataFactory.namedNode('theSubject');
         const ctx = {
           context: {
             theField: 'http://example.org/theField',
@@ -960,13 +964,13 @@ query HeroForEpisode($ep: Episode!) {
             andAnotherField: 'http://example.org/andAnotherField',
           },
           path: [ 'a' ],
+          subject,
           terminalVariables: [],
           fragmentDefinitions: {},
           variablesDict: {},
           variablesMetaDict: {},
         };
-        const subject = DataFactory.namedNode('theSubject');
-        return expect(converter.selectionToPatterns(ctx, subject,
+        return expect(converter.selectionToPatterns(ctx,
           {
             kind: 'Field',
             name: { kind: 'Name', value: 'theField' },
@@ -997,6 +1001,7 @@ query HeroForEpisode($ep: Episode!) {
       });
 
       it('should convert a field selection node with arguments', async () => {
+        const subject = DataFactory.namedNode('theSubject');
         const ctx = {
           context: {
             theField: 'http://example.org/theField',
@@ -1004,13 +1009,13 @@ query HeroForEpisode($ep: Episode!) {
             andAnotherField: 'http://example.org/andAnotherField',
           },
           path: [ 'a' ],
+          subject,
           terminalVariables: [],
           fragmentDefinitions: {},
           variablesDict: {},
           variablesMetaDict: {},
         };
-        const subject = DataFactory.namedNode('theSubject');
-        return expect(converter.selectionToPatterns(ctx, subject,
+        return expect(converter.selectionToPatterns(ctx,
           {
             kind: 'Field',
             name: { kind: 'Name', value: 'theField' },
@@ -1040,33 +1045,34 @@ query HeroForEpisode($ep: Episode!) {
       });
 
       it('should terminate a field selection node without selection set', async () => {
+        const subject = DataFactory.namedNode('theSubject');
         const ctx = {
           context: { theField: 'http://example.org/theField' },
           path: [ 'a' ],
+          subject,
           terminalVariables: [],
           fragmentDefinitions: {},
           variablesDict: {},
           variablesMetaDict: {},
         };
-        const subject = DataFactory.namedNode('theSubject');
-        converter.selectionToPatterns(ctx, subject,
-          { kind: 'Field', name: { kind: 'Name', value: 'theField' } });
+        converter.selectionToPatterns(ctx, { kind: 'Field', name: { kind: 'Name', value: 'theField' } });
         return expect(ctx.terminalVariables).toEqual([
           DataFactory.variable('a_theField'),
         ]);
       });
 
       it('should terminate a field selection node with an empty selection set', async () => {
+        const subject = DataFactory.namedNode('theSubject');
         const ctx = {
           context: { theField: 'http://example.org/theField' },
           path: [ 'a' ],
+          subject,
           terminalVariables: [],
           fragmentDefinitions: {},
           variablesDict: {},
           variablesMetaDict: {},
         };
-        const subject = DataFactory.namedNode('theSubject');
-        converter.selectionToPatterns(ctx, subject,
+        converter.selectionToPatterns(ctx,
           {
             kind: 'Field',
             name: { kind: 'Name', value: 'theField' },
@@ -1078,16 +1084,17 @@ query HeroForEpisode($ep: Episode!) {
       });
 
       it('should not terminate a field selection node with selection set', async () => {
+        const subject = DataFactory.namedNode('theSubject');
         const ctx = {
           context: { theField: 'http://example.org/theField' },
           path: [ 'a' ],
+          subject,
           terminalVariables: [],
           fragmentDefinitions: {},
           variablesDict: {},
           variablesMetaDict: {},
         };
-        const subject = DataFactory.namedNode('theSubject');
-        converter.selectionToPatterns(ctx, subject,
+        converter.selectionToPatterns(ctx,
           {
             kind: 'Field',
             name: { kind: 'Name', value: 'theField' },
@@ -1104,18 +1111,19 @@ query HeroForEpisode($ep: Episode!) {
       });
 
       it('should convert a field selection node with an alias', async () => {
+        const subject = DataFactory.namedNode('theSubject');
         const ctx = {
           context: {
             theField: 'http://example.org/theField',
           },
           path: [ 'a' ],
+          subject,
           terminalVariables: [],
           fragmentDefinitions: {},
           variablesDict: {},
           variablesMetaDict: {},
         };
-        const subject = DataFactory.namedNode('theSubject');
-        return expect(converter.selectionToPatterns(ctx, subject,
+        return expect(converter.selectionToPatterns(ctx,
           {
             alias: { kind: 'Name', value: 'theAliasField' },
             kind: 'Field',
@@ -1130,12 +1138,14 @@ query HeroForEpisode($ep: Episode!) {
       });
 
       it('should convert a fragment spread selection node', async () => {
+        const subject = DataFactory.namedNode('theSubject');
         const ctx: IConvertContext = {
           context: {
             theField: 'http://example.org/theField',
             Character: 'http://example.org/types/Character',
           },
           path: [ 'a' ],
+          subject,
           terminalVariables: [],
           fragmentDefinitions: {
             fragment1: {
@@ -1156,8 +1166,7 @@ query HeroForEpisode($ep: Episode!) {
           variablesDict: {},
           variablesMetaDict: {},
         };
-        const subject = DataFactory.namedNode('theSubject');
-        return expect(converter.selectionToPatterns(ctx, subject,
+        return expect(converter.selectionToPatterns(ctx,
           {
             kind: 'FragmentSpread',
             name: { kind: 'Name', value: 'fragment1' },
@@ -1179,11 +1188,13 @@ query HeroForEpisode($ep: Episode!) {
       });
 
       it('should convert a field selection node with a directive', async () => {
+        const subject = DataFactory.namedNode('theSubject');
         const ctx = {
           context: {
             theField: 'http://example.org/theField',
           },
           path: [ 'a' ],
+          subject,
           terminalVariables: [],
           fragmentDefinitions: {},
           variablesDict: <IVariablesDictionary> {
@@ -1192,8 +1203,7 @@ query HeroForEpisode($ep: Episode!) {
           },
           variablesMetaDict: {},
         };
-        const subject = DataFactory.namedNode('theSubject');
-        return expect(converter.selectionToPatterns(ctx, subject,
+        return expect(converter.selectionToPatterns(ctx,
           {
             alias: { kind: 'Name', value: 'theAliasField' },
             kind: 'Field',
@@ -1217,19 +1227,20 @@ query HeroForEpisode($ep: Episode!) {
       });
 
       it('should convert an inline fragment spread selection node', async () => {
+        const subject = DataFactory.namedNode('theSubject');
         const ctx = {
           context: {
             theField: 'http://example.org/theField',
             Character: 'http://example.org/types/Character',
           },
           path: [ 'a' ],
+          subject,
           terminalVariables: [],
           fragmentDefinitions: {},
           variablesDict: {},
           variablesMetaDict: {},
         };
-        const subject = DataFactory.namedNode('theSubject');
-        return expect(converter.selectionToPatterns(ctx, subject,
+        return expect(converter.selectionToPatterns(ctx,
           {
             kind: 'InlineFragment',
             typeCondition: {
@@ -1260,19 +1271,20 @@ query HeroForEpisode($ep: Episode!) {
       });
 
       it('should convert the __typename meta field', async () => {
+        const subject = DataFactory.namedNode('theSubject');
         const ctx = {
           context: {
             theField: 'http://example.org/theField',
             Character: 'http://example.org/types/Character',
           },
           path: [ 'a' ],
+          subject,
           terminalVariables: [],
           fragmentDefinitions: {},
           variablesDict: {},
           variablesMetaDict: {},
         };
-        const subject = DataFactory.namedNode('theSubject');
-        return expect(converter.selectionToPatterns(ctx, subject,
+        return expect(converter.selectionToPatterns(ctx,
           {
             kind: 'Field',
             name: { kind: 'Name', value: '__typename' },
@@ -1370,6 +1382,7 @@ query HeroForEpisode($ep: Episode!) {
         const ctx: IConvertContext = {
           context: {},
           path: [],
+          subject: null,
           terminalVariables: [],
           fragmentDefinitions: {},
           variablesDict: {},
@@ -1383,6 +1396,7 @@ query HeroForEpisode($ep: Episode!) {
         const ctx: IConvertContext = {
           context: {},
           path: [ 'abc' ],
+          subject: null,
           terminalVariables: [],
           fragmentDefinitions: {},
           variablesDict: {},
@@ -1396,6 +1410,7 @@ query HeroForEpisode($ep: Episode!) {
         const ctx = {
           context: {},
           path: [ 'abc', 'def', 'ghi' ],
+          subject: null,
           terminalVariables: [],
           fragmentDefinitions: {},
           variablesDict: {},
@@ -1433,6 +1448,7 @@ query HeroForEpisode($ep: Episode!) {
           va_datetime: { '@id': 'http://example.org/va', "@type": "http://www.w3.org/2001/XMLSchema#dateTime" },
         },
         path: [],
+        subject: null,
         terminalVariables: [],
         fragmentDefinitions: {},
         variablesDict: <IVariablesDictionary> {
@@ -1675,6 +1691,7 @@ query HeroForEpisode($ep: Episode!) {
       const ctx = {
         context: {},
         path: [],
+        subject: null,
         terminalVariables: [],
         fragmentDefinitions: {},
         variablesDict: <IVariablesDictionary> {
@@ -1718,9 +1735,10 @@ query HeroForEpisode($ep: Episode!) {
           value: { kind: 'Variable', name: { kind: 'Name', value: 'varFalse' } },
         },
       ] };
+      const idDirective: DirectiveNode = { kind: 'Directive', name: { kind: 'Name', value: 'id' }, arguments: [] };
 
-      it('should error on an unsupported directive', async () => {
-        return expect(() => converter.handleDirective(unknownDirective, ctx)).toThrow();
+      it('should ignore an unsupported directive', async () => {
+        return expect(converter.handleDirective(unknownDirective, ctx)).toBeTruthy();
       });
 
       it('should return true on a true inclusion', async () => {

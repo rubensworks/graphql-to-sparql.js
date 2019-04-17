@@ -65,6 +65,7 @@ export class Converter {
       context,
       fragmentDefinitions: this.indexFragments(document),
       path: [],
+      subject: this.dataFactory.blankNode(),
       terminalVariables: [],
       variablesDict: variablesDict || {},
       variablesMetaDict: {},
@@ -123,8 +124,6 @@ export class Converter {
       }
       // We ignore the query name, as SPARQL doesn't support naming queries.
 
-      const subject: RDF.Term = this.dataFactory.blankNode();
-
       // Variables
       if (operationDefinition.variableDefinitions) {
         for (const variableDefinition of operationDefinition.variableDefinitions) {
@@ -161,7 +160,7 @@ export class Converter {
       }
 
       return this.joinOperations(operationDefinition.selectionSet.selections
-        .map(this.selectionToPatterns.bind(this, convertContext, subject)));
+        .map(this.selectionToPatterns.bind(this, convertContext)));
     case 'FragmentDefinition':
       throw new Error('Illegal state: fragment definitions must be indexed and removed before processing');
     default:
@@ -172,12 +171,10 @@ export class Converter {
   /**
    * Convert a GraphQL selection node into an algebra operation.
    * @param {IConvertContext} convertContext A convert context.
-   * @param {Term} subject The RDF term that should be used as subject.
    * @param {SelectionNode} selectionNode A GraphQL selection node.
    * @return {Pattern[]} An array of quad patterns.
    */
-  public selectionToPatterns(convertContext: IConvertContext, subject: RDF.Term,
-                             selectionNode: SelectionNode): Algebra.Operation {
+  public selectionToPatterns(convertContext: IConvertContext, selectionNode: SelectionNode): Algebra.Operation {
     switch (selectionNode.kind) {
     case 'FragmentSpread':
       const fragmentSpreadNode: FragmentSpreadNode = <FragmentSpreadNode> selectionNode;
@@ -190,7 +187,7 @@ export class Converter {
       // Wrap in an OPTIONAL, as this pattern should only apply if the type applies
       return this.operationFactory.createLeftJoin(
         this.operationFactory.createBgp([]),
-        this.fieldToOperation(convertContext, subject, {
+        this.fieldToOperation(convertContext, {
           alias: null,
           arguments: null,
           directives: fragmentDefinitionNode.directives,
@@ -198,25 +195,25 @@ export class Converter {
           name: fragmentSpreadNode.name,
           selectionSet: fragmentDefinitionNode.selectionSet,
         }, false,
-          [ this.newTypePattern(subject, fragmentDefinitionNode.typeCondition, convertContext) ]));
+          [ this.newTypePattern(convertContext.subject, fragmentDefinitionNode.typeCondition, convertContext) ]));
     case 'InlineFragment':
       const inlineFragmentNode: InlineFragmentNode = <InlineFragmentNode> selectionNode;
 
       // Wrap in an OPTIONAL, as this pattern should only apply if the type applies
       return this.operationFactory.createLeftJoin(
         this.operationFactory.createBgp([]),
-        this.fieldToOperation(convertContext, subject, {
+        this.fieldToOperation(convertContext, {
           alias: null,
           arguments: null,
           directives: inlineFragmentNode.directives,
           kind: 'Field',
-          name: { kind: 'Name', value: subject.value },
+          name: { kind: 'Name', value: convertContext.subject.value },
           selectionSet: inlineFragmentNode.selectionSet,
         }, false,
           inlineFragmentNode.typeCondition
-            ? [ this.newTypePattern(subject, inlineFragmentNode.typeCondition, convertContext) ] : []));
+            ? [ this.newTypePattern(convertContext.subject, inlineFragmentNode.typeCondition, convertContext) ] : []));
     case 'Field':
-      return this.fieldToOperation(convertContext, subject, <FieldNode> selectionNode, true);
+      return this.fieldToOperation(convertContext, <FieldNode> selectionNode, true);
     }
   }
 
@@ -237,20 +234,19 @@ export class Converter {
   /**
    * Convert a field node to an operation.
    * @param {IConvertContext} convertContext A convert context.
-   * @param {Term} subject The subject.
    * @param {FieldNode} fieldNode The field node to convert.
    * @param {boolean} pushTerminalVariables If terminal variables should be created.
    * @param {Pattern[]} auxiliaryPatterns Optional patterns that should be part of the BGP.
    * @return {Operation} The reslting operation.
    */
-  public fieldToOperation(convertContext: IConvertContext, subject: RDF.Term, fieldNode: FieldNode,
+  public fieldToOperation(convertContext: IConvertContext, fieldNode: FieldNode,
                           pushTerminalVariables: boolean, auxiliaryPatterns?: Algebra.Pattern[]): Algebra.Operation {
     // Offset and limit can be changed using the magic arguments 'first' and 'offset'.
     let offset = 0;
     let limit;
 
     if (pushTerminalVariables) {
-      const operationOverride = this.handleMetaField(convertContext, subject, fieldNode, auxiliaryPatterns);
+      const operationOverride = this.handleMetaField(convertContext, fieldNode, auxiliaryPatterns);
       if (operationOverride) {
         return operationOverride;
       }
@@ -276,7 +272,7 @@ export class Converter {
       if (setValueArgument) {
         const valueOutput = this.valueToTerm(setValueArgument.value, convertContext, fieldNode.name.value);
         valueOutput.terms.forEach((term) => patterns.push(this
-          .createTriplePattern(subject, fieldNode.name, term, convertContext.context)));
+          .createTriplePattern(convertContext.subject, fieldNode.name, term, convertContext.context)));
         if (valueOutput.auxiliaryPatterns) {
           patterns = patterns.concat(valueOutput.auxiliaryPatterns);
         }
@@ -285,7 +281,7 @@ export class Converter {
 
     // Create at least a pattern for the parent node and the current path.
     if (pushTerminalVariables) {
-      patterns.push(this.createTriplePattern(subject, fieldNode.name, object, convertContext.context));
+      patterns.push(this.createTriplePattern(convertContext.subject, fieldNode.name, object, convertContext.context));
     }
 
     // Create patterns for the node's arguments
@@ -329,10 +325,11 @@ export class Converter {
     if (fieldNode.selectionSet && fieldNode.selectionSet.selections.length) {
       // Change path value when there was an alias on this node.
       const pathSubValue: string = fieldNode.alias ? fieldNode.alias.value : fieldNode.name.value;
-      const subConvertContext: IConvertContext = pushTerminalVariables
-        ? Object.assign(Object.assign({}, convertContext),
-        { path: convertContext.path.concat([pathSubValue]) })
-        : convertContext;
+      const subConvertContext: IConvertContext = {
+        ...convertContext,
+        ...pushTerminalVariables ? { path: convertContext.path.concat([pathSubValue]) } : {},
+        subject: pushTerminalVariables ? object : convertContext.subject,
+      };
 
       // If the magic keyword 'totalCount' is present, include a count aggregator.
       let totalCount: boolean = false;
@@ -346,7 +343,7 @@ export class Converter {
         });
 
       let joinedOperation = this.joinOperations([operation].concat(selections
-        .map(this.selectionToPatterns.bind(this, subConvertContext, pushTerminalVariables ? object : subject))));
+        .map(this.selectionToPatterns.bind(this, subConvertContext))));
 
       // Modify the operation if there was a count selection
       if (totalCount) {
@@ -422,7 +419,7 @@ export class Converter {
    * @param {Pattern[]} auxiliaryPatterns Optional patterns that should be part of the BGP.
    * @return {Operation} An operation or null.
    */
-  public handleMetaField(convertContext: IConvertContext, subject: RDF.Term, fieldNode: FieldNode,
+  public handleMetaField(convertContext: IConvertContext, fieldNode: FieldNode,
                          auxiliaryPatterns?: Algebra.Pattern[]): Algebra.Operation {
     // TODO: in the future, we should add support for GraphQL wide range of introspection features:
     // http://graphql.org/learn/introspection/
@@ -433,7 +430,7 @@ export class Converter {
       convertContext.terminalVariables.push(object);
       return this.operationFactory.createBgp([
         this.operationFactory.createPattern(
-          subject, this.dataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'), object,
+          convertContext.subject, this.dataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'), object,
         ),
       ].concat(auxiliaryPatterns || []));
     }
@@ -668,27 +665,33 @@ export class Converter {
    * @return {boolean} If processing of the active should continue.
    */
   public handleDirective(directive: DirectiveNode, convertContext: IConvertContext): boolean {
-    const arg: ArgumentNode = this.getArgument(directive.arguments, 'if');
-    const subValue = this.valueToTerm(arg.value, convertContext, arg.name.value);
-    if (subValue.terms.length !== 1) {
-      throw new Error(`Can not apply a directive with a list: ${subValue.terms}`);
-    }
-    const val: RDF.Term = subValue.terms[0];
+    let val: RDF.Term;
     switch (directive.name.value) {
     case 'include':
+      val = this.getDirectiveConditionalValue(directive, convertContext);
       if (val.termType === 'Literal' && val.value === 'false') {
         return false;
       }
       break;
     case 'skip':
+      val = this.getDirectiveConditionalValue(directive, convertContext);
       if (val.termType === 'Literal' && val.value === 'true') {
         return false;
       }
       break;
     default:
-      throw new Error('Unsupported directive: ' + directive.name.value);
+      // Ignore all other directives
     }
     return true;
+  }
+
+  public getDirectiveConditionalValue(directive: DirectiveNode, convertContext: IConvertContext): RDF.Term {
+    const arg: ArgumentNode = this.getArgument(directive.arguments, 'if');
+    const subValue = this.valueToTerm(arg.value, convertContext, arg.name.value);
+    if (subValue.terms.length !== 1) {
+      throw new Error(`Can not apply a directive with a list: ${subValue.terms}`);
+    }
+    return subValue.terms[0];
   }
 
   /**
@@ -782,6 +785,10 @@ export interface IConvertContext {
    * The current JSON path within the GraphQL query.
    */
   path: string[];
+  /**
+   * The subject term.
+   */
+  subject: RDF.Term;
   /**
    * All variables that have no deeper child and should be selected withing the GraphQL query.
    */

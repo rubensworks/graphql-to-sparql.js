@@ -3,11 +3,11 @@ import {
   ArgumentNode,
   BooleanValueNode,
   DefinitionNode, DirectiveNode, DocumentNode, EnumValueNode, FieldNode, FloatValueNode, FragmentDefinitionNode,
-  FragmentSpreadNode, InlineFragmentNode,
-  IntValueNode, ListTypeNode, ListValueNode, NamedTypeNode,
-  NameNode, NonNullTypeNode, ObjectValueNode,
-  OperationDefinitionNode, parse,
-  SelectionNode,
+  FragmentSpreadNode, InlineFragmentNode, IntValueNode,
+  ListTypeNode, ListValueNode, NamedTypeNode, NameNode,
+  NonNullTypeNode, ObjectValueNode, OperationDefinitionNode,
+  parse, SelectionNode,
+  SelectionSetNode,
   StringValueNode, TypeNode,
   ValueNode, VariableNode,
 } from "graphql/language";
@@ -60,20 +60,34 @@ export class Converter {
   public graphqlToSparqlAlgebraRawContext(graphqlQuery: string, context: IJsonLdContextNormalized,
                                           variablesDict?: IVariablesDictionary): Algebra.Operation {
     const document: DocumentNode = parse(graphqlQuery);
-
-    const queryParseContext: IConvertContext = {
+    const fragmentDefinitions = this.indexFragments(document);
+    const queryParseContextBase: IConvertContext = {
       context,
-      fragmentDefinitions: this.indexFragments(document),
+      fragmentDefinitions,
       path: [],
-      subject: this.dataFactory.blankNode(),
+      subject: null,
       terminalVariables: [],
       variablesDict: variablesDict || {},
       variablesMetaDict: {},
     };
 
-    const operation = this.operationFactory.createProject(<Algebra.Operation> document.definitions.map(
-      this.definitionToPattern.bind(this, queryParseContext)).reduce(
-      (prev: Algebra.Operation, current: Algebra.Operation) => {
+    const operation = this.operationFactory.createProject(<Algebra.Operation> document.definitions
+      .map((definition) => {
+        const subjectOutput = this.getSubjectDefinitionNode(definition, queryParseContextBase);
+        const queryParseContext: IConvertContext = {
+          ...queryParseContextBase,
+          subject: subjectOutput ? subjectOutput.subject : this.dataFactory.blankNode(),
+        };
+        let definitionOperation = this.definitionToPattern(queryParseContext, definition);
+        if (subjectOutput && subjectOutput.auxiliaryPatterns) {
+          definitionOperation = this.joinOperations([
+            definitionOperation,
+            this.operationFactory.createBgp(subjectOutput.auxiliaryPatterns),
+          ]);
+        }
+        return definitionOperation;
+      })
+      .reduce((prev: Algebra.Operation, current: Algebra.Operation) => {
         if (!current) {
           return prev;
         }
@@ -81,10 +95,82 @@ export class Converter {
           return current;
         }
         return this.operationFactory.createUnion(prev, current);
-      }, null), queryParseContext.terminalVariables);
+      }, null), queryParseContextBase.terminalVariables);
 
     // Convert blank nodes to variables
     return this.translateBlankNodesToVariables(operation);
+  }
+
+  /**
+   * Get the subject term of a definition node that should be used for the whole definition node.
+   * @param {DefinitionNode} definition A definition node.
+   * @param {IConvertContext} convertContext A convert context.
+   * @return {IGetSubjectOutput | null} The subject and optional auxiliary patterns.
+   */
+  public getSubjectDefinitionNode(definition: DefinitionNode, convertContext: IConvertContext)
+    : IGetSubjectOutput | null {
+    if (definition.kind === 'OperationDefinition') {
+      return this.getSubjectSelectionSet(definition.selectionSet, convertContext);
+    }
+    return null;
+  }
+
+  /**
+   * Get the subject term of a field node that should be used for the whole definition node.
+   * @param {FieldNode} field A field node.
+   * @param {IConvertContext} convertContext A convert context.
+   * @return {IGetSubjectOutput | null} The subject and optional auxiliary patterns.
+   */
+  public getSubjectFieldNode(field: FieldNode, convertContext: IConvertContext)
+    : IGetSubjectOutput | null {
+    return this.getSubjectSelectionSet(field.selectionSet, {
+      ...convertContext,
+      path: this.appendFieldToPath(convertContext.path, field),
+    });
+  }
+
+  /**
+   * Get the subject term of a selection set node that should be used for the whole definition node.
+   *
+   * This is a pre-processing step of selection sets.
+   * Its only purpose is to determine the subject within a selection set,
+   * because this subject is needed to link with its parent.
+   * In a later phase, the selection set will be processed using the discovered subject,
+   * and the field identifying the subject will be ignored.
+   *
+   * @param {SelectionSetNode} selectionSet A selection set node.
+   * @param {IConvertContext} convertContext A convert context.
+   * @return {IGetSubjectOutput | null} The subject and optional auxiliary patterns.
+   */
+  public getSubjectSelectionSet(selectionSet: SelectionSetNode | null, convertContext: IConvertContext)
+    : IGetSubjectOutput | null {
+    if (selectionSet) {
+      for (const selectionNode of selectionSet.selections) {
+        if (selectionNode.kind === 'Field') {
+          const fieldNode = selectionNode;
+          // Get (or set) the subject for 'id' fields
+          if (fieldNode.name.value === 'id') {
+            if (fieldNode.arguments) {
+              for (const argument of fieldNode.arguments) {
+                // Allow the subject to be set with the '_' argument for 'id'
+                if (argument.name.value === '_') {
+                  const valueOutput = this.valueToTerm(argument.value, convertContext, fieldNode.name.value);
+                  if (valueOutput.terms.length !== 1) {
+                    throw new Error(`Only single values can be set as id, but got ${valueOutput.terms
+                      .length} at ${fieldNode.name.value}`);
+                  }
+                  return { subject: valueOutput.terms[0], auxiliaryPatterns: valueOutput.auxiliaryPatterns };
+                }
+              }
+            }
+            const subject = this.nameToVariable(fieldNode, convertContext);
+            convertContext.terminalVariables.push(subject);
+            return { subject };
+          }
+        }
+      }
+    }
+    return null;
   }
 
   /**
@@ -241,10 +327,19 @@ export class Converter {
    */
   public fieldToOperation(convertContext: IConvertContext, fieldNode: FieldNode,
                           pushTerminalVariables: boolean, auxiliaryPatterns?: Algebra.Pattern[]): Algebra.Operation {
+    // If a deeper node is being selected, and if the current object should become the next subject
+    const nesting = pushTerminalVariables;
+
     // Offset and limit can be changed using the magic arguments 'first' and 'offset'.
     let offset = 0;
     let limit;
 
+    // Ignore 'id' fields, because we have processed them earlier in getSubjectSelectionSet.
+    if (fieldNode.name.value === 'id') {
+      pushTerminalVariables = false;
+    }
+
+    // Handle meta fields
     if (pushTerminalVariables) {
       const operationOverride = this.handleMetaField(convertContext, fieldNode, auxiliaryPatterns);
       if (operationOverride) {
@@ -253,28 +348,35 @@ export class Converter {
     }
 
     let patterns: Algebra.Pattern[] = auxiliaryPatterns ? auxiliaryPatterns.concat([]) : [];
-    // Aliases change the variable name (and path name)
-    const object: RDF.Variable = this.nameToVariable(fieldNode.alias ? fieldNode.alias : fieldNode.name,
-      convertContext);
+
+    // Define subject and object
+    const subjectOutput = this.getSubjectFieldNode(fieldNode, convertContext);
+    let object: RDF.Term;
+    if (subjectOutput) {
+      object = subjectOutput.subject;
+      if (subjectOutput.auxiliaryPatterns) {
+        patterns = patterns.concat(subjectOutput.auxiliaryPatterns);
+      }
+    } else {
+      object = this.nameToVariable(fieldNode, convertContext);
+    }
 
     // Check if there is a '_' argument
     // We do this before handling all other arguments so that the order of final triple patterns is sane.
-    let setValueArgument: ArgumentNode = null;
+    let overrideObjectTerms: RDF.Term[] = null;
     if (fieldNode.arguments && fieldNode.arguments.length) {
       for (const argument of fieldNode.arguments) {
         if (argument.name.value === '_') {
           // '_'-arguments do not create an additional predicate link, but set the value directly.
-          setValueArgument = argument;
+          const valueOutput = this.valueToTerm(argument.value, convertContext, fieldNode.name.value);
+          overrideObjectTerms = valueOutput.terms;
+          valueOutput.terms.forEach((term) => patterns.push(this
+            .createTriplePattern(convertContext.subject, fieldNode.name, term, convertContext.context)));
+          if (valueOutput.auxiliaryPatterns) {
+            patterns = patterns.concat(valueOutput.auxiliaryPatterns);
+          }
           pushTerminalVariables = false;
           break;
-        }
-      }
-      if (setValueArgument) {
-        const valueOutput = this.valueToTerm(setValueArgument.value, convertContext, fieldNode.name.value);
-        valueOutput.terms.forEach((term) => patterns.push(this
-          .createTriplePattern(convertContext.subject, fieldNode.name, term, convertContext.context)));
-        if (valueOutput.auxiliaryPatterns) {
-          patterns = patterns.concat(valueOutput.auxiliaryPatterns);
         }
       }
     }
@@ -323,12 +425,20 @@ export class Converter {
     // Recursive call for nested selection sets
     let operation: Algebra.Operation = this.operationFactory.createBgp(patterns);
     if (fieldNode.selectionSet && fieldNode.selectionSet.selections.length) {
+      // Override the object if needed
+      if (overrideObjectTerms) {
+        if (overrideObjectTerms.length !== 1) {
+          throw new Error(`Only single values can be set as id, but got ${overrideObjectTerms
+            .length} at ${fieldNode.name.value}`);
+        }
+        object = overrideObjectTerms[0];
+      }
+
       // Change path value when there was an alias on this node.
-      const pathSubValue: string = fieldNode.alias ? fieldNode.alias.value : fieldNode.name.value;
       const subConvertContext: IConvertContext = {
         ...convertContext,
-        ...pushTerminalVariables ? { path: convertContext.path.concat([pathSubValue]) } : {},
-        subject: pushTerminalVariables ? object : convertContext.subject,
+        ...nesting ? { path: this.appendFieldToPath(convertContext.path, fieldNode) } : {},
+        subject: nesting ? object : convertContext.subject,
       };
 
       // If the magic keyword 'totalCount' is present, include a count aggregator.
@@ -377,7 +487,7 @@ export class Converter {
       }
 
       operation = joinedOperation;
-    } else if (pushTerminalVariables) {
+    } else if (pushTerminalVariables && object.termType === 'Variable') {
       // If no nested selection sets exist,
       // consider the object variable as a terminal variable that should be selected.
       convertContext.terminalVariables.push(object);
@@ -425,8 +535,7 @@ export class Converter {
     // http://graphql.org/learn/introspection/
     if (fieldNode.name.value === '__typename') {
       // Aliases change the variable name (and path name)
-      const object: RDF.Variable = this.nameToVariable(fieldNode.alias ? fieldNode.alias : fieldNode.name,
-        convertContext);
+      const object: RDF.Variable = this.nameToVariable(fieldNode, convertContext);
       convertContext.terminalVariables.push(object);
       return this.operationFactory.createBgp([
         this.operationFactory.createPattern(
@@ -471,15 +580,34 @@ export class Converter {
   }
 
   /**
-   * Convert a name node to a variable built from the node name and the current path inside the context.
-   * @param {NameNode} name A name node.
+   * Append a field's label to a path.
+   * @param {string[]} path A path.
+   * @param {FieldNode} field A field.
+   * @return {string[]} A new path array.
+   */
+  public appendFieldToPath(path: string[], field: FieldNode): string[] {
+    return path.concat([this.getFieldLabel(field)]);
+  }
+
+  /**
+   * Get the label of a field by taking into account the alias.
+   * @param {FieldNode} field A field node.
+   * @return {string} The field name or alias.
+   */
+  public getFieldLabel(field: FieldNode): string {
+    return (field.alias ? field.alias : field.name).value;
+  }
+
+  /**
+   * Convert a field node to a variable built from the node name and the current path inside the context.
+   * @param {FieldNode} field A field node.
    * @param {IConvertContext} convertContext A convert context.
    * @return {Variable} A variable.
    */
-  public nameToVariable(name: NameNode, convertContext: IConvertContext): RDF.Variable {
+  public nameToVariable(field: FieldNode, convertContext: IConvertContext): RDF.Variable {
+    const label = this.getFieldLabel(field);
     return this.dataFactory.variable((convertContext.path.length
-      ? convertContext.path.join(this.variableDelimiter) + this.variableDelimiter : '')
-      + name.value);
+      ? convertContext.path.join(this.variableDelimiter) + this.variableDelimiter : '') + label);
   }
 
   /**
@@ -626,7 +754,6 @@ export class Converter {
       const subject = this.dataFactory.blankNode();
       let auxiliaryObjectPatterns: Algebra.Pattern[] = [];
       for (const field of (<ObjectValueNode> valueNode).fields) {
-        const predicate = this.valueToNamedNode(field.name.value, convertContext.context);
         const subValue = this.valueToTerm(field.value, convertContext, argumentName);
         for (const term of subValue.terms) {
           auxiliaryObjectPatterns.push(this.createTriplePattern(subject, field.name, term, convertContext.context));
@@ -826,5 +953,13 @@ export interface IVariablesMetaDictionary {
  */
 export interface IValueToTermOutput {
   terms: RDF.Term[];
+  auxiliaryPatterns?: Algebra.Pattern[];
+}
+
+/**
+ * The output of getting the subject for a definition node.
+ */
+export interface IGetSubjectOutput {
+  subject: RDF.Term;
   auxiliaryPatterns?: Algebra.Pattern[];
 }

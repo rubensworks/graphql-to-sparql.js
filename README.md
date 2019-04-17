@@ -496,6 +496,77 @@ GraphQL:
 }
 ```
 
+### Defining or looking up the id of entities
+
+Using `id` fields, the id (or _subject_) of entities can be queried or defined.
+
+Context:
+```json
+{
+    "hero": "http://example.org/hero",
+    "HAN_SOLO": "http://example.org/HanSolo",
+    "name": "http://example.org/name",
+    "friend": "http://example.org/friend"
+}
+```
+
+#### Getting an id
+
+GraphQL:
+```graphql
+{
+  hero {
+    id
+    name
+  }
+}
+```
+
+SPARQL:
+```sparql
+SELECT ?hero_name ?hero_id WHERE {
+  _:b1 <http://example.org/hero> ?hero_id.
+  ?hero_id <http://example.org/name> ?hero_name.
+}
+```
+
+#### Setting a block-scoped id
+
+GraphQL:
+```graphql
+{
+  hero(_:HAN_SOLO) {
+    name
+  }
+}
+```
+
+SPARQL:
+```sparql
+SELECT ?hero_name WHERE {
+  _:b1 <http://example.org/hero> <http://example.org/HanSolo>.
+  <http://example.org/HanSolo> <http://example.org/name> ?hero_name.
+}
+```
+
+#### Setting an inline id
+
+GraphQL:
+```graphql
+{
+  friend(_:HAN_SOLO)
+  name
+}
+```
+
+SPARQL:
+```sparql
+SELECT ?name WHERE {
+  ?b1 <http://example.org/friend> <http://example.org/HanSolo>;
+    <http://example.org/name> ?name.
+}
+```
+
 ## License
 This software is written by [Ruben Taelman](http://rubensworks.net/).
 

@@ -789,6 +789,288 @@ query HeroForEpisode($ep: Episode!) {
   DataFactory.variable('human_name'),
 ]));
       });
+
+      it('it should convert a query for getting id at root', async () => {
+        const context = {
+          name: 'http://example.org/name',
+        };
+        return expect(await converter.graphqlToSparqlAlgebra(`
+{
+  id
+  name
+}
+`, context)).toEqual(
+          OperationFactory.createProject(OperationFactory.createBgp([
+            OperationFactory.createPattern(
+              DataFactory.variable('id'),
+              DataFactory.namedNode('http://example.org/name'),
+              DataFactory.variable('name'),
+            ),
+          ]),
+            [
+              DataFactory.variable('id'),
+              DataFactory.variable('name'),
+            ]));
+      });
+
+      it('it should convert a query for getting id in inner node', async () => {
+        const context = {
+          hero: 'http://example.org/hero',
+          name: 'http://example.org/name',
+        };
+        return expect(await converter.graphqlToSparqlAlgebra(`
+{
+  hero {
+    id
+    name
+  }
+}
+`, context)).toEqual(
+          OperationFactory.createProject(OperationFactory.createBgp([
+            OperationFactory.createPattern(
+                DataFactory.blankNode('b15'),
+                DataFactory.namedNode('http://example.org/hero'),
+                DataFactory.variable('hero_id'),
+              ),
+            OperationFactory.createPattern(
+                DataFactory.variable('hero_id'),
+                DataFactory.namedNode('http://example.org/name'),
+                DataFactory.variable('hero_name'),
+              ),
+          ]),
+            [
+              DataFactory.variable('hero_id'),
+              DataFactory.variable('hero_name'),
+            ]));
+      });
+
+      it('it should convert a query for setting id without children', async () => {
+        const context = {
+          HAN_SOLO: 'http://example.org/HanSolo',
+          hero: 'http://example.org/hero',
+          name: 'http://example.org/name',
+        };
+        return expect(await converter.graphqlToSparqlAlgebra(`
+{
+  hero(_:HAN_SOLO)
+}
+`, context)).toEqual(
+          OperationFactory.createProject(OperationFactory.createBgp([
+            OperationFactory.createPattern(
+                DataFactory.blankNode('b16'),
+                DataFactory.namedNode('http://example.org/hero'),
+                DataFactory.namedNode('http://example.org/HanSolo'),
+              ),
+          ]),
+            []));
+      });
+
+      it('it should convert a query for setting id with children', async () => {
+        const context = {
+          HAN_SOLO: 'http://example.org/HanSolo',
+          hero: 'http://example.org/hero',
+          name: 'http://example.org/name',
+        };
+        return expect(await converter.graphqlToSparqlAlgebra(`
+{
+  hero(_:HAN_SOLO) {
+    name
+  }
+}
+`, context)).toEqual(
+          OperationFactory.createProject(OperationFactory.createBgp([
+            OperationFactory.createPattern(
+                DataFactory.blankNode('b17'),
+                DataFactory.namedNode('http://example.org/hero'),
+                DataFactory.namedNode('http://example.org/HanSolo'),
+            ),
+            OperationFactory.createPattern(
+                DataFactory.namedNode('http://example.org/HanSolo'),
+                DataFactory.namedNode('http://example.org/name'),
+                DataFactory.variable('hero_name'),
+              ),
+          ]),
+            [
+              DataFactory.variable('hero_name'),
+            ]));
+      });
+    });
+
+    describe('#getSubjectSelectionSet', () => {
+      let ctx;
+
+      beforeEach(() => {
+        ctx = {
+          context: { theField: 'http://example.org/theField' },
+          path: [ 'a' ],
+          subject: DataFactory.namedNode('subject'),
+          terminalVariables: [],
+          fragmentDefinitions: {},
+          variablesDict: <IVariablesDictionary> {
+            varTrue: { kind: 'BooleanValue', value: true },
+          },
+          variablesMetaDict: {},
+        };
+      });
+
+      it('should be null for no selection set', async () => {
+        return expect(converter.getSubjectSelectionSet(null, ctx)).toBe(null);
+      });
+
+      it('should be null for non-id fields', async () => {
+        return expect(converter.getSubjectSelectionSet({
+          kind: 'SelectionSet',
+          selections: [
+            {
+              kind: 'Field',
+              name: { kind: 'Name', value: 'field1' },
+            },
+            {
+              kind: 'Field',
+              name: { kind: 'Name', value: 'field2' },
+            },
+            {
+              kind: 'FragmentSpread',
+              name: { kind: 'Name', value: 'spread1' },
+            },
+          ],
+        }, ctx)).toBe(null);
+      });
+
+      it('should return a variable id for an id field', async () => {
+        expect(converter.getSubjectSelectionSet({
+          kind: 'SelectionSet',
+          selections: [
+            {
+              kind: 'Field',
+              name: { kind: 'Name', value: 'field1' },
+            },
+            {
+              kind: 'Field',
+              name: { kind: 'Name', value: 'id' },
+            },
+            {
+              kind: 'Field',
+              name: { kind: 'Name', value: 'field3' },
+            },
+          ],
+        }, ctx)).toEqual({ subject: DataFactory.variable('a_id') });
+        expect(ctx.terminalVariables).toEqual([ DataFactory.variable('a_id') ]);
+      });
+
+      it('should return a variable id for an id field with alias', async () => {
+        expect(converter.getSubjectSelectionSet({
+          kind: 'SelectionSet',
+          selections: [
+            {
+              kind: 'Field',
+              name: { kind: 'Name', value: 'field1' },
+            },
+            {
+              kind: 'Field',
+              name: { kind: 'Name', value: 'id' },
+              alias: { kind: 'Name', value: 'myId' },
+            },
+            {
+              kind: 'Field',
+              name: { kind: 'Name', value: 'field3' },
+            },
+          ],
+        }, ctx)).toEqual({ subject: DataFactory.variable('a_myId') });
+        expect(ctx.terminalVariables).toEqual([ DataFactory.variable('a_myId') ]);
+      });
+
+      it('should return a variable id for an id field with non-_ args', async () => {
+        return expect(converter.getSubjectSelectionSet({
+          kind: 'SelectionSet',
+          selections: [
+            {
+              kind: 'Field',
+              name: { kind: 'Name', value: 'field1' },
+            },
+            {
+              kind: 'Field',
+              name: { kind: 'Name', value: 'id' },
+              arguments: [
+                {
+                  kind: 'Argument',
+                  name: { kind: 'Name', value: 'bla1' },
+                  value: { kind: 'EnumValue', value: 'http://ex.org/val' },
+                },
+                {
+                  kind: 'Argument',
+                  name: { kind: 'Name', value: 'bla2' },
+                  value: { kind: 'EnumValue', value: 'http://ex.org/val' },
+                },
+              ],
+            },
+            {
+              kind: 'Field',
+              name: { kind: 'Name', value: 'field3' },
+            },
+          ],
+        }, ctx)).toEqual({ subject: DataFactory.variable('a_id') });
+      });
+
+      it('should return a concrete id for an id field with _ arg', async () => {
+        expect(converter.getSubjectSelectionSet({
+          kind: 'SelectionSet',
+          selections: [
+            {
+              kind: 'Field',
+              name: { kind: 'Name', value: 'field1' },
+            },
+            {
+              kind: 'Field',
+              name: { kind: 'Name', value: 'id' },
+              alias: { kind: 'Name', value: 'myId' },
+              arguments: [
+                {
+                  kind: 'Argument',
+                  name: { kind: 'Name', value: '_' },
+                  value: { kind: 'EnumValue', value: 'http://ex.org/val' },
+                },
+              ],
+            },
+            {
+              kind: 'Field',
+              name: { kind: 'Name', value: 'field3' },
+            },
+          ],
+        }, ctx)).toEqual({ subject: DataFactory.namedNode('http://ex.org/val') });
+        expect(ctx.terminalVariables).toEqual([]);
+      });
+
+      it('should error on a concrete id for an id field with _ arg with list value', async () => {
+        return expect(() => converter.getSubjectSelectionSet({
+          kind: 'SelectionSet',
+          selections: [
+            {
+              kind: 'Field',
+              name: { kind: 'Name', value: 'field1' },
+            },
+            {
+              kind: 'Field',
+              name: { kind: 'Name', value: 'id' },
+              alias: { kind: 'Name', value: 'myId' },
+              arguments: [
+                {
+                  kind: 'Argument',
+                  name: { kind: 'Name', value: '_' },
+                  value: { kind: 'ListValue', values: [
+                      { kind: 'EnumValue', value: 'http://ex.org/val1' },
+                      { kind: 'EnumValue', value: 'http://ex.org/val2' },
+                  ] },
+                },
+              ],
+            },
+            {
+              kind: 'Field',
+              name: { kind: 'Name', value: 'field3' },
+            },
+          ],
+        }, ctx)).toThrow(new Error('Only single values can be set as id, but got 2 at id'));
+      });
     });
 
     describe('#indexFragments', () => {
@@ -1388,7 +1670,7 @@ query HeroForEpisode($ep: Episode!) {
           variablesDict: {},
           variablesMetaDict: {},
         };
-        return expect(converter.nameToVariable({ kind: 'Name', value: 'varName' }, ctx))
+        return expect(converter.nameToVariable({ kind: 'Field', name: { kind: 'Name', value: 'varName' } }, ctx))
           .toEqual(DataFactory.namedNode('varName'));
       });
 
@@ -1402,8 +1684,23 @@ query HeroForEpisode($ep: Episode!) {
           variablesDict: {},
           variablesMetaDict: {},
         };
-        return expect(converter.nameToVariable({ kind: 'Name', value: 'varName' }, ctx))
+        return expect(converter.nameToVariable({ kind: 'Field', name: { kind: 'Name', value: 'varName' } }, ctx))
           .toEqual(DataFactory.namedNode('abc_varName'));
+      });
+
+      it('should convert an aliased variable with a single path element', async () => {
+        const ctx: IConvertContext = {
+          context: {},
+          path: [ 'abc' ],
+          subject: null,
+          terminalVariables: [],
+          fragmentDefinitions: {},
+          variablesDict: {},
+          variablesMetaDict: {},
+        };
+        return expect(converter.nameToVariable(
+          { kind: 'Field', name: { kind: 'Name', value: 'varName' }, alias: { kind: 'Name', value: 'varName2' } }, ctx))
+          .toEqual(DataFactory.namedNode('abc_varName2'));
       });
 
       it('should convert a variable with multiple path elements', async () => {
@@ -1416,7 +1713,7 @@ query HeroForEpisode($ep: Episode!) {
           variablesDict: {},
           variablesMetaDict: {},
         };
-        return expect(converter.nameToVariable({ kind: 'Name', value: 'varName' }, ctx))
+        return expect(converter.nameToVariable({ kind: 'Field', name: { kind: 'Name', value: 'varName' } }, ctx))
           .toEqual(DataFactory.namedNode('abc_def_ghi_varName'));
       });
     });

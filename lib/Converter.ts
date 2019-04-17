@@ -64,6 +64,7 @@ export class Converter {
     const queryParseContextBase: IConvertContext = {
       context,
       fragmentDefinitions,
+      graph: this.dataFactory.defaultGraph(),
       path: [],
       subject: null,
       terminalVariables: [],
@@ -73,10 +74,11 @@ export class Converter {
 
     const operation = this.operationFactory.createProject(<Algebra.Operation> document.definitions
       .map((definition) => {
-        const subjectOutput = this.getSubjectDefinitionNode(definition, queryParseContextBase);
+        const subjectOutput = this.getNodeQuadContextDefinitionNode(definition, queryParseContextBase);
         const queryParseContext: IConvertContext = {
           ...queryParseContextBase,
-          subject: subjectOutput ? subjectOutput.subject : this.dataFactory.blankNode(),
+          graph: subjectOutput.graph || queryParseContextBase.graph,
+          subject: subjectOutput.subject || this.dataFactory.blankNode(),
         };
         let definitionOperation = this.definitionToPattern(queryParseContext, definition);
         if (subjectOutput && subjectOutput.auxiliaryPatterns) {
@@ -102,35 +104,35 @@ export class Converter {
   }
 
   /**
-   * Get the subject term of a definition node that should be used for the whole definition node.
+   * Get the quad context of a definition node that should be used for the whole definition node.
    * @param {DefinitionNode} definition A definition node.
    * @param {IConvertContext} convertContext A convert context.
-   * @return {IGetSubjectOutput | null} The subject and optional auxiliary patterns.
+   * @return {INodeQuadContext | null} The subject and optional auxiliary patterns.
    */
-  public getSubjectDefinitionNode(definition: DefinitionNode, convertContext: IConvertContext)
-    : IGetSubjectOutput | null {
+  public getNodeQuadContextDefinitionNode(definition: DefinitionNode, convertContext: IConvertContext)
+    : INodeQuadContext | null {
     if (definition.kind === 'OperationDefinition') {
-      return this.getSubjectSelectionSet(definition.selectionSet, convertContext);
+      return this.getNodeQuadContextSelectionSet(definition.selectionSet, convertContext);
     }
     return null;
   }
 
   /**
-   * Get the subject term of a field node that should be used for the whole definition node.
+   * Get the quad context of a field node that should be used for the whole definition node.
    * @param {FieldNode} field A field node.
    * @param {IConvertContext} convertContext A convert context.
-   * @return {IGetSubjectOutput | null} The subject and optional auxiliary patterns.
+   * @return {INodeQuadContext | null} The subject and optional auxiliary patterns.
    */
-  public getSubjectFieldNode(field: FieldNode, convertContext: IConvertContext)
-    : IGetSubjectOutput | null {
-    return this.getSubjectSelectionSet(field.selectionSet, {
+  public getNodeQuadContextFieldNode(field: FieldNode, convertContext: IConvertContext)
+    : INodeQuadContext | null {
+    return this.getNodeQuadContextSelectionSet(field.selectionSet, {
       ...convertContext,
       path: this.appendFieldToPath(convertContext.path, field),
     });
   }
 
   /**
-   * Get the subject term of a selection set node that should be used for the whole definition node.
+   * Get the quad context of a selection set node that should be used for the whole definition node.
    *
    * This is a pre-processing step of selection sets.
    * Its only purpose is to determine the subject within a selection set,
@@ -140,37 +142,62 @@ export class Converter {
    *
    * @param {SelectionSetNode} selectionSet A selection set node.
    * @param {IConvertContext} convertContext A convert context.
-   * @return {IGetSubjectOutput | null} The subject and optional auxiliary patterns.
+   * @return {INodeQuadContext} The subject, graph and auxiliary patterns.
    */
-  public getSubjectSelectionSet(selectionSet: SelectionSetNode | null, convertContext: IConvertContext)
-    : IGetSubjectOutput | null {
+  public getNodeQuadContextSelectionSet(selectionSet: SelectionSetNode | null, convertContext: IConvertContext)
+    : INodeQuadContext {
+    const nodeQuadContext: INodeQuadContext = {};
     if (selectionSet) {
       for (const selectionNode of selectionSet.selections) {
         if (selectionNode.kind === 'Field') {
           const fieldNode = selectionNode;
-          // Get (or set) the subject for 'id' fields
-          if (fieldNode.name.value === 'id') {
-            if (fieldNode.arguments) {
-              for (const argument of fieldNode.arguments) {
-                // Allow the subject to be set with the '_' argument for 'id'
-                if (argument.name.value === '_') {
-                  const valueOutput = this.valueToTerm(argument.value, convertContext, fieldNode.name.value);
-                  if (valueOutput.terms.length !== 1) {
-                    throw new Error(`Only single values can be set as id, but got ${valueOutput.terms
-                      .length} at ${fieldNode.name.value}`);
-                  }
-                  return { subject: valueOutput.terms[0], auxiliaryPatterns: valueOutput.auxiliaryPatterns };
-                }
-              }
-            }
-            const subject = this.nameToVariable(fieldNode, convertContext);
-            convertContext.terminalVariables.push(subject);
-            return { subject };
-          }
+          this.handleNodeQuadContextField(fieldNode, convertContext, nodeQuadContext, 'id', 'subject');
+          this.handleNodeQuadContextField(fieldNode, convertContext, nodeQuadContext, 'graph', 'graph');
         }
       }
     }
-    return null;
+    return nodeQuadContext;
+  }
+
+  /**
+   * Handles a single field for determining the node quad context.
+   * @param {FieldNode} fieldNode A field node.
+   * @param {IConvertContext} convertContext A convert context.
+   * @param {INodeQuadContext} nodeQuadContext The node quad context to populate.
+   * @param {string} fieldName The field name to check for.
+   * @param {keyof INodeQuadContext} nodeQuadContextKey The key to fill into the node quad context.
+   */
+  public handleNodeQuadContextField(fieldNode: FieldNode, convertContext: IConvertContext,
+                                    nodeQuadContext: INodeQuadContext, fieldName: string,
+                                    nodeQuadContextKey: keyof INodeQuadContext) {
+    if (!nodeQuadContext[nodeQuadContextKey] && fieldNode.name.value === fieldName) {
+      // Get (or set) the nodeQuadContextKey for fieldName fields
+      if (fieldNode.arguments && !nodeQuadContext[nodeQuadContextKey]) {
+        for (const argument of fieldNode.arguments) {
+          // Allow the subject to be set with the '_' argument for fieldName
+          if (argument.name.value === '_') {
+            const valueOutput = this.valueToTerm(argument.value, convertContext, fieldNode.name.value);
+            if (valueOutput.terms.length !== 1) {
+              throw new Error(`Only single values can be set as ${fieldName}, but got ${valueOutput.terms
+                .length} at ${fieldNode.name.value}`);
+            }
+            nodeQuadContext[nodeQuadContextKey] = valueOutput.terms[0];
+            if (valueOutput.auxiliaryPatterns) {
+              if (!nodeQuadContext.auxiliaryPatterns) {
+                nodeQuadContext.auxiliaryPatterns = [];
+              }
+              nodeQuadContext.auxiliaryPatterns.concat(valueOutput.auxiliaryPatterns);
+            }
+            break;
+          }
+        }
+      }
+      if (!nodeQuadContext[nodeQuadContextKey]) {
+        const term = this.nameToVariable(fieldNode, convertContext);
+        convertContext.terminalVariables.push(term);
+        nodeQuadContext[nodeQuadContextKey] = term;
+      }
+    }
   }
 
   /**
@@ -314,7 +341,8 @@ export class Converter {
     return this.operationFactory.createPattern(
       subject,
       this.dataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
-      this.valueToNamedNode(typeCondition.name.value, convertContext.context));
+      this.valueToNamedNode(typeCondition.name.value, convertContext.context),
+      convertContext.graph);
   }
 
   /**
@@ -334,8 +362,8 @@ export class Converter {
     let offset = 0;
     let limit;
 
-    // Ignore 'id' fields, because we have processed them earlier in getSubjectSelectionSet.
-    if (fieldNode.name.value === 'id') {
+    // Ignore 'id' and 'graph' fields, because we have processed them earlier in getNodeQuadContextSelectionSet.
+    if (fieldNode.name.value === 'id' || fieldNode.name.value === 'graph') {
       pushTerminalVariables = false;
     }
 
@@ -350,32 +378,40 @@ export class Converter {
     let patterns: Algebra.Pattern[] = auxiliaryPatterns ? auxiliaryPatterns.concat([]) : [];
 
     // Define subject and object
-    const subjectOutput = this.getSubjectFieldNode(fieldNode, convertContext);
-    let object: RDF.Term;
-    if (subjectOutput) {
-      object = subjectOutput.subject;
-      if (subjectOutput.auxiliaryPatterns) {
-        patterns = patterns.concat(subjectOutput.auxiliaryPatterns);
-      }
-    } else {
-      object = this.nameToVariable(fieldNode, convertContext);
+    const subjectOutput = this.getNodeQuadContextFieldNode(fieldNode, convertContext);
+    let object: RDF.Term = subjectOutput.subject || this.nameToVariable(fieldNode, convertContext);
+    let graph: RDF.Term = subjectOutput.graph || convertContext.graph;
+    if (subjectOutput.auxiliaryPatterns) {
+      patterns = patterns.concat(subjectOutput.auxiliaryPatterns);
     }
 
     // Check if there is a '_' argument
     // We do this before handling all other arguments so that the order of final triple patterns is sane.
     let overrideObjectTerms: RDF.Term[] = null;
-    if (fieldNode.arguments && fieldNode.arguments.length) {
+    if (pushTerminalVariables && fieldNode.arguments && fieldNode.arguments.length) {
       for (const argument of fieldNode.arguments) {
         if (argument.name.value === '_') {
           // '_'-arguments do not create an additional predicate link, but set the value directly.
           const valueOutput = this.valueToTerm(argument.value, convertContext, fieldNode.name.value);
           overrideObjectTerms = valueOutput.terms;
-          valueOutput.terms.forEach((term) => patterns.push(this
-            .createTriplePattern(convertContext.subject, fieldNode.name, term, convertContext.context)));
+          valueOutput.terms.forEach((term) => patterns.push(this.createQuadPattern(
+            convertContext.subject, fieldNode.name, term, convertContext.graph, convertContext.context)));
           if (valueOutput.auxiliaryPatterns) {
             patterns = patterns.concat(valueOutput.auxiliaryPatterns);
           }
           pushTerminalVariables = false;
+          break;
+        } else if (argument.name.value === 'graph') {
+          // 'graph'-arguments do not create an additional predicate link, but set the graph.
+          const valueOutput = this.valueToTerm(argument.value, convertContext, fieldNode.name.value);
+          if (valueOutput.terms.length !== 1) {
+            throw new Error(`Only single values can be set as graph, but got ${valueOutput.terms
+              .length} at ${fieldNode.name.value}`);
+          }
+          graph = convertContext.graph = valueOutput.terms[0];
+          if (valueOutput.auxiliaryPatterns) {
+            patterns = patterns.concat(valueOutput.auxiliaryPatterns);
+          }
           break;
         }
       }
@@ -383,13 +419,14 @@ export class Converter {
 
     // Create at least a pattern for the parent node and the current path.
     if (pushTerminalVariables) {
-      patterns.push(this.createTriplePattern(convertContext.subject, fieldNode.name, object, convertContext.context));
+      patterns.push(this.createQuadPattern(convertContext.subject, fieldNode.name, object,
+        convertContext.graph, convertContext.context));
     }
 
     // Create patterns for the node's arguments
     if (fieldNode.arguments && fieldNode.arguments.length) {
       for (const argument of fieldNode.arguments) {
-        if (argument.name.value === '_') {
+        if (argument.name.value === '_' || argument.name.value === 'graph') {
           // no-op
         } else if (argument.name.value === 'first') {
           if (argument.value.kind !== 'IntValue') {
@@ -404,7 +441,8 @@ export class Converter {
         } else {
           const valueOutput = this.valueToTerm(argument.value, convertContext, argument.name.value);
           for (const term of valueOutput.terms) {
-            patterns.push(this.createTriplePattern(object, argument.name, term, convertContext.context));
+            patterns.push(this.createQuadPattern(
+              object, argument.name, term, convertContext.graph, convertContext.context));
           }
           if (valueOutput.auxiliaryPatterns) {
             patterns = patterns.concat(valueOutput.auxiliaryPatterns);
@@ -438,6 +476,7 @@ export class Converter {
       const subConvertContext: IConvertContext = {
         ...convertContext,
         ...nesting ? { path: this.appendFieldToPath(convertContext.path, fieldNode) } : {},
+        graph,
         subject: nesting ? object : convertContext.subject,
       };
 
@@ -503,21 +542,22 @@ export class Converter {
   }
 
   /**
-   * Create a triple pattern when the predicate is a name node that needs to be translated using the context.
+   * Create a quad pattern when the predicate is a name node that needs to be translated using the context.
    * @param {Term} subject The subject.
    * @param {NameNode} predicateName The name node for the predicate.
    * @param {Term} object The object.
+   * @param {Term} graph The graph.
    * @param {IContext} context A context.
-   * @return {Pattern} A triple pattern.
+   * @return {Pattern} A quad pattern.
    */
-  public createTriplePattern(subject: RDF.Term, predicateName: NameNode, object: RDF.Term,
-                             context: IJsonLdContextNormalized): Algebra.Pattern {
+  public createQuadPattern(subject: RDF.Term, predicateName: NameNode, object: RDF.Term, graph: RDF.Term,
+                           context: IJsonLdContextNormalized): Algebra.Pattern {
     const predicate: RDF.NamedNode = this.valueToNamedNode(predicateName.value, context);
     if (context && context[predicateName.value]
       && (<any> context[predicateName.value])['@reverse'] === predicate.value) {
-      return this.operationFactory.createPattern(object, predicate, subject);
+      return this.operationFactory.createPattern(object, predicate, subject, graph);
     }
-    return this.operationFactory.createPattern(subject, predicate, object);
+    return this.operationFactory.createPattern(subject, predicate, object, graph);
   }
 
   /**
@@ -534,12 +574,14 @@ export class Converter {
     // TODO: in the future, we should add support for GraphQL wide range of introspection features:
     // http://graphql.org/learn/introspection/
     if (fieldNode.name.value === '__typename') {
-      // Aliases change the variable name (and path name)
       const object: RDF.Variable = this.nameToVariable(fieldNode, convertContext);
       convertContext.terminalVariables.push(object);
       return this.operationFactory.createBgp([
         this.operationFactory.createPattern(
-          convertContext.subject, this.dataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'), object,
+          convertContext.subject,
+          this.dataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
+          this.nameToVariable(fieldNode, convertContext),
+          convertContext.graph,
         ),
       ].concat(auxiliaryPatterns || []));
     }
@@ -733,6 +775,7 @@ export class Converter {
             listNode,
             this.dataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#first'),
             term,
+            convertContext.graph,
           ));
           const nextListNode: RDF.Term = --remaining === 0
             ? this.dataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#nil')
@@ -741,6 +784,7 @@ export class Converter {
             listNode,
             this.dataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#rest'),
             nextListNode,
+            convertContext.graph,
           ));
           listNode = nextListNode;
         }
@@ -756,7 +800,8 @@ export class Converter {
       for (const field of (<ObjectValueNode> valueNode).fields) {
         const subValue = this.valueToTerm(field.value, convertContext, argumentName);
         for (const term of subValue.terms) {
-          auxiliaryObjectPatterns.push(this.createTriplePattern(subject, field.name, term, convertContext.context));
+          auxiliaryObjectPatterns.push(this.createQuadPattern(
+            subject, field.name, term, convertContext.graph, convertContext.context));
         }
         if (subValue.auxiliaryPatterns) {
           auxiliaryObjectPatterns = auxiliaryObjectPatterns.concat(subValue.auxiliaryPatterns);
@@ -917,6 +962,10 @@ export interface IConvertContext {
    */
   subject: RDF.Term;
   /**
+   * The graph term.
+   */
+  graph: RDF.Term;
+  /**
    * All variables that have no deeper child and should be selected withing the GraphQL query.
    */
   terminalVariables: RDF.Variable[];
@@ -957,9 +1006,10 @@ export interface IValueToTermOutput {
 }
 
 /**
- * The output of getting the subject for a definition node.
+ * The output of getting a node's quad context.
  */
-export interface IGetSubjectOutput {
-  subject: RDF.Term;
+export interface INodeQuadContext {
+  subject?: RDF.Term;
+  graph?: RDF.Term;
   auxiliaryPatterns?: Algebra.Pattern[];
 }

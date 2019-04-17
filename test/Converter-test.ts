@@ -894,9 +894,145 @@ query HeroForEpisode($ep: Episode!) {
               DataFactory.variable('hero_name'),
             ]));
       });
+
+      it('it should convert a query for getting graph at root', async () => {
+        const context = {
+          name: 'http://example.org/name',
+        };
+        return expect(await converter.graphqlToSparqlAlgebra(`
+{
+  graph
+  name
+}
+`, context)).toEqual(
+          OperationFactory.createProject(OperationFactory.createBgp([
+            OperationFactory.createPattern(
+                DataFactory.blankNode('b18'),
+                DataFactory.namedNode('http://example.org/name'),
+                DataFactory.variable('name'),
+                DataFactory.variable('graph'),
+              ),
+          ]),
+            [
+              DataFactory.variable('graph'),
+              DataFactory.variable('name'),
+            ]));
+      });
+
+      it('it should convert a query for setting graph at root', async () => {
+        const context = {
+          G1: 'http://example.org/graph1',
+          name: 'http://example.org/name',
+        };
+        return expect(await converter.graphqlToSparqlAlgebra(`
+{
+  graph(_:G1)
+  name
+}
+`, context)).toEqual(
+          OperationFactory.createProject(OperationFactory.createBgp([
+            OperationFactory.createPattern(
+                DataFactory.blankNode('b19'),
+                DataFactory.namedNode('http://example.org/name'),
+                DataFactory.variable('name'),
+                DataFactory.namedNode('http://example.org/graph1'),
+              ),
+          ]),
+            [
+              DataFactory.variable('name'),
+            ]));
+      });
+
+      it('it should convert a query for getting graph in inner node', async () => {
+        const context = {
+          hero: 'http://example.org/hero',
+          name: 'http://example.org/name',
+        };
+        return expect(await converter.graphqlToSparqlAlgebra(`
+{
+  hero {
+    graph
+    name
+  }
+}
+`, context)).toEqual(
+          OperationFactory.createProject(OperationFactory.createBgp([
+            OperationFactory.createPattern(
+                DataFactory.blankNode('b20'),
+                DataFactory.namedNode('http://example.org/hero'),
+                DataFactory.variable('hero'),
+            ),
+            OperationFactory.createPattern(
+                DataFactory.variable('hero'),
+                DataFactory.namedNode('http://example.org/name'),
+                DataFactory.variable('hero_name'),
+                DataFactory.variable('hero_graph'),
+              ),
+          ]),
+            [
+              DataFactory.variable('hero_graph'),
+              DataFactory.variable('hero_name'),
+            ]));
+      });
+
+      it('it should convert a query for setting graph without children', async () => {
+        const context = {
+          G1: 'http://example.org/graph1',
+          hero: 'http://example.org/hero',
+          name: 'http://example.org/name',
+        };
+        return expect(await converter.graphqlToSparqlAlgebra(`
+{
+  hero(graph:G1)
+}
+`, context)).toEqual(
+          OperationFactory.createProject(OperationFactory.createBgp([
+            OperationFactory.createPattern(
+                DataFactory.blankNode('b21'),
+                DataFactory.namedNode('http://example.org/hero'),
+                DataFactory.variable('hero'),
+                DataFactory.namedNode('http://example.org/graph1'),
+              ),
+          ]),
+            [
+              DataFactory.variable('hero'),
+            ]));
+      });
+
+      it('it should convert a query for setting graph with children', async () => {
+        const context = {
+          G1: 'http://example.org/graph1',
+          hero: 'http://example.org/hero',
+          name: 'http://example.org/name',
+        };
+        return expect(await converter.graphqlToSparqlAlgebra(`
+{
+  hero(graph:G1) {
+    name
+  }
+}
+`, context)).toEqual(
+          OperationFactory.createProject(OperationFactory.createBgp([
+            OperationFactory.createPattern(
+                DataFactory.blankNode('b22'),
+                DataFactory.namedNode('http://example.org/hero'),
+                DataFactory.variable('hero'),
+                DataFactory.namedNode('http://example.org/graph1'),
+            ),
+            OperationFactory.createPattern(
+                DataFactory.variable('hero'),
+                DataFactory.namedNode('http://example.org/name'),
+                DataFactory.variable('hero_name'),
+                DataFactory.namedNode('http://example.org/graph1'),
+              ),
+          ]),
+            [
+              DataFactory.variable('hero_name'),
+            ]));
+      });
     });
 
-    describe('#getSubjectSelectionSet', () => {
+    describe('#getNodeQuadContextSelectionSet', () => {
       let ctx;
 
       beforeEach(() => {
@@ -913,12 +1049,12 @@ query HeroForEpisode($ep: Episode!) {
         };
       });
 
-      it('should be null for no selection set', async () => {
-        return expect(converter.getSubjectSelectionSet(null, ctx)).toBe(null);
+      it('should be empty for no selection set', async () => {
+        return expect(converter.getNodeQuadContextSelectionSet(null, ctx)).toEqual({});
       });
 
-      it('should be null for non-id fields', async () => {
-        return expect(converter.getSubjectSelectionSet({
+      it('should be empty for unknown fields', async () => {
+        return expect(converter.getNodeQuadContextSelectionSet({
           kind: 'SelectionSet',
           selections: [
             {
@@ -934,11 +1070,11 @@ query HeroForEpisode($ep: Episode!) {
               name: { kind: 'Name', value: 'spread1' },
             },
           ],
-        }, ctx)).toBe(null);
+        }, ctx)).toEqual({});
       });
 
       it('should return a variable id for an id field', async () => {
-        expect(converter.getSubjectSelectionSet({
+        expect(converter.getNodeQuadContextSelectionSet({
           kind: 'SelectionSet',
           selections: [
             {
@@ -959,7 +1095,7 @@ query HeroForEpisode($ep: Episode!) {
       });
 
       it('should return a variable id for an id field with alias', async () => {
-        expect(converter.getSubjectSelectionSet({
+        expect(converter.getNodeQuadContextSelectionSet({
           kind: 'SelectionSet',
           selections: [
             {
@@ -981,7 +1117,7 @@ query HeroForEpisode($ep: Episode!) {
       });
 
       it('should return a variable id for an id field with non-_ args', async () => {
-        return expect(converter.getSubjectSelectionSet({
+        return expect(converter.getNodeQuadContextSelectionSet({
           kind: 'SelectionSet',
           selections: [
             {
@@ -1013,7 +1149,7 @@ query HeroForEpisode($ep: Episode!) {
       });
 
       it('should return a concrete id for an id field with _ arg', async () => {
-        expect(converter.getSubjectSelectionSet({
+        expect(converter.getNodeQuadContextSelectionSet({
           kind: 'SelectionSet',
           selections: [
             {
@@ -1042,7 +1178,7 @@ query HeroForEpisode($ep: Episode!) {
       });
 
       it('should error on a concrete id for an id field with _ arg with list value', async () => {
-        return expect(() => converter.getSubjectSelectionSet({
+        return expect(() => converter.getNodeQuadContextSelectionSet({
           kind: 'SelectionSet',
           selections: [
             {
@@ -1070,6 +1206,141 @@ query HeroForEpisode($ep: Episode!) {
             },
           ],
         }, ctx)).toThrow(new Error('Only single values can be set as id, but got 2 at id'));
+      });
+
+      it('should return a variable graph for an graph field', async () => {
+        expect(converter.getNodeQuadContextSelectionSet({
+          kind: 'SelectionSet',
+          selections: [
+            {
+              kind: 'Field',
+              name: { kind: 'Name', value: 'field1' },
+            },
+            {
+              kind: 'Field',
+              name: { kind: 'Name', value: 'graph' },
+            },
+            {
+              kind: 'Field',
+              name: { kind: 'Name', value: 'field3' },
+            },
+          ],
+        }, ctx)).toEqual({ graph: DataFactory.variable('a_graph') });
+        expect(ctx.terminalVariables).toEqual([ DataFactory.variable('a_graph') ]);
+      });
+
+      it('should return a variable id for an graph field with alias', async () => {
+        expect(converter.getNodeQuadContextSelectionSet({
+          kind: 'SelectionSet',
+          selections: [
+            {
+              kind: 'Field',
+              name: { kind: 'Name', value: 'field1' },
+            },
+            {
+              kind: 'Field',
+              name: { kind: 'Name', value: 'graph' },
+              alias: { kind: 'Name', value: 'myGraph' },
+            },
+            {
+              kind: 'Field',
+              name: { kind: 'Name', value: 'field3' },
+            },
+          ],
+        }, ctx)).toEqual({ graph: DataFactory.variable('a_myGraph') });
+        expect(ctx.terminalVariables).toEqual([ DataFactory.variable('a_myGraph') ]);
+      });
+
+      it('should return a variable graph for a graph field with non-_ args', async () => {
+        return expect(converter.getNodeQuadContextSelectionSet({
+          kind: 'SelectionSet',
+          selections: [
+            {
+              kind: 'Field',
+              name: { kind: 'Name', value: 'field1' },
+            },
+            {
+              kind: 'Field',
+              name: { kind: 'Name', value: 'graph' },
+              arguments: [
+                {
+                  kind: 'Argument',
+                  name: { kind: 'Name', value: 'bla1' },
+                  value: { kind: 'EnumValue', value: 'http://ex.org/val' },
+                },
+                {
+                  kind: 'Argument',
+                  name: { kind: 'Name', value: 'bla2' },
+                  value: { kind: 'EnumValue', value: 'http://ex.org/val' },
+                },
+              ],
+            },
+            {
+              kind: 'Field',
+              name: { kind: 'Name', value: 'field3' },
+            },
+          ],
+        }, ctx)).toEqual({ graph: DataFactory.variable('a_graph') });
+      });
+
+      it('should return a concrete graph for a graph field with _ arg', async () => {
+        expect(converter.getNodeQuadContextSelectionSet({
+          kind: 'SelectionSet',
+          selections: [
+            {
+              kind: 'Field',
+              name: { kind: 'Name', value: 'field1' },
+            },
+            {
+              kind: 'Field',
+              name: { kind: 'Name', value: 'graph' },
+              alias: { kind: 'Name', value: 'myGraph' },
+              arguments: [
+                {
+                  kind: 'Argument',
+                  name: { kind: 'Name', value: '_' },
+                  value: { kind: 'EnumValue', value: 'http://ex.org/val' },
+                },
+              ],
+            },
+            {
+              kind: 'Field',
+              name: { kind: 'Name', value: 'field3' },
+            },
+          ],
+        }, ctx)).toEqual({ graph: DataFactory.namedNode('http://ex.org/val') });
+        expect(ctx.terminalVariables).toEqual([]);
+      });
+
+      it('should error on a concrete id for an graph field with _ arg with list value', async () => {
+        return expect(() => converter.getNodeQuadContextSelectionSet({
+          kind: 'SelectionSet',
+          selections: [
+            {
+              kind: 'Field',
+              name: { kind: 'Name', value: 'field1' },
+            },
+            {
+              kind: 'Field',
+              name: { kind: 'Name', value: 'graph' },
+              alias: { kind: 'Name', value: 'myGraph' },
+              arguments: [
+                {
+                  kind: 'Argument',
+                  name: { kind: 'Name', value: '_' },
+                  value: { kind: 'ListValue', values: [
+                      { kind: 'EnumValue', value: 'http://ex.org/val1' },
+                      { kind: 'EnumValue', value: 'http://ex.org/val2' },
+                  ] },
+                },
+              ],
+            },
+            {
+              kind: 'Field',
+              name: { kind: 'Name', value: 'field3' },
+            },
+          ],
+        }, ctx)).toThrow(new Error('Only single values can be set as graph, but got 2 at graph'));
       });
     });
 
@@ -1147,6 +1418,7 @@ query HeroForEpisode($ep: Episode!) {
       it('should convert an operation query definition node', async () => {
         const ctx = {
           context: { theField: 'http://example.org/theField' },
+          graph: DataFactory.defaultGraph(),
           path: [ 'a' ],
           subject: DataFactory.namedNode('subject'),
           terminalVariables: [],
@@ -1176,6 +1448,7 @@ query HeroForEpisode($ep: Episode!) {
       it('should convert an operation query definition node with a directive', async () => {
         const ctx = {
           context: { theField: 'http://example.org/theField' },
+          graph: DataFactory.defaultGraph(),
           path: [ 'a' ],
           subject: DataFactory.namedNode('subject'),
           terminalVariables: [],
@@ -1219,6 +1492,7 @@ query HeroForEpisode($ep: Episode!) {
         const subject = DataFactory.namedNode('theSubject');
         const ctx = {
           context: { theField: 'http://example.org/theField' },
+          graph: DataFactory.defaultGraph(),
           path: [ 'a' ],
           subject,
           terminalVariables: [],
@@ -1245,6 +1519,7 @@ query HeroForEpisode($ep: Episode!) {
             anotherField: 'http://example.org/anotherField',
             andAnotherField: 'http://example.org/andAnotherField',
           },
+          graph: DataFactory.defaultGraph(),
           path: [ 'a' ],
           subject,
           terminalVariables: [],
@@ -1290,6 +1565,7 @@ query HeroForEpisode($ep: Episode!) {
             anotherField: 'http://example.org/anotherField',
             andAnotherField: 'http://example.org/andAnotherField',
           },
+          graph: DataFactory.defaultGraph(),
           path: [ 'a' ],
           subject,
           terminalVariables: [],
@@ -1330,6 +1606,7 @@ query HeroForEpisode($ep: Episode!) {
         const subject = DataFactory.namedNode('theSubject');
         const ctx = {
           context: { theField: 'http://example.org/theField' },
+          graph: DataFactory.defaultGraph(),
           path: [ 'a' ],
           subject,
           terminalVariables: [],
@@ -1347,6 +1624,7 @@ query HeroForEpisode($ep: Episode!) {
         const subject = DataFactory.namedNode('theSubject');
         const ctx = {
           context: { theField: 'http://example.org/theField' },
+          graph: DataFactory.defaultGraph(),
           path: [ 'a' ],
           subject,
           terminalVariables: [],
@@ -1369,6 +1647,7 @@ query HeroForEpisode($ep: Episode!) {
         const subject = DataFactory.namedNode('theSubject');
         const ctx = {
           context: { theField: 'http://example.org/theField' },
+          graph: DataFactory.defaultGraph(),
           path: [ 'a' ],
           subject,
           terminalVariables: [],
@@ -1398,6 +1677,7 @@ query HeroForEpisode($ep: Episode!) {
           context: {
             theField: 'http://example.org/theField',
           },
+          graph: DataFactory.defaultGraph(),
           path: [ 'a' ],
           subject,
           terminalVariables: [],
@@ -1426,6 +1706,7 @@ query HeroForEpisode($ep: Episode!) {
             theField: 'http://example.org/theField',
             Character: 'http://example.org/types/Character',
           },
+          graph: DataFactory.defaultGraph(),
           path: [ 'a' ],
           subject,
           terminalVariables: [],
@@ -1475,6 +1756,7 @@ query HeroForEpisode($ep: Episode!) {
           context: {
             theField: 'http://example.org/theField',
           },
+          graph: DataFactory.defaultGraph(),
           path: [ 'a' ],
           subject,
           terminalVariables: [],
@@ -1515,6 +1797,7 @@ query HeroForEpisode($ep: Episode!) {
             theField: 'http://example.org/theField',
             Character: 'http://example.org/types/Character',
           },
+          graph: DataFactory.defaultGraph(),
           path: [ 'a' ],
           subject,
           terminalVariables: [],
@@ -1559,6 +1842,7 @@ query HeroForEpisode($ep: Episode!) {
             theField: 'http://example.org/theField',
             Character: 'http://example.org/types/Character',
           },
+          graph: DataFactory.defaultGraph(),
           path: [ 'a' ],
           subject,
           terminalVariables: [],
@@ -1663,6 +1947,7 @@ query HeroForEpisode($ep: Episode!) {
       it('should convert a variable with an empty path', async () => {
         const ctx: IConvertContext = {
           context: {},
+          graph: DataFactory.defaultGraph(),
           path: [],
           subject: null,
           terminalVariables: [],
@@ -1677,6 +1962,7 @@ query HeroForEpisode($ep: Episode!) {
       it('should convert a variable with a single path element', async () => {
         const ctx: IConvertContext = {
           context: {},
+          graph: DataFactory.defaultGraph(),
           path: [ 'abc' ],
           subject: null,
           terminalVariables: [],
@@ -1691,6 +1977,7 @@ query HeroForEpisode($ep: Episode!) {
       it('should convert an aliased variable with a single path element', async () => {
         const ctx: IConvertContext = {
           context: {},
+          graph: DataFactory.defaultGraph(),
           path: [ 'abc' ],
           subject: null,
           terminalVariables: [],
@@ -1706,6 +1993,7 @@ query HeroForEpisode($ep: Episode!) {
       it('should convert a variable with multiple path elements', async () => {
         const ctx = {
           context: {},
+          graph: DataFactory.defaultGraph(),
           path: [ 'abc', 'def', 'ghi' ],
           subject: null,
           terminalVariables: [],
@@ -1744,6 +2032,7 @@ query HeroForEpisode($ep: Episode!) {
           va_en: { '@id': 'http://example.org/va', "@language": "en" },
           va_datetime: { '@id': 'http://example.org/va', "@type": "http://www.w3.org/2001/XMLSchema#dateTime" },
         },
+        graph: DataFactory.defaultGraph(),
         path: [],
         subject: null,
         terminalVariables: [],
@@ -1952,7 +2241,8 @@ query HeroForEpisode($ep: Episode!) {
         const s = DataFactory.namedNode('s');
         const p: NameNode = { kind: 'Name', value: 'p' };
         const o = DataFactory.namedNode('o');
-        return expect(converter.createTriplePattern(s, p, o, { p: 'myP' }))
+        const g = DataFactory.defaultGraph();
+        return expect(converter.createQuadPattern(s, p, o, g, { p: 'myP' }))
           .toEqual(OperationFactory.createPattern(s, DataFactory.namedNode('myP'), o));
       });
 
@@ -1960,8 +2250,27 @@ query HeroForEpisode($ep: Episode!) {
         const s = DataFactory.namedNode('s');
         const p: NameNode = { kind: 'Name', value: 'p' };
         const o = DataFactory.namedNode('o');
-        return expect(converter.createTriplePattern(s, p, o, { p: { '@reverse': 'myP' } }))
+        const g = DataFactory.defaultGraph();
+        return expect(converter.createQuadPattern(s, p, o, g, { p: { '@reverse': 'myP' } }))
           .toEqual(OperationFactory.createPattern(o, DataFactory.namedNode('myP'), s));
+      });
+
+      it('should create a quad pattern for a normal context', async () => {
+        const s = DataFactory.namedNode('s');
+        const p: NameNode = { kind: 'Name', value: 'p' };
+        const o = DataFactory.namedNode('o');
+        const g = DataFactory.namedNode('g');
+        return expect(converter.createQuadPattern(s, p, o, g, { p: 'myP' }))
+          .toEqual(OperationFactory.createPattern(s, DataFactory.namedNode('myP'), o, g));
+      });
+
+      it('should create a quad pattern for a reversed context', async () => {
+        const s = DataFactory.namedNode('s');
+        const p: NameNode = { kind: 'Name', value: 'p' };
+        const o = DataFactory.namedNode('o');
+        const g = DataFactory.namedNode('g');
+        return expect(converter.createQuadPattern(s, p, o, g, { p: { '@reverse': 'myP' } }))
+          .toEqual(OperationFactory.createPattern(o, DataFactory.namedNode('myP'), s, g));
       });
     });
 
@@ -1987,6 +2296,7 @@ query HeroForEpisode($ep: Episode!) {
     describe('#handleDirective', () => {
       const ctx = {
         context: {},
+        graph: DataFactory.defaultGraph(),
         path: [],
         subject: null,
         terminalVariables: [],

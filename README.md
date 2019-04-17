@@ -567,6 +567,113 @@ SELECT ?name WHERE {
 }
 ```
 
+### Defining or looking up the graph
+
+Using `graph` fields, the _named graph_ can be queried or defined.
+
+When `graph` is used as a field,
+this will have as side-effect that fields inside the node can be selected from _any_ graph,
+instead of only the _default graph_.
+
+Context:
+```json
+{
+    "hero": "http://example.org/hero",
+    "EMPIRE": "http://example.org/EMPIRE",
+    "name": "http://example.org/name",
+    "friend": "http://example.org/friend"
+}
+```
+
+#### Getting a graph
+
+GraphQL:
+```graphql
+{
+  hero {
+    graph
+    name
+  }
+}
+```
+
+SPARQL:
+```sparql
+SELECT ?hero_name ?hero_id WHERE {
+  _:b1 <http://example.org/hero> ?hero.
+  GRAPH ?graph {
+    ?hero <http://example.org/name> ?hero_name.
+  }
+}
+```
+
+#### Setting a block-scoped graph (1)
+
+GraphQL:
+```graphql
+{
+  hero {
+    graph(_:EMPIRE)
+    name
+    friend
+  }
+}
+```
+
+SPARQL:
+```sparql
+SELECT ?hero_name WHERE {
+  _:b1 <http://example.org/hero> ?hero.
+  GRAPH <http://example.org/EMPIRE> {
+    ?hero <http://example.org/name> ?hero_name;
+          <http://example.org/friend> ?hero_friend.
+  }
+}
+```
+
+#### Setting a block-scoped graph (2)
+
+GraphQL:
+```graphql
+{
+  hero(graph:EMPIRE) {
+    name
+    friend
+  }
+}
+```
+
+SPARQL:
+```sparql
+SELECT ?hero_name WHERE {
+  GRAPH <http://example.org/EMPIRE> {
+    _:b1 <http://example.org/hero> ?hero.
+    ?hero <http://example.org/name> ?hero_name.
+          <http://example.org/friend> ?hero_friend.
+  }
+}
+```
+
+#### Setting an inline graph
+
+GraphQL:
+```graphql
+{
+  friend(graph:EMPIRE)
+  name
+}
+```
+
+SPARQL:
+```sparql
+SELECT ?name WHERE {
+  GRAPH <http://example.org/EMPIRE> {
+    ?b1 <http://example.org/friend> ?friend;
+  }
+  ?b1 <http://example.org/name> ?name.
+}
+```
+
 ## License
 This software is written by [Ruben Taelman](http://rubensworks.net/).
 

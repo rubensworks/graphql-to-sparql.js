@@ -92,7 +92,8 @@ export abstract class NodeHandlerSelectionAdapter<T extends SelectionNode> exten
             throw new Error(`Only single values can be set as graph, but got ${valueOutput.terms
               .length} at ${fieldNode.name.value}`);
           }
-          graph = convertContext.graph = valueOutput.terms[0];
+          graph = valueOutput.terms[0];
+          convertContext = { ...convertContext, graph };
           if (valueOutput.auxiliaryPatterns) {
             patterns = patterns.concat(valueOutput.auxiliaryPatterns);
           }

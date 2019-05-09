@@ -428,7 +428,7 @@ query HeroNameAndFriends($episode: Episode) {
     }
   }
 }
-`, context, variablesDict)).toEqual(OperationFactory.createProject(OperationFactory.createBgp([
+`, context, { variablesDict })).toEqual(OperationFactory.createProject(OperationFactory.createBgp([
   OperationFactory.createPattern(
     DataFactory.blankNode('b8'),
     DataFactory.namedNode('http://example.org/hero'),
@@ -528,7 +528,7 @@ query Hero($episode: Episode, $withFriends: Boolean!) {
     }
   }
 }
-`, context, variablesDict)).toEqual(OperationFactory.createProject(OperationFactory.createBgp([
+`, context, { variablesDict })).toEqual(OperationFactory.createProject(OperationFactory.createBgp([
   OperationFactory.createPattern(
     DataFactory.blankNode('b10'),
     DataFactory.namedNode('http://example.org/hero'),
@@ -574,7 +574,7 @@ query HeroForEpisode($ep: Episode!) {
     }
   }
 }
-`, context, variablesDict)).toEqual(OperationFactory.createProject(
+`, context, { variablesDict })).toEqual(OperationFactory.createProject(
           OperationFactory.createJoin(
             OperationFactory.createBgp([
               OperationFactory.createPattern(
@@ -1098,6 +1098,111 @@ query HeroForEpisode($ep: Episode!) {
               ],
             },
           },
+        });
+      });
+    });
+
+    describe('for value singularization', () => {
+      it('should handle a couple @single fields', async () => {
+        const context = {
+          hero: 'http://example.org/hero',
+          friends: 'http://example.org/friends',
+          name: 'http://example.org/name',
+        };
+        const options =  {
+          singularizeVariables: {},
+        };
+        await converter.graphqlToSparqlAlgebra(`
+{
+  hero {
+    name @single
+    friends {
+      name @single
+    }
+  }
+}
+`, context, options);
+        return expect(options.singularizeVariables).toEqual({
+          hero_name: true,
+          hero_friends_name: true,
+        });
+      });
+
+      it('should handle a scope-all single', async () => {
+        const context = {
+          hero: 'http://example.org/hero',
+          friends: 'http://example.org/friends',
+          name: 'http://example.org/name',
+        };
+        const options =  {
+          singularizeVariables: {},
+        };
+        await converter.graphqlToSparqlAlgebra(`
+query {
+  hero @single(scope: all) {
+    name
+    friends {
+      name
+    }
+  }
+}
+`, context, options);
+        return expect(options.singularizeVariables).toEqual({
+          hero: true,
+          hero_name: true,
+          hero_friends: true,
+          hero_friends_name: true,
+        });
+      });
+
+      it('should handle scope-all single and plural combined', async () => {
+        const context = {
+          hero: 'http://example.org/hero',
+          friends: 'http://example.org/friends',
+          name: 'http://example.org/name',
+        };
+        const options =  {
+          singularizeVariables: {},
+        };
+        await converter.graphqlToSparqlAlgebra(`
+query {
+  hero @single(scope: all) {
+    name
+    friends @plural(scope: all) {
+      name
+    }
+  }
+}
+`, context, options);
+        return expect(options.singularizeVariables).toEqual({
+          hero: true,
+          hero_name: true,
+        });
+      });
+
+      it('should handle a root @single and couple @plural fields', async () => {
+        const context = {
+          hero: 'http://example.org/hero',
+          friends: 'http://example.org/friends',
+          name: 'http://example.org/name',
+        };
+        const options =  {
+          singularizeVariables: {},
+        };
+        await converter.graphqlToSparqlAlgebra(`
+query @single(scope: all) {
+  hero @plural {
+    name
+    friends @plural {
+      name
+    }
+  }
+}
+`, context, options);
+        return expect(options.singularizeVariables).toEqual({
+          '': true,
+          'hero_name': true,
+          'hero_friends_name': true,
         });
       });
     });

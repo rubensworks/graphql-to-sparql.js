@@ -1,7 +1,7 @@
-import {ArgumentNode, DirectiveNode, FieldNode, SelectionSetNode} from "graphql/language";
+import {ArgumentNode, DirectiveNode, FieldNode, NameNode, SelectionSetNode} from "graphql/language";
 import * as RDF from "rdf-js";
 import {Algebra} from "sparqlalgebrajs";
-import {IConvertContext} from "../IConvertContext";
+import {IConvertContext, SingularizeState} from "../IConvertContext";
 import {IConvertSettings} from "../IConvertSettings";
 import {Util} from "../Util";
 
@@ -40,10 +40,12 @@ export abstract class NodeHandlerAdapter<T extends { kind: string }> {
    * and the field identifying the subject will be ignored.
    *
    * @param {SelectionSetNode} selectionSet A selection set node.
+   * @param {string} fieldLabel A field label.
    * @param {IConvertContext} convertContext A convert context.
    * @return {INodeQuadContext} The subject, graph and auxiliary patterns.
    */
-  public getNodeQuadContextSelectionSet(selectionSet: SelectionSetNode | null, convertContext: IConvertContext)
+  public getNodeQuadContextSelectionSet(selectionSet: SelectionSetNode | null, fieldLabel: string,
+                                        convertContext: IConvertContext)
     : INodeQuadContext {
     const nodeQuadContext: INodeQuadContext = {};
     if (selectionSet) {
@@ -89,7 +91,7 @@ export abstract class NodeHandlerAdapter<T extends { kind: string }> {
         }
       }
       if (!nodeQuadContext[nodeQuadContextKey]) {
-        const term = this.util.nameToVariable(fieldNode, convertContext);
+        const term = this.util.nameToVariable(this.util.getFieldLabel(fieldNode), convertContext);
         convertContext.terminalVariables.push(term);
         nodeQuadContext[nodeQuadContextKey] = term;
       }
@@ -101,14 +103,15 @@ export abstract class NodeHandlerAdapter<T extends { kind: string }> {
   /**
    * Get an operation override defined by one of the directives.
    * @param {ReadonlyArray<DirectiveNode>} directives An option directives array.
+   * @param {string} fieldLabel The current field label.
    * @param {IConvertContext} convertContext A convert context.
    * @return {Algebra.Operation} An overridden operation or null.
    */
   public getDirectivesOverride(directives: ReadonlyArray<DirectiveNode> | null,
-                               convertContext: IConvertContext): Algebra.Operation {
+                               fieldLabel: string, convertContext: IConvertContext): Algebra.Operation {
     if (directives) {
       for (const directive of directives) {
-        if (!this.testDirectives(directive, convertContext)) {
+        if (!this.testDirectives(directive, fieldLabel, convertContext)) {
           return this.util.operationFactory.createBgp([]);
         }
       }
@@ -119,10 +122,11 @@ export abstract class NodeHandlerAdapter<T extends { kind: string }> {
   /**
    * Check if none of the directives block further handling of the active node.
    * @param {DirectiveNode} directive A directive.
+   * @param {string} fieldLabel The current field label.
    * @param {IConvertContext} convertContext A convert context.
    * @return {boolean} If processing of the active node should continue.
    */
-  public testDirectives(directive: DirectiveNode, convertContext: IConvertContext): boolean {
+  public testDirectives(directive: DirectiveNode, fieldLabel: string, convertContext: IConvertContext): boolean {
     let val: RDF.Term;
     switch (directive.name.value) {
     case 'include':
@@ -136,6 +140,19 @@ export abstract class NodeHandlerAdapter<T extends { kind: string }> {
       if (val.termType === 'Literal' && val.value === 'true') {
         return false;
       }
+      break;
+    case 'single':
+      if (this.isDirectiveScopeAll(directive)) {
+        convertContext.singularizeState = SingularizeState.SINGLE;
+      }
+      convertContext.singularizeVariables[this.util.nameToVariable(fieldLabel, convertContext).value] = true;
+      break;
+    case 'plural':
+      if (this.isDirectiveScopeAll(directive)) {
+        convertContext.singularizeState = SingularizeState.PLURAL;
+      }
+      // Delete the existing entry, as this may have already been set before if we were in a single scope.
+      delete convertContext.singularizeVariables[this.util.nameToVariable(fieldLabel, convertContext).value];
       break;
     default:
       // Ignore all other directives
@@ -156,6 +173,16 @@ export abstract class NodeHandlerAdapter<T extends { kind: string }> {
       throw new Error(`Can not apply a directive with a list: ${subValue.terms}`);
     }
     return subValue.terms[0];
+  }
+
+  /**
+   * If a `scope: all` directive param is present.
+   * @param {DirectiveNode} directive A directive.
+   * @return {boolean} If `scope: all` is present.
+   */
+  public isDirectiveScopeAll(directive: DirectiveNode) {
+    const scopeArg: ArgumentNode = this.util.getArgument(directive.arguments, 'scope');
+    return scopeArg && scopeArg.value.kind === 'EnumValue' && scopeArg.value.value === 'all';
   }
 
 }

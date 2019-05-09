@@ -1,7 +1,7 @@
 import {FieldNode, IntValueNode, SelectionNode} from "graphql/language";
 import * as RDF from "rdf-js";
 import {Algebra} from "sparqlalgebrajs";
-import {IConvertContext} from "../IConvertContext";
+import {IConvertContext, SingularizeState} from "../IConvertContext";
 import {IConvertSettings} from "../IConvertSettings";
 import {Util} from "../Util";
 import {INodeQuadContext, NodeHandlerAdapter} from "./NodeHandlerAdapter";
@@ -18,14 +18,15 @@ export abstract class NodeHandlerSelectionAdapter<T extends SelectionNode> exten
   /**
    * Get the quad context of a field node that should be used for the whole definition node.
    * @param {FieldNode} field A field node.
+   * @param {string} fieldLabel A field label.
    * @param {IConvertContext} convertContext A convert context.
    * @return {INodeQuadContext | null} The subject and optional auxiliary patterns.
    */
-  public getNodeQuadContextFieldNode(field: FieldNode, convertContext: IConvertContext)
+  public getNodeQuadContextFieldNode(field: FieldNode, fieldLabel: string, convertContext: IConvertContext)
     : INodeQuadContext | null {
-    return this.getNodeQuadContextSelectionSet(field.selectionSet, {
+    return this.getNodeQuadContextSelectionSet(field.selectionSet, fieldLabel, {
       ...convertContext,
-      path: this.util.appendFieldToPath(convertContext.path, field),
+      path: this.util.appendFieldToPath(convertContext.path, fieldLabel),
     });
   }
 
@@ -51,9 +52,17 @@ export abstract class NodeHandlerSelectionAdapter<T extends SelectionNode> exten
       pushTerminalVariables = false;
     }
 
+    // Determine the field label for variable naming, taking into account aliases
+    const fieldLabel: string = this.util.getFieldLabel(fieldNode);
+
+    // Handle the singular/plural scope
+    if (convertContext.singularizeState === SingularizeState.SINGLE) {
+      convertContext.singularizeVariables[this.util.nameToVariable(fieldLabel, convertContext).value] = true;
+    }
+
     // Handle meta fields
     if (pushTerminalVariables) {
-      const operationOverride = this.handleMetaField(convertContext, fieldNode, auxiliaryPatterns);
+      const operationOverride = this.handleMetaField(convertContext, fieldLabel, auxiliaryPatterns);
       if (operationOverride) {
         return operationOverride;
       }
@@ -62,8 +71,8 @@ export abstract class NodeHandlerSelectionAdapter<T extends SelectionNode> exten
     let patterns: Algebra.Pattern[] = auxiliaryPatterns ? auxiliaryPatterns.concat([]) : [];
 
     // Define subject and object
-    const subjectOutput = this.getNodeQuadContextFieldNode(fieldNode, convertContext);
-    let object: RDF.Term = subjectOutput.subject || this.util.nameToVariable(fieldNode, convertContext);
+    const subjectOutput = this.getNodeQuadContextFieldNode(fieldNode, fieldLabel, convertContext);
+    let object: RDF.Term = subjectOutput.subject || this.util.nameToVariable(fieldLabel, convertContext);
     let graph: RDF.Term = subjectOutput.graph || convertContext.graph;
     if (subjectOutput.auxiliaryPatterns) {
       patterns = patterns.concat(subjectOutput.auxiliaryPatterns);
@@ -137,7 +146,7 @@ export abstract class NodeHandlerSelectionAdapter<T extends SelectionNode> exten
     }
 
     // Directives
-    const directivesOverride = this.getDirectivesOverride(fieldNode.directives, convertContext);
+    const directivesOverride = this.getDirectivesOverride(fieldNode.directives, fieldLabel, convertContext);
     if (directivesOverride) {
       return directivesOverride;
     }
@@ -157,7 +166,7 @@ export abstract class NodeHandlerSelectionAdapter<T extends SelectionNode> exten
       // Change path value when there was an alias on this node.
       const subConvertContext: IConvertContext = {
         ...convertContext,
-        ...nesting ? { path: this.util.appendFieldToPath(convertContext.path, fieldNode) } : {},
+        ...nesting ? { path: this.util.appendFieldToPath(convertContext.path, fieldLabel) } : {},
         graph,
         subject: nesting ? object : convertContext.subject,
       };
@@ -228,22 +237,22 @@ export abstract class NodeHandlerSelectionAdapter<T extends SelectionNode> exten
    * If so, return a new operation for this, otherwise, null is returned.
    * @param {IConvertContext} convertContext A convert context.
    * @param {Term} subject The subject.
-   * @param {FieldNode} fieldNode The field node to convert.
+   * @param {string} fieldLabel The field label to convert.
    * @param {Pattern[]} auxiliaryPatterns Optional patterns that should be part of the BGP.
    * @return {Operation} An operation or null.
    */
-  public handleMetaField(convertContext: IConvertContext, fieldNode: FieldNode,
+  public handleMetaField(convertContext: IConvertContext, fieldLabel: string,
                          auxiliaryPatterns?: Algebra.Pattern[]): Algebra.Operation {
     // TODO: in the future, we should add support for GraphQL wide range of introspection features:
     // http://graphql.org/learn/introspection/
-    if (fieldNode.name.value === '__typename') {
-      const object: RDF.Variable = this.util.nameToVariable(fieldNode, convertContext);
+    if (fieldLabel === '__typename') {
+      const object: RDF.Variable = this.util.nameToVariable(fieldLabel, convertContext);
       convertContext.terminalVariables.push(object);
       return this.util.operationFactory.createBgp([
         this.util.operationFactory.createPattern(
           convertContext.subject,
           this.util.dataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
-          this.util.nameToVariable(fieldNode, convertContext),
+          this.util.nameToVariable(fieldLabel, convertContext),
           convertContext.graph,
         ),
       ].concat(auxiliaryPatterns || []));

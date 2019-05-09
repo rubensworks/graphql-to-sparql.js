@@ -2,7 +2,7 @@ import * as DataFactory from "@rdfjs/data-model";
 import {Factory} from "sparqlalgebrajs";
 import {Converter} from "../../lib/Converter";
 import {NodeHandlerDefinitionOperation} from "../../lib/handler/NodeHandlerDefinitionOperation";
-import {IVariablesDictionary} from "../../lib/IConvertContext";
+import {IVariablesDictionary, SingularizeState} from "../../lib/IConvertContext";
 import {Util} from "../../lib/Util";
 
 // tslint:disable:object-literal-sort-keys
@@ -30,6 +30,8 @@ describe('NodeHandlerDefinitionOperation', () => {
         context: { theField: 'http://example.org/theField' },
         graph: DataFactory.defaultGraph(),
         path: [ 'a' ],
+        singularizeState: SingularizeState.PLURAL,
+        singularizeVariables: {},
         subject: DataFactory.namedNode('subject'),
         terminalVariables: [],
         fragmentDefinitions: {},
@@ -59,6 +61,8 @@ describe('NodeHandlerDefinitionOperation', () => {
         context: { theField: 'http://example.org/theField' },
         graph: DataFactory.defaultGraph(),
         path: [ 'a' ],
+        singularizeState: SingularizeState.PLURAL,
+        singularizeVariables: {},
         subject: DataFactory.namedNode('subject'),
         terminalVariables: [],
         fragmentDefinitions: {},

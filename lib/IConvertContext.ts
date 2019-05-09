@@ -40,6 +40,14 @@ export interface IConvertContext {
    * A dictionary of variable metadata.
    */
   variablesMetaDict: IVariablesMetaDictionary;
+  /**
+   * The fields that are to be singularized.
+   */
+  singularizeVariables?: ISingularizeVariables;
+  /**
+   * The current singularization state.
+   */
+  singularizeState: SingularizeState;
 }
 
 /**
@@ -54,4 +62,26 @@ export interface IVariablesDictionary {
  */
 export interface IVariablesMetaDictionary {
   [id: string]: { mandatory: boolean, list: boolean, type: string };
+}
+
+/**
+ * A mapping from (nested) field names to a boolean indicating whether or not this field should be singularized.
+ * If the field is not present, singularization for this field is false.
+ */
+export interface ISingularizeVariables {
+  [id: string]: boolean;
+}
+
+/**
+ * A singularization state for variable values.
+ */
+export enum SingularizeState {
+  /**
+   * If only a first matching value should be picked.
+   */
+  SINGLE,
+  /**
+   * If all matching values should be picked.
+   */
+  PLURAL,
 }

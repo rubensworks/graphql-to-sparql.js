@@ -74,6 +74,7 @@
     "coveralls": "jest --coverage && cat ./coverage/lcov.info | coveralls",
     "lint": "tslint index.ts lib/**/*.ts test/**/*.ts --exclude '**/*.d.ts'",
     "build": "tsc",
+    "build-watch": "tsc --watch",
     "validate": "npm ls",
     "prepare": "npm run build",
     "version": "manual-git-changelog onversion"

@@ -111,11 +111,11 @@ export class Util {
   /**
    * Append a field's label to a path.
    * @param {string[]} path A path.
-   * @param {FieldNode} field A field.
+   * @param {string} fieldLabel A field label.
    * @return {string[]} A new path array.
    */
-  public appendFieldToPath(path: string[], field: FieldNode): string[] {
-    return path.concat([this.getFieldLabel(field)]);
+  public appendFieldToPath(path: string[], fieldLabel: string): string[] {
+    return path.concat([fieldLabel]);
   }
 
   /**
@@ -129,15 +129,14 @@ export class Util {
 
   /**
    * Convert a field node to a variable built from the node name and the current path inside the context.
-   * @param {FieldNode} field A field node.
+   * @param {string} fieldLabel A field label.
    * @param {IConvertContext} convertContext A convert context.
    * @param {string} variableDelimiter A variable delimiter.
    * @return {Variable} A variable.
    */
-  public nameToVariable(field: FieldNode, convertContext: IConvertContext): RDF.Variable {
-    const label = this.getFieldLabel(field);
+  public nameToVariable(fieldLabel: string, convertContext: IConvertContext): RDF.Variable {
     return this.dataFactory.variable((convertContext.path.length
-      ? convertContext.path.join(this.settings.variableDelimiter) + this.settings.variableDelimiter : '') + label);
+      ? convertContext.path.join(this.settings.variableDelimiter) + this.settings.variableDelimiter : '') + fieldLabel);
   }
 
   /**

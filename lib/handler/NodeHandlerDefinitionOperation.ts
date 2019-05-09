@@ -47,7 +47,8 @@ export class NodeHandlerDefinitionOperation extends NodeHandlerDefinitionAdapter
     }
 
     // Directives
-    const directivesOverride = this.getDirectivesOverride(operationDefinition.directives, convertContext);
+    const directivesOverride = this.getDirectivesOverride(operationDefinition.directives,
+      operationDefinition.name ? operationDefinition.name.value : '', convertContext);
     if (directivesOverride) {
       return directivesOverride;
     }

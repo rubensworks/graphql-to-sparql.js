@@ -57,7 +57,8 @@ export class NodeHandlerDocument extends NodeHandlerAdapter<DocumentNode> {
   public getNodeQuadContextDefinitionNode(definition: DefinitionNode, convertContext: IConvertContext)
     : INodeQuadContext | null {
     if (definition.kind === 'OperationDefinition') {
-      return this.getNodeQuadContextSelectionSet(definition.selectionSet, convertContext);
+      return this.getNodeQuadContextSelectionSet(definition.selectionSet,
+        definition.name ? definition.name.value : '', convertContext);
     }
     return null;
   }

@@ -2,7 +2,7 @@ import * as DataFactory from "@rdfjs/data-model";
 import {DirectiveNode} from "graphql";
 import {Converter} from "../../lib/Converter";
 import {NodeHandlerAdapter} from "../../lib/handler/NodeHandlerAdapter";
-import {IVariablesDictionary} from "../../lib/IConvertContext";
+import {IVariablesDictionary, SingularizeState} from "../../lib/IConvertContext";
 import {Util} from "../../lib/Util";
 
 // tslint:disable:object-literal-sort-keys
@@ -39,7 +39,7 @@ describe('NodeHandlerAdapter', () => {
     });
 
     it('should be empty for no selection set', async () => {
-      return expect(adapter.getNodeQuadContextSelectionSet(null, ctx)).toEqual({});
+      return expect(adapter.getNodeQuadContextSelectionSet(null, 'field', ctx)).toEqual({});
     });
 
     it('should be empty for unknown fields', async () => {
@@ -59,7 +59,7 @@ describe('NodeHandlerAdapter', () => {
             name: { kind: 'Name', value: 'spread1' },
           },
         ],
-      }, ctx)).toEqual({});
+      }, 'field', ctx)).toEqual({});
     });
 
     it('should return a variable id for an id field', async () => {
@@ -79,7 +79,7 @@ describe('NodeHandlerAdapter', () => {
             name: { kind: 'Name', value: 'field3' },
           },
         ],
-      }, ctx)).toEqual({ subject: DataFactory.variable('a_id') });
+      }, 'field', ctx)).toEqual({ subject: DataFactory.variable('a_id') });
       expect(ctx.terminalVariables).toEqual([ DataFactory.variable('a_id') ]);
     });
 
@@ -101,7 +101,7 @@ describe('NodeHandlerAdapter', () => {
             name: { kind: 'Name', value: 'field3' },
           },
         ],
-      }, ctx)).toEqual({ subject: DataFactory.variable('a_myId') });
+      }, 'field', ctx)).toEqual({ subject: DataFactory.variable('a_myId') });
       expect(ctx.terminalVariables).toEqual([ DataFactory.variable('a_myId') ]);
     });
 
@@ -134,7 +134,7 @@ describe('NodeHandlerAdapter', () => {
             name: { kind: 'Name', value: 'field3' },
           },
         ],
-      }, ctx)).toEqual({ subject: DataFactory.variable('a_id') });
+      }, 'field', ctx)).toEqual({ subject: DataFactory.variable('a_id') });
     });
 
     it('should return a concrete id for an id field with _ arg', async () => {
@@ -162,7 +162,7 @@ describe('NodeHandlerAdapter', () => {
             name: { kind: 'Name', value: 'field3' },
           },
         ],
-      }, ctx)).toEqual({ subject: DataFactory.namedNode('http://ex.org/val') });
+      }, 'field', ctx)).toEqual({ subject: DataFactory.namedNode('http://ex.org/val') });
       expect(ctx.terminalVariables).toEqual([]);
     });
 
@@ -194,7 +194,7 @@ describe('NodeHandlerAdapter', () => {
             name: { kind: 'Name', value: 'field3' },
           },
         ],
-      }, ctx)).toThrow(new Error('Only single values can be set as id, but got 2 at id'));
+      }, 'field', ctx)).toThrow(new Error('Only single values can be set as id, but got 2 at id'));
     });
 
     it('should return a variable graph for an graph field', async () => {
@@ -214,7 +214,7 @@ describe('NodeHandlerAdapter', () => {
             name: { kind: 'Name', value: 'field3' },
           },
         ],
-      }, ctx)).toEqual({ graph: DataFactory.variable('a_graph') });
+      }, 'field', ctx)).toEqual({ graph: DataFactory.variable('a_graph') });
       expect(ctx.terminalVariables).toEqual([ DataFactory.variable('a_graph') ]);
     });
 
@@ -236,7 +236,7 @@ describe('NodeHandlerAdapter', () => {
             name: { kind: 'Name', value: 'field3' },
           },
         ],
-      }, ctx)).toEqual({ graph: DataFactory.variable('a_myGraph') });
+      }, 'field', ctx)).toEqual({ graph: DataFactory.variable('a_myGraph') });
       expect(ctx.terminalVariables).toEqual([ DataFactory.variable('a_myGraph') ]);
     });
 
@@ -269,7 +269,7 @@ describe('NodeHandlerAdapter', () => {
             name: { kind: 'Name', value: 'field3' },
           },
         ],
-      }, ctx)).toEqual({ graph: DataFactory.variable('a_graph') });
+      }, 'field', ctx)).toEqual({ graph: DataFactory.variable('a_graph') });
     });
 
     it('should return a concrete graph for a graph field with _ arg', async () => {
@@ -297,7 +297,7 @@ describe('NodeHandlerAdapter', () => {
             name: { kind: 'Name', value: 'field3' },
           },
         ],
-      }, ctx)).toEqual({ graph: DataFactory.namedNode('http://ex.org/val') });
+      }, 'field', ctx)).toEqual({ graph: DataFactory.namedNode('http://ex.org/val') });
       expect(ctx.terminalVariables).toEqual([]);
     });
 
@@ -329,7 +329,7 @@ describe('NodeHandlerAdapter', () => {
             name: { kind: 'Name', value: 'field3' },
           },
         ],
-      }, ctx)).toThrow(new Error('Only single values can be set as graph, but got 2 at graph'));
+      }, 'field', ctx)).toThrow(new Error('Only single values can be set as graph, but got 2 at graph'));
     });
   });
 
@@ -337,8 +337,10 @@ describe('NodeHandlerAdapter', () => {
     const ctx = {
       context: {},
       graph: DataFactory.defaultGraph(),
-      path: [],
+      path: [ 'parent' ],
       subject: null,
+      singularizeState: null,
+      singularizeVariables: {},
       terminalVariables: [],
       fragmentDefinitions: {},
       variablesDict: <IVariablesDictionary> {
@@ -383,25 +385,81 @@ describe('NodeHandlerAdapter', () => {
       },
     ] };
     const idDirective: DirectiveNode = { kind: 'Directive', name: { kind: 'Name', value: 'id' }, arguments: [] };
+    const single: DirectiveNode = { kind: 'Directive', name: { kind: 'Name', value: 'single' }, arguments: [] };
+    const singleAll: DirectiveNode = { kind: 'Directive', name: { kind: 'Name', value: 'single' }, arguments: [
+      {
+        kind: 'Argument',
+        name: { kind: 'Name', value: 'scope' },
+        value: { kind: 'EnumValue', value: 'all' },
+      },
+    ] };
+    const plural: DirectiveNode = { kind: 'Directive', name: { kind: 'Name', value: 'plural' }, arguments: [] };
+    const pluralAll: DirectiveNode = { kind: 'Directive', name: { kind: 'Name', value: 'plural' }, arguments: [
+      {
+        kind: 'Argument',
+        name: { kind: 'Name', value: 'scope' },
+        value: { kind: 'EnumValue', value: 'all' },
+      },
+    ] };
 
     it('should ignore an unsupported directive', async () => {
-      return expect(adapter.testDirectives(unknownDirective, ctx)).toBeTruthy();
+      return expect(adapter.testDirectives(unknownDirective, 'field', ctx)).toBeTruthy();
     });
 
     it('should return true on a true inclusion', async () => {
-      return expect(adapter.testDirectives(includeTrue, ctx)).toBeTruthy();
+      return expect(adapter.testDirectives(includeTrue, 'field', ctx)).toBeTruthy();
     });
 
     it('should return false on a false inclusion', async () => {
-      return expect(adapter.testDirectives(includeFalse, ctx)).toBeFalsy();
+      return expect(adapter.testDirectives(includeFalse, 'field', ctx)).toBeFalsy();
     });
 
     it('should return false on a true skip', async () => {
-      return expect(adapter.testDirectives(skipTrue, ctx)).toBeFalsy();
+      return expect(adapter.testDirectives(skipTrue, 'field', ctx)).toBeFalsy();
     });
 
     it('should return true on a false skip', async () => {
-      return expect(adapter.testDirectives(skipFalse, ctx)).toBeTruthy();
+      return expect(adapter.testDirectives(skipFalse, 'field', ctx)).toBeTruthy();
+    });
+
+    it('should modify singularize variables and not set the single state on single', async () => {
+      ctx.singularizeState = null;
+      ctx.singularizeVariables = {};
+      adapter.testDirectives(single, 'field', ctx);
+      expect(ctx.singularizeVariables).toEqual({
+        parent_field: true,
+      });
+      expect(ctx.singularizeState).toEqual(null);
+    });
+
+    it('should modify singularize variables and set the single state on single all', async () => {
+      ctx.singularizeState = null;
+      ctx.singularizeVariables = {};
+      adapter.testDirectives(singleAll, 'field', ctx);
+      expect(ctx.singularizeVariables).toEqual({
+        parent_field: true,
+      });
+      expect(ctx.singularizeState).toEqual(SingularizeState.SINGLE);
+    });
+
+    it('should modify singularize variables and not set the single state on plural', async () => {
+      ctx.singularizeState = null;
+      ctx.singularizeVariables = {
+        parent_field: true,
+      };
+      adapter.testDirectives(plural, 'field', ctx);
+      expect(ctx.singularizeVariables).toEqual({});
+      expect(ctx.singularizeState).toEqual(null);
+    });
+
+    it('should modify singularize variables and set the single state on plural all', async () => {
+      ctx.singularizeState = null;
+      ctx.singularizeVariables = {
+        parent_field: true,
+      };
+      adapter.testDirectives(pluralAll, 'field', ctx);
+      expect(ctx.singularizeVariables).toEqual({});
+      expect(ctx.singularizeState).toEqual(SingularizeState.PLURAL);
     });
   });
 });

@@ -2,7 +2,7 @@ import * as DataFactory from "@rdfjs/data-model";
 import {Factory} from "sparqlalgebrajs";
 import {Converter} from "../../lib/Converter";
 import {NodeHandlerSelectionField} from "../../lib/handler/NodeHandlerSelectionField";
-import {IConvertContext, IVariablesDictionary} from "../../lib/IConvertContext";
+import {IConvertContext, IVariablesDictionary, SingularizeState} from "../../lib/IConvertContext";
 import {Util} from "../../lib/Util";
 
 // tslint:disable:object-literal-sort-keys
@@ -32,6 +32,8 @@ describe('NodeHandlerSelectionField', () => {
         graph: DataFactory.defaultGraph(),
         path: [ 'a' ],
         subject,
+        singularizeState: SingularizeState.PLURAL,
+        singularizeVariables: {},
         terminalVariables: [],
         fragmentDefinitions: {},
         variablesDict: {},
@@ -58,6 +60,8 @@ describe('NodeHandlerSelectionField', () => {
         graph: DataFactory.defaultGraph(),
         path: [ 'a' ],
         subject,
+        singularizeState: SingularizeState.PLURAL,
+        singularizeVariables: {},
         terminalVariables: [],
         fragmentDefinitions: {},
         variablesDict: {},
@@ -103,6 +107,8 @@ describe('NodeHandlerSelectionField', () => {
         graph: DataFactory.defaultGraph(),
         path: [ 'a' ],
         subject,
+        singularizeState: SingularizeState.PLURAL,
+        singularizeVariables: {},
         terminalVariables: [],
         fragmentDefinitions: {},
         variablesDict: {},
@@ -143,6 +149,8 @@ describe('NodeHandlerSelectionField', () => {
         graph: DataFactory.defaultGraph(),
         path: [ 'a' ],
         subject,
+        singularizeState: SingularizeState.PLURAL,
+        singularizeVariables: {},
         terminalVariables: [],
         fragmentDefinitions: {},
         variablesDict: {},
@@ -161,6 +169,8 @@ describe('NodeHandlerSelectionField', () => {
         graph: DataFactory.defaultGraph(),
         path: [ 'a' ],
         subject,
+        singularizeState: SingularizeState.PLURAL,
+        singularizeVariables: {},
         terminalVariables: [],
         fragmentDefinitions: {},
         variablesDict: {},
@@ -183,6 +193,8 @@ describe('NodeHandlerSelectionField', () => {
         graph: DataFactory.defaultGraph(),
         path: [ 'a' ],
         subject,
+        singularizeState: SingularizeState.PLURAL,
+        singularizeVariables: {},
         terminalVariables: [],
         fragmentDefinitions: {},
         variablesDict: {},
@@ -212,6 +224,8 @@ describe('NodeHandlerSelectionField', () => {
         graph: DataFactory.defaultGraph(),
         path: [ 'a' ],
         subject,
+        singularizeState: SingularizeState.PLURAL,
+        singularizeVariables: {},
         terminalVariables: [],
         fragmentDefinitions: {},
         variablesDict: {},
@@ -239,6 +253,8 @@ describe('NodeHandlerSelectionField', () => {
         graph: DataFactory.defaultGraph(),
         path: [ 'a' ],
         subject,
+        singularizeState: SingularizeState.PLURAL,
+        singularizeVariables: {},
         terminalVariables: [],
         fragmentDefinitions: {},
         variablesDict: <IVariablesDictionary> {
@@ -279,6 +295,8 @@ describe('NodeHandlerSelectionField', () => {
         graph: DataFactory.defaultGraph(),
         path: [ 'a' ],
         subject,
+        singularizeState: SingularizeState.PLURAL,
+        singularizeVariables: {},
         terminalVariables: [],
         fragmentDefinitions: {},
         variablesDict: {},

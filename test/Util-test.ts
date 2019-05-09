@@ -3,7 +3,7 @@ import {NameNode} from "graphql";
 import * as RDF from "rdf-js";
 import {Factory} from "sparqlalgebrajs";
 import {Converter} from "../lib/Converter";
-import {IConvertContext, IVariablesDictionary} from "../lib/IConvertContext";
+import {IConvertContext, IVariablesDictionary, SingularizeState} from "../lib/IConvertContext";
 import {Util} from "../lib/Util";
 
 // tslint:disable:object-literal-sort-keys
@@ -108,12 +108,14 @@ describe('Util', () => {
         graph: DataFactory.defaultGraph(),
         path: [],
         subject: null,
+        singularizeState: SingularizeState.PLURAL,
+        singularizeVariables: {},
         terminalVariables: [],
         fragmentDefinitions: {},
         variablesDict: {},
         variablesMetaDict: {},
       };
-      return expect(util.nameToVariable({ kind: 'Field', name: { kind: 'Name', value: 'varName' } }, ctx))
+      return expect(util.nameToVariable('varName', ctx))
         .toEqual(DataFactory.namedNode('varName'));
     });
 
@@ -123,29 +125,15 @@ describe('Util', () => {
         graph: DataFactory.defaultGraph(),
         path: [ 'abc' ],
         subject: null,
+        singularizeState: SingularizeState.PLURAL,
+        singularizeVariables: {},
         terminalVariables: [],
         fragmentDefinitions: {},
         variablesDict: {},
         variablesMetaDict: {},
       };
-      return expect(util.nameToVariable({ kind: 'Field', name: { kind: 'Name', value: 'varName' } }, ctx))
+      return expect(util.nameToVariable('varName', ctx))
         .toEqual(DataFactory.namedNode('abc_varName'));
-    });
-
-    it('should convert an aliased variable with a single path element', async () => {
-      const ctx: IConvertContext = {
-        context: {},
-        graph: DataFactory.defaultGraph(),
-        path: [ 'abc' ],
-        subject: null,
-        terminalVariables: [],
-        fragmentDefinitions: {},
-        variablesDict: {},
-        variablesMetaDict: {},
-      };
-      return expect(util.nameToVariable(
-        { kind: 'Field', name: { kind: 'Name', value: 'varName' }, alias: { kind: 'Name', value: 'varName2' } }, ctx))
-        .toEqual(DataFactory.namedNode('abc_varName2'));
     });
 
     it('should convert a variable with multiple path elements', async () => {
@@ -154,12 +142,14 @@ describe('Util', () => {
         graph: DataFactory.defaultGraph(),
         path: [ 'abc', 'def', 'ghi' ],
         subject: null,
+        singularizeState: SingularizeState.PLURAL,
+        singularizeVariables: {},
         terminalVariables: [],
         fragmentDefinitions: {},
         variablesDict: {},
         variablesMetaDict: {},
       };
-      return expect(util.nameToVariable({ kind: 'Field', name: { kind: 'Name', value: 'varName' } }, ctx))
+      return expect(util.nameToVariable('varName', ctx))
         .toEqual(DataFactory.namedNode('abc_def_ghi_varName'));
     });
   });
@@ -193,6 +183,8 @@ describe('Util', () => {
       graph: DataFactory.defaultGraph(),
       path: [],
       subject: null,
+      singularizeState: SingularizeState.PLURAL,
+      singularizeVariables: {},
       terminalVariables: [],
       fragmentDefinitions: {},
       variablesDict: <IVariablesDictionary> {

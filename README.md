@@ -674,6 +674,114 @@ SELECT ?name WHERE {
 }
 ```
 
+## Converting to tree-based results
+
+Using a tool such as [SPARQL-Results+JSON to tree](https://github.com/rubensworks/sparqljson-to-tree.js),
+results from converted queries can be compacted.
+By default, all values will be considered _plural_, and values will always be emitted in an array.
+With the `singularizeVariables` option, you can specify which values should be _singularized_ and not wrapped in an array anymore.
+
+To simplify this process, graphql-to-sparql allows `@single` or `@plural` directives to be added inside the queries to indicate which fields should be singularized and which ones should remain plural.
+If no directive is present, everything will remain plural.
+For this, graphql-to-sparql allows an `singularizeVariables` object to be passed via options,
+which can then be used by other tools for compaction.
+
+For example:
+```
+import {Converter as TreeConverter} from "sparqljson-to-tree";
+
+const singularizeVariables = {};
+const algebra = await new Converter().graphqlToSparqlAlgebra('{ hero { name } }', {
+  "hero": "http://example.org/hero",
+  "name": "http://example.org/name",
+  "friends": "http://example.org/friends"
+}, { singularizeVariables });
+
+const response =  { ... }; // Passed to some query engine like Comunica
+
+const jsonResult = new TreeConverter().sparqlJsonResultsToTree(response, { singularizeVariables });
+```
+
+Available directives:
+
+| Directive | Meaning |
+| --------- | ------- |
+| `@single` | This field will be singular. |
+| `@plural` | This field will be plural. |
+| `@single(scope: all)` | This field and all child fields will be singular. |
+| `@plural(scope: all)` | This field and all child fields will be plural. |
+
+By default, all fields all plural. So there is an implicit `@plural(scope: all)` directive on the query root.
+
+### Singularization examples
+
+#### Singularizing a field
+
+Query:
+```graphql
+{
+  hero {
+    name @single
+  }
+}
+```
+Example output:
+```json
+[
+  {
+    "hero": [
+      {
+        "name": "Alice"
+      },
+      {
+        "name": "Bob"
+      }
+    ]
+  }
+]
+```
+
+#### Singularizing everything
+
+Query:
+```graphql
+query @single(scope: all) {
+  hero {
+    name
+  }
+}
+```
+Example output:
+```json
+{
+  "hero": {
+    "name": "Alice"
+  }
+}
+```
+
+#### Singularizing everything except for a single field
+
+Query:
+```graphql
+query @single(scope: all) {
+  hero @plural {
+    name
+  }
+}
+```
+Example output:
+```json
+{
+  "hero": [
+    {
+      "name": "Alice"
+    }
+  ]
+}
+```
+
+
 ## License
 This software is written by [Ruben Taelman](http://rubensworks.net/).
 

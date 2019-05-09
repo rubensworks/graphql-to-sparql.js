@@ -18,7 +18,8 @@ import {
   NodeValueHandlerString,
   NodeValueHandlerVariable,
 } from "./handler";
-import {IConvertContext, IVariablesDictionary} from "./IConvertContext";
+import {IConvertContext, SingularizeState} from "./IConvertContext";
+import {IConvertOptions} from "./IConvertOptions";
 import {IConvertSettings} from "./IConvertSettings";
 import {Util} from "./Util";
 
@@ -64,24 +65,25 @@ export class Converter {
    * Translates a GraphQL query into SPARQL algebra.
    * @param {string} graphqlQuery A GraphQL query string.
    * @param {IContext} context A JSON-LD context.
-   * @param {IVariablesDictionary} variablesDict A variables dictionary.
+   * @param {IConvertOptions} options An options object.
    * @return {Promise<Operation>} A promise resolving to an operation.
    */
   public async graphqlToSparqlAlgebra(graphqlQuery: string, context: JsonLdContext,
-                                      variablesDict?: IVariablesDictionary): Promise<Algebra.Operation> {
+                                      options?: IConvertOptions): Promise<Algebra.Operation> {
     return this.graphqlToSparqlAlgebraRawContext(graphqlQuery,
-      await this.util.contextParser.parse(context), variablesDict);
+      await this.util.contextParser.parse(context), options);
   }
 
   /**
    * Translates a GraphQL query into SPARQL algebra.
    * @param {string} graphqlQuery A GraphQL query string.
    * @param {IContext} context A JSON-LD context.
-   * @param {IVariablesDictionary} variablesDict A variables dictionary.
+   * @param {IConvertOptions} options An options object.
    * @return {Operation} An operation.
    */
   public graphqlToSparqlAlgebraRawContext(graphqlQuery: string, context: IJsonLdContextNormalized,
-                                          variablesDict?: IVariablesDictionary): Algebra.Operation {
+                                          options?: IConvertOptions): Algebra.Operation {
+    options = options || {};
     const document: DocumentNode = parse(graphqlQuery);
     const fragmentDefinitions = this.indexFragments(document);
     const convertContext: IConvertContext = {
@@ -89,9 +91,11 @@ export class Converter {
       fragmentDefinitions,
       graph: this.util.dataFactory.defaultGraph(),
       path: [],
+      singularizeState: SingularizeState.PLURAL, // We don't make this configurable to enforce query consistency
+      singularizeVariables: options.singularizeVariables || {},
       subject: null,
       terminalVariables: [],
-      variablesDict: variablesDict || {},
+      variablesDict: options.variablesDict || {},
       variablesMetaDict: {},
     };
 

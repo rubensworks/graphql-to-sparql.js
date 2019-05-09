@@ -2,7 +2,7 @@ import * as DataFactory from "@rdfjs/data-model";
 import {Factory} from "sparqlalgebrajs";
 import {Converter} from "../../lib/Converter";
 import {NodeHandlerSelectionInlineFragment} from "../../lib/handler/NodeHandlerSelectionInlineFragment";
-import {IConvertContext} from "../../lib/IConvertContext";
+import {IConvertContext, SingularizeState} from "../../lib/IConvertContext";
 import {Util} from "../../lib/Util";
 
 // tslint:disable:object-literal-sort-keys
@@ -35,6 +35,8 @@ describe('NodeHandlerSelectionInlineFragment', () => {
         graph: DataFactory.defaultGraph(),
         path: [ 'a' ],
         subject,
+        singularizeState: SingularizeState.PLURAL,
+        singularizeVariables: {},
         terminalVariables: [],
         fragmentDefinitions: {},
         variablesDict: {},

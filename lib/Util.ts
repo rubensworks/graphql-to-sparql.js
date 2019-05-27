@@ -6,6 +6,11 @@ import {Algebra, Factory} from "sparqlalgebrajs";
 import {IValueNodeHandlerOutput, NodeHandlerAdapter, NodeValueHandlerAdapter} from "./handler";
 import {IConvertContext} from "./IConvertContext";
 import {IConvertSettings} from "./IConvertSettings";
+import {
+  DirectiveNodeHandlerAdapter,
+  IDirectiveContext,
+  IDirectiveNodeHandlerOutput
+} from "./handler/directivenode/DirectiveNodeHandlerAdapter";
 
 /**
  * Utilities for conversion.
@@ -20,6 +25,7 @@ export class Util {
 
   private readonly nodeHandlers: {[kind: string]: NodeHandlerAdapter<any>} = {};
   private readonly nodeValueHandlers: {[kind: string]: NodeValueHandlerAdapter<any>} = {};
+  private readonly directiveNodeHandlers: {[kind: string]: DirectiveNodeHandlerAdapter} = {};
 
   constructor(settings: IConvertSettings) {
     this.settings = settings;
@@ -43,6 +49,14 @@ export class Util {
    */
   public registerNodeValueHandler(nodeValueHandler: NodeValueHandlerAdapter<any>) {
     this.nodeValueHandlers[nodeValueHandler.targetKind] = nodeValueHandler;
+  }
+
+  /**
+   * Register a new {@link DirectiveNodeHandlerAdapter}
+   * @param {DirectiveNodeHandlerAdapter} directiveNodeHandler A handler for handling GraphQL directives.
+   */
+  public registerDirectiveNodeHandler(directiveNodeHandler: DirectiveNodeHandlerAdapter) {
+    this.directiveNodeHandlers[directiveNodeHandler.targetKind] = directiveNodeHandler;
   }
 
   /**
@@ -73,6 +87,21 @@ export class Util {
       throw new Error(`Unsupported GraphQL value node '${node.kind}'`);
     }
     return nodeValueHandler.handle(node, fieldName, convertContext);
+  }
+
+  /**
+   * Get the handler output for the given directive.
+   * @param {IDirectiveContext} directiveContext The current directive context.
+   * @param {IConvertContext} convertContext A conversion context.
+   * @return {IValueNodeHandlerOutput} The RDF terms and patterns.
+   */
+  public handleDirectiveNode(directiveContext: IDirectiveContext, convertContext: IConvertContext)
+    : IDirectiveNodeHandlerOutput {
+    const directiveNodeHandler = this.directiveNodeHandlers[directiveContext.directive.name.value];
+    if (!directiveNodeHandler) {
+      return { pass: true };
+    }
+    return directiveNodeHandler.handle(directiveContext, convertContext);
   }
 
   /**

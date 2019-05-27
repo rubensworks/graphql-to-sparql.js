@@ -1,3 +1,4 @@
+export * from "./directivenode";
 export * from "./valuenode";
 export * from "./NodeHandlerAdapter";
 export * from "./NodeHandlerDefinitionAdapter";

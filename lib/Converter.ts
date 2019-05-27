@@ -22,6 +22,10 @@ import {IConvertContext, SingularizeState} from "./IConvertContext";
 import {IConvertOptions} from "./IConvertOptions";
 import {IConvertSettings} from "./IConvertSettings";
 import {Util} from "./Util";
+import {DirectiveNodeHandlerInclude} from "./handler/directivenode/DirectiveNodeHandlerInclude";
+import {DirectiveNodeHandlerPlural} from "./handler/directivenode/DirectiveNodeHandlerPlural";
+import {DirectiveNodeHandlerSingle} from "./handler/directivenode/DirectiveNodeHandlerSingle";
+import {DirectiveNodeHandlerSkip} from "./handler/directivenode/DirectiveNodeHandlerSkip";
 
 /**
  * Translate GraphQL queries into SPARQL algebra.
@@ -59,6 +63,13 @@ export class Converter {
     util.registerNodeValueHandler(new NodeValueHandlerEnum(util, settings));
     util.registerNodeValueHandler(new NodeValueHandlerList(util, settings));
     util.registerNodeValueHandler(new NodeValueHandlerObject(util, settings));
+  }
+
+  public static registerDirectiveNodeHandlers(util: Util, settings: IConvertSettings) {
+    util.registerDirectiveNodeHandler(new DirectiveNodeHandlerInclude(util, settings));
+    util.registerDirectiveNodeHandler(new DirectiveNodeHandlerPlural(util, settings));
+    util.registerDirectiveNodeHandler(new DirectiveNodeHandlerSingle(util, settings));
+    util.registerDirectiveNodeHandler(new DirectiveNodeHandlerSkip(util, settings));
   }
 
   /**
@@ -127,6 +138,7 @@ export class Converter {
   private initializeNodeHandlers(settings: IConvertSettings) {
     Converter.registerNodeHandlers(this.util, settings);
     Converter.registerNodeValueHandlers(this.util, settings);
+    Converter.registerDirectiveNodeHandlers(this.util, settings);
   }
 
 }

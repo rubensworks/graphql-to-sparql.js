@@ -19,6 +19,7 @@ describe('NodeHandlerAdapter', () => {
     const util = new Util(settings);
     adapter = new (<any> NodeHandlerAdapter)(null, util, settings);
     Converter.registerNodeValueHandlers(util, settings);
+    Converter.registerDirectiveNodeHandlers(util, settings);
   });
 
   describe('#getNodeQuadContextSelectionSet', () => {
@@ -330,136 +331,6 @@ describe('NodeHandlerAdapter', () => {
           },
         ],
       }, 'field', ctx)).toThrow(new Error('Only single values can be set as graph, but got 2 at graph'));
-    });
-  });
-
-  describe('#testDirectives', () => {
-    const ctx = {
-      context: {},
-      graph: DataFactory.defaultGraph(),
-      path: [ 'parent' ],
-      subject: null,
-      singularizeState: null,
-      singularizeVariables: {},
-      terminalVariables: [],
-      fragmentDefinitions: {},
-      variablesDict: <IVariablesDictionary> {
-        varTrue: { kind: 'BooleanValue', value: true },
-        varFalse: { kind: 'BooleanValue', value: false },
-      },
-      variablesMetaDict: {},
-    };
-    const includeTrue: DirectiveNode = { kind: 'Directive', name: { kind: 'Name', value: 'include' }, arguments: [
-      {
-        kind: 'Argument',
-        name: { kind: 'Name', value: 'if' },
-        value: { kind: 'Variable', name: { kind: 'Name', value: 'varTrue' } },
-      },
-    ] };
-    const includeFalse: DirectiveNode = { kind: 'Directive', name: { kind: 'Name', value: 'include' }, arguments: [
-      {
-        kind: 'Argument',
-        name: { kind: 'Name', value: 'if' },
-        value: { kind: 'Variable', name: { kind: 'Name', value: 'varFalse' } },
-      },
-    ] };
-    const skipTrue: DirectiveNode = { kind: 'Directive', name: { kind: 'Name', value: 'skip' }, arguments: [
-      {
-        kind: 'Argument',
-        name: { kind: 'Name', value: 'if' },
-        value: { kind: 'Variable', name: { kind: 'Name', value: 'varTrue' } },
-      },
-    ] };
-    const skipFalse: DirectiveNode = { kind: 'Directive', name: { kind: 'Name', value: 'skip' }, arguments: [
-      {
-        kind: 'Argument',
-        name: { kind: 'Name', value: 'if' },
-        value: { kind: 'Variable', name: { kind: 'Name', value: 'varFalse' } },
-      },
-    ] };
-    const unknownDirective: DirectiveNode = { kind: 'Directive', name: { kind: 'Name', value: 'unknow' }, arguments: [
-      {
-        kind: 'Argument',
-        name: { kind: 'Name', value: 'if' },
-        value: { kind: 'Variable', name: { kind: 'Name', value: 'varFalse' } },
-      },
-    ] };
-    const idDirective: DirectiveNode = { kind: 'Directive', name: { kind: 'Name', value: 'id' }, arguments: [] };
-    const single: DirectiveNode = { kind: 'Directive', name: { kind: 'Name', value: 'single' }, arguments: [] };
-    const singleAll: DirectiveNode = { kind: 'Directive', name: { kind: 'Name', value: 'single' }, arguments: [
-      {
-        kind: 'Argument',
-        name: { kind: 'Name', value: 'scope' },
-        value: { kind: 'EnumValue', value: 'all' },
-      },
-    ] };
-    const plural: DirectiveNode = { kind: 'Directive', name: { kind: 'Name', value: 'plural' }, arguments: [] };
-    const pluralAll: DirectiveNode = { kind: 'Directive', name: { kind: 'Name', value: 'plural' }, arguments: [
-      {
-        kind: 'Argument',
-        name: { kind: 'Name', value: 'scope' },
-        value: { kind: 'EnumValue', value: 'all' },
-      },
-    ] };
-
-    it('should ignore an unsupported directive', async () => {
-      return expect(adapter.testDirectives(unknownDirective, 'field', ctx)).toBeTruthy();
-    });
-
-    it('should return true on a true inclusion', async () => {
-      return expect(adapter.testDirectives(includeTrue, 'field', ctx)).toBeTruthy();
-    });
-
-    it('should return false on a false inclusion', async () => {
-      return expect(adapter.testDirectives(includeFalse, 'field', ctx)).toBeFalsy();
-    });
-
-    it('should return false on a true skip', async () => {
-      return expect(adapter.testDirectives(skipTrue, 'field', ctx)).toBeFalsy();
-    });
-
-    it('should return true on a false skip', async () => {
-      return expect(adapter.testDirectives(skipFalse, 'field', ctx)).toBeTruthy();
-    });
-
-    it('should modify singularize variables and not set the single state on single', async () => {
-      ctx.singularizeState = null;
-      ctx.singularizeVariables = {};
-      adapter.testDirectives(single, 'field', ctx);
-      expect(ctx.singularizeVariables).toEqual({
-        parent_field: true,
-      });
-      expect(ctx.singularizeState).toEqual(null);
-    });
-
-    it('should modify singularize variables and set the single state on single all', async () => {
-      ctx.singularizeState = null;
-      ctx.singularizeVariables = {};
-      adapter.testDirectives(singleAll, 'field', ctx);
-      expect(ctx.singularizeVariables).toEqual({
-        parent_field: true,
-      });
-      expect(ctx.singularizeState).toEqual(SingularizeState.SINGLE);
-    });
-
-    it('should modify singularize variables and not set the single state on plural', async () => {
-      ctx.singularizeState = null;
-      ctx.singularizeVariables = {
-        parent_field: true,
-      };
-      adapter.testDirectives(plural, 'field', ctx);
-      expect(ctx.singularizeVariables).toEqual({});
-      expect(ctx.singularizeState).toEqual(null);
-    });
-
-    it('should modify singularize variables and set the single state on plural all', async () => {
-      ctx.singularizeState = null;
-      ctx.singularizeVariables = {
-        parent_field: true,
-      };
-      adapter.testDirectives(pluralAll, 'field', ctx);
-      expect(ctx.singularizeVariables).toEqual({});
-      expect(ctx.singularizeState).toEqual(SingularizeState.PLURAL);
     });
   });
 });

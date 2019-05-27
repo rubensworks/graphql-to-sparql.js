@@ -1,7 +1,7 @@
-import {ArgumentNode, DirectiveNode, FieldNode, NameNode, SelectionSetNode} from "graphql/language";
+import {DirectiveNode, FieldNode, SelectionSetNode} from "graphql/language";
 import * as RDF from "rdf-js";
 import {Algebra} from "sparqlalgebrajs";
-import {IConvertContext, SingularizeState} from "../IConvertContext";
+import {IConvertContext} from "../IConvertContext";
 import {IConvertSettings} from "../IConvertSettings";
 import {Util} from "../Util";
 
@@ -111,78 +111,13 @@ export abstract class NodeHandlerAdapter<T extends { kind: string }> {
                                fieldLabel: string, convertContext: IConvertContext): Algebra.Operation {
     if (directives) {
       for (const directive of directives) {
-        if (!this.testDirectives(directive, fieldLabel, convertContext)) {
-          return this.util.operationFactory.createBgp([]);
+        const handleResult = this.util.handleDirectiveNode({ directive, fieldLabel }, convertContext);
+        if (!handleResult.pass) {
+          return handleResult.operationOverride || this.util.operationFactory.createBgp([]);
         }
       }
     }
     return null;
-  }
-
-  /**
-   * Check if none of the directives block further handling of the active node.
-   * @param {DirectiveNode} directive A directive.
-   * @param {string} fieldLabel The current field label.
-   * @param {IConvertContext} convertContext A convert context.
-   * @return {boolean} If processing of the active node should continue.
-   */
-  public testDirectives(directive: DirectiveNode, fieldLabel: string, convertContext: IConvertContext): boolean {
-    let val: RDF.Term;
-    switch (directive.name.value) {
-    case 'include':
-      val = this.getDirectiveConditionalValue(directive, convertContext);
-      if (val.termType === 'Literal' && val.value === 'false') {
-        return false;
-      }
-      break;
-    case 'skip':
-      val = this.getDirectiveConditionalValue(directive, convertContext);
-      if (val.termType === 'Literal' && val.value === 'true') {
-        return false;
-      }
-      break;
-    case 'single':
-      if (this.isDirectiveScopeAll(directive)) {
-        convertContext.singularizeState = SingularizeState.SINGLE;
-      }
-      convertContext.singularizeVariables[this.util.nameToVariable(fieldLabel, convertContext).value] = true;
-      break;
-    case 'plural':
-      if (this.isDirectiveScopeAll(directive)) {
-        convertContext.singularizeState = SingularizeState.PLURAL;
-      }
-      // Delete the existing entry, as this may have already been set before if we were in a single scope.
-      delete convertContext.singularizeVariables[this.util.nameToVariable(fieldLabel, convertContext).value];
-      break;
-    default:
-      // Ignore all other directives
-    }
-    return true;
-  }
-
-  /**
-   * Get the value of the 'if' argument in a directive.
-   * @param {DirectiveNode} directive A directive.
-   * @param {IConvertContext} convertContext A convert context.
-   * @return {Term} The term.
-   */
-  public getDirectiveConditionalValue(directive: DirectiveNode, convertContext: IConvertContext): RDF.Term {
-    const arg: ArgumentNode = this.util.getArgument(directive.arguments, 'if');
-    const subValue = this.util.handleNodeValue(arg.value, arg.name.value, convertContext);
-    if (subValue.terms.length !== 1) {
-      throw new Error(`Can not apply a directive with a list: ${subValue.terms}`);
-    }
-    return subValue.terms[0];
-  }
-
-  /**
-   * If a `scope: all` directive param is present.
-   * @param {DirectiveNode} directive A directive.
-   * @return {boolean} If `scope: all` is present.
-   */
-  public isDirectiveScopeAll(directive: DirectiveNode) {
-    const scopeArg: ArgumentNode = this.util.getArgument(directive.arguments, 'scope');
-    return scopeArg && scopeArg.value.kind === 'EnumValue' && scopeArg.value.value === 'all';
   }
 
 }

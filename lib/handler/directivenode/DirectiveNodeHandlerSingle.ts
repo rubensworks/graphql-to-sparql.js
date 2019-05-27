@@ -22,6 +22,6 @@ export class DirectiveNodeHandlerSingle extends DirectiveNodeHandlerAdapter {
     }
     convertContext.singularizeVariables
       [this.util.nameToVariable(directiveContext.fieldLabel, convertContext).value] = true;
-    return { pass: true };
+    return {};
   }
 }

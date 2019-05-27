@@ -465,30 +465,31 @@ describe('Util', () => {
           value: { kind: 'EnumValue', value: 'all' },
         },
       ] };
+    const optional: DirectiveNode = { kind: 'Directive', name: { kind: 'Name', value: 'optional' }, arguments: [] };
 
-    it('should ignore an unsupported directive', async () => {
+    it('should return null for an unsupported directive', async () => {
       return expect(util.handleDirectiveNode({ directive: unknownDirective, fieldLabel: 'field' }, ctx))
-        .toEqual({ pass: true });
+        .toEqual(null);
     });
 
     it('should return true on a true inclusion', async () => {
       return expect(util.handleDirectiveNode({ directive: includeTrue, fieldLabel: 'field' }, ctx))
-        .toEqual({ pass: true });
+        .toEqual({});
     });
 
     it('should return false on a false inclusion', async () => {
       return expect(util.handleDirectiveNode({ directive: includeFalse, fieldLabel: 'field' }, ctx))
-        .toEqual({ pass: false });
+        .toEqual({ ignore: true });
     });
 
     it('should return false on a true skip', async () => {
       return expect(util.handleDirectiveNode({ directive: skipTrue, fieldLabel: 'field' }, ctx))
-        .toEqual({ pass: false });
+        .toEqual({ ignore: true });
     });
 
     it('should return true on a false skip', async () => {
       return expect(util.handleDirectiveNode({ directive: skipFalse, fieldLabel: 'field' }, ctx))
-        .toEqual({ pass: true });
+        .toEqual({});
     });
 
     it('should modify singularize variables and not set the single state on single', async () => {
@@ -529,6 +530,28 @@ describe('Util', () => {
       util.handleDirectiveNode({ directive: pluralAll, fieldLabel: 'field' }, ctx);
       expect(ctx.singularizeVariables).toEqual({});
       expect(ctx.singularizeState).toEqual(SingularizeState.PLURAL);
+    });
+
+    it('should wrap the operation into a left join for optional', async () => {
+      const { ignore, operationOverrider } = util
+        .handleDirectiveNode({ directive: optional, fieldLabel: 'field' }, ctx);
+      expect(ignore).toBeFalsy();
+      expect(operationOverrider(OperationFactory.createBgp([
+        OperationFactory.createPattern(
+          DataFactory.namedNode('s'),
+          DataFactory.namedNode('p'),
+          DataFactory.namedNode('o'),
+        ),
+      ]))).toEqual(OperationFactory.createLeftJoin(
+        OperationFactory.createBgp([]),
+        OperationFactory.createBgp([
+          OperationFactory.createPattern(
+            DataFactory.namedNode('s'),
+            DataFactory.namedNode('p'),
+            DataFactory.namedNode('o'),
+          ),
+        ]),
+      ));
     });
   });
 

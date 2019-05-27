@@ -674,6 +674,44 @@ SELECT ?name WHERE {
 }
 ```
 
+### Optional fields
+
+By default, all fields that are defined in the query are _required_ to have results.
+If any of the fields do not produce results, the full query results set will be empty.
+
+However, in some cases you may not be certain that a field will have results.
+In those cases, you may want to mark a field as _optional_, using the `@optional` directive.
+
+Context:
+```json
+{
+    "hero": "http://example.org/hero",
+    "name": "http://example.org/name",
+    "friend": "http://example.org/friend"
+}
+
+```
+
+GraphQL:
+```graphql
+query {
+  hero {
+    name @optional
+    friend @optional
+  }
+}
+
+```
+
+SPARQL:
+```sparql
+SELECT ?hero_name ?hero_friend WHERE {
+  ?b1 <http://example.org/hero> ?hero.
+  OPTIONAL { ?hero <http://example.org/name> ?hero_name. }
+  OPTIONAL { ?hero <http://example.org/friend> ?hero_friend. }
+}
+```
+
 ## Converting to tree-based results
 
 Using a tool such as [SPARQL-Results+JSON to tree](https://github.com/rubensworks/sparqljson-to-tree.js),

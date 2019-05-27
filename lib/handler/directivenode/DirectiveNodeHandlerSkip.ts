@@ -19,8 +19,8 @@ export class DirectiveNodeHandlerSkip extends DirectiveNodeHandlerAdapter {
   public handle(directiveContext: IDirectiveContext, convertContext: IConvertContext): IDirectiveNodeHandlerOutput {
     const val = this.getDirectiveConditionalValue(directiveContext.directive, convertContext);
     if (val.termType === 'Literal' && val.value === 'true') {
-      return { pass: false };
+      return { ignore: true };
     }
-    return { pass: true };
+    return {};
   }
 }

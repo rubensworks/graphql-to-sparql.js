@@ -1030,6 +1030,60 @@ query HeroForEpisode($ep: Episode!) {
               DataFactory.variable('hero_name'),
             ]));
       });
+
+      it('it should convert a query with @optional', async () => {
+        const context = {
+          hero: 'http://example.org/hero',
+          name: 'http://example.org/name',
+          friend: 'http://example.org/friend',
+        };
+        return expect(await converter.graphqlToSparqlAlgebra(`
+{
+  hero {
+    name @optional
+    friend @optional
+  }
+}
+`, context)).toEqual(
+          OperationFactory.createProject(
+            OperationFactory.createJoin(
+              OperationFactory.createBgp([
+                OperationFactory.createPattern(
+                    DataFactory.blankNode('b23'),
+                    DataFactory.namedNode('http://example.org/hero'),
+                    DataFactory.variable('hero'),
+                  ),
+              ],
+              ),
+              OperationFactory.createJoin(
+                OperationFactory.createLeftJoin(
+                  OperationFactory.createBgp([]),
+                  OperationFactory.createBgp([
+                    OperationFactory.createPattern(
+                        DataFactory.variable('hero'),
+                        DataFactory.namedNode('http://example.org/name'),
+                        DataFactory.variable('hero_name'),
+                      ),
+                  ],
+                  ),
+                ),
+                OperationFactory.createLeftJoin(
+                  OperationFactory.createBgp([]),
+                  OperationFactory.createBgp([
+                    OperationFactory.createPattern(
+                        DataFactory.variable('hero'),
+                        DataFactory.namedNode('http://example.org/friend'),
+                        DataFactory.variable('hero_friend'),
+                      ),
+                  ],
+                  ),
+                ),
+              ),
+            ), [
+              DataFactory.variable('hero_name'),
+              DataFactory.variable('hero_friend'),
+            ]));
+      });
     });
 
     describe('#indexFragments', () => {

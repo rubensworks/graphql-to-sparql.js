@@ -146,9 +146,9 @@ export abstract class NodeHandlerSelectionAdapter<T extends SelectionNode> exten
     }
 
     // Directives
-    const directivesOverride = this.getDirectivesOverride(fieldNode.directives, fieldLabel, convertContext);
-    if (directivesOverride) {
-      return directivesOverride;
+    const directiveOutputs = this.getDirectiveOutputs(fieldNode.directives, fieldLabel, convertContext);
+    if (!directiveOutputs) {
+      return this.util.operationFactory.createBgp([]);
     }
 
     // Recursive call for nested selection sets
@@ -229,7 +229,8 @@ export abstract class NodeHandlerSelectionAdapter<T extends SelectionNode> exten
         .createSlice(this.util.operationFactory.createProject(operation, []), offset, limit);
     }
 
-    return operation;
+    // Override operation if needed
+    return this.handleDirectiveOutputs(directiveOutputs, operation);
   }
 
   /**

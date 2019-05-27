@@ -23,6 +23,6 @@ export class DirectiveNodeHandlerPlural extends DirectiveNodeHandlerAdapter {
     // Delete the existing entry, as this may have already been set before if we were in a single scope.
     delete convertContext.singularizeVariables
       [this.util.nameToVariable(directiveContext.fieldLabel, convertContext).value];
-    return { pass: true };
+    return {};
   }
 }

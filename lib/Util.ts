@@ -93,13 +93,13 @@ export class Util {
    * Get the handler output for the given directive.
    * @param {IDirectiveContext} directiveContext The current directive context.
    * @param {IConvertContext} convertContext A conversion context.
-   * @return {IValueNodeHandlerOutput} The RDF terms and patterns.
+   * @return {IDirectiveNodeHandlerOutput} The directive node handler output or null.
    */
   public handleDirectiveNode(directiveContext: IDirectiveContext, convertContext: IConvertContext)
     : IDirectiveNodeHandlerOutput {
     const directiveNodeHandler = this.directiveNodeHandlers[directiveContext.directive.name.value];
     if (!directiveNodeHandler) {
-      return { pass: true };
+      return null;
     }
     return directiveNodeHandler.handle(directiveContext, convertContext);
   }

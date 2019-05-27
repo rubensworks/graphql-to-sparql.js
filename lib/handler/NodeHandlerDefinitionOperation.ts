@@ -47,14 +47,18 @@ export class NodeHandlerDefinitionOperation extends NodeHandlerDefinitionAdapter
     }
 
     // Directives
-    const directivesOverride = this.getDirectivesOverride(operationDefinition.directives,
+    const directiveOutputs = this.getDirectiveOutputs(operationDefinition.directives,
       operationDefinition.name ? operationDefinition.name.value : '', convertContext);
-    if (directivesOverride) {
-      return directivesOverride;
+    if (!directiveOutputs) {
+      return this.util.operationFactory.createBgp([]);
     }
 
-    return this.util.joinOperations(operationDefinition.selectionSet.selections
+    // Handle the operation
+    const operation = this.util.joinOperations(operationDefinition.selectionSet.selections
       .map((selectionNode) => this.util.handleNode(selectionNode, convertContext)));
+
+    // Override operation if needed
+    return this.handleDirectiveOutputs(directiveOutputs, operation);
   }
 
 }

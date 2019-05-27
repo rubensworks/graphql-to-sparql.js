@@ -4,6 +4,7 @@ import {Algebra} from "sparqlalgebrajs";
 import {IConvertContext} from "../IConvertContext";
 import {IConvertSettings} from "../IConvertSettings";
 import {Util} from "../Util";
+import {IDirectiveNodeHandlerOutput} from "./directivenode/DirectiveNodeHandlerAdapter";
 
 /**
  * A handler for converting GraphQL nodes to operations.
@@ -102,22 +103,51 @@ export abstract class NodeHandlerAdapter<T extends { kind: string }> {
 
   /**
    * Get an operation override defined by one of the directives.
+   *
+   * This should be called before a sub-operation is handled.
+   *
    * @param {ReadonlyArray<DirectiveNode>} directives An option directives array.
    * @param {string} fieldLabel The current field label.
    * @param {IConvertContext} convertContext A convert context.
-   * @return {Algebra.Operation} An overridden operation or null.
+   * @return {IDirectiveNodeHandlerOutput[]} The directive node handler outputs, or null if it should be ignored.
    */
-  public getDirectivesOverride(directives: ReadonlyArray<DirectiveNode> | null,
-                               fieldLabel: string, convertContext: IConvertContext): Algebra.Operation {
+  public getDirectiveOutputs(directives: ReadonlyArray<DirectiveNode> | null,
+                             fieldLabel: string, convertContext: IConvertContext): IDirectiveNodeHandlerOutput[] {
+    const outputs: IDirectiveNodeHandlerOutput[] = [];
     if (directives) {
       for (const directive of directives) {
-        const handleResult = this.util.handleDirectiveNode({ directive, fieldLabel }, convertContext);
-        if (!handleResult.pass) {
-          return handleResult.operationOverride || this.util.operationFactory.createBgp([]);
+        const output = this.util.handleDirectiveNode({ directive, fieldLabel }, convertContext);
+        if (output) {
+          if (output.ignore) {
+            return null;
+          }
+          outputs.push(output);
         }
       }
     }
-    return null;
+    return outputs;
+  }
+
+  /**
+   * Handle the directive outputs with respect to an operation.
+   *
+   * This should be called after a sub-operation was handled.
+   *
+   * @param {IDirectiveNodeHandlerOutput[]} directiveOutputs
+   * @param {Operation} operation
+   * @return {Operation}
+   */
+  public handleDirectiveOutputs(directiveOutputs: IDirectiveNodeHandlerOutput[],
+                                operation: Algebra.Operation): Algebra.Operation {
+    for (const directiveOutput of directiveOutputs) {
+      if (directiveOutput.ignore) {
+        return this.util.operationFactory.createBgp([]);
+      }
+      if (directiveOutput.operationOverrider) {
+        operation = directiveOutput.operationOverrider(operation);
+      }
+    }
+    return operation;
   }
 
 }

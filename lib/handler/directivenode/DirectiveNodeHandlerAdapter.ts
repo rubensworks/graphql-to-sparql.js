@@ -65,13 +65,13 @@ export abstract class DirectiveNodeHandlerAdapter {
  */
 export interface IDirectiveNodeHandlerOutput {
   /**
-   * If the original logic should be followed.
+   * If the field should be ignored.
    */
-  pass: boolean;
+  ignore?: boolean;
   /**
-   * The optional operation override.
+   * The optional operation overrider.
    */
-  operationOverride?: Algebra.Operation;
+  operationOverrider?: (operation: Algebra.Operation) => Algebra.Operation;
 }
 
 export interface IDirectiveContext {

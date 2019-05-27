@@ -1084,6 +1084,44 @@ query HeroForEpisode($ep: Episode!) {
               DataFactory.variable('hero_friend'),
             ]));
       });
+
+      it('it should convert a query with @reverse', async () => {
+        const context = {
+          G1: 'http://example.org/graph1',
+          hero: 'http://example.org/hero',
+          friend: { '@reverse': 'http://example.org/friend' },
+          name: 'http://example.org/name',
+        };
+        return expect(await converter.graphqlToSparqlAlgebra(`
+{
+  hero {
+    friend {
+      name
+    }
+  }
+}
+`, context)).toEqual(
+          OperationFactory.createProject(OperationFactory.createBgp([
+            OperationFactory.createPattern(
+                DataFactory.blankNode('b24'),
+                DataFactory.namedNode('http://example.org/hero'),
+                DataFactory.variable('hero'),
+            ),
+            OperationFactory.createPattern(
+                DataFactory.variable('hero_friend'),
+                DataFactory.namedNode('http://example.org/friend'),
+                DataFactory.variable('hero'),
+            ),
+            OperationFactory.createPattern(
+                DataFactory.variable('hero_friend'),
+                DataFactory.namedNode('http://example.org/name'),
+                DataFactory.variable('hero_friend_name'),
+            ),
+          ]),
+            [
+              DataFactory.variable('hero_friend_name'),
+            ]));
+      });
     });
 
     describe('#indexFragments', () => {

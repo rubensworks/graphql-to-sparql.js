@@ -570,7 +570,7 @@ describe('Util', () => {
       const p: NameNode = { kind: 'Name', value: 'p' };
       const o = DataFactory.namedNode('o');
       const g = DataFactory.defaultGraph();
-      return expect(util.createQuadPattern(s, p, o, g, { p: { '@reverse': 'myP' } }))
+      return expect(util.createQuadPattern(s, p, o, g, { p: { '@reverse': true, '@id': 'myP' } }))
         .toEqual(OperationFactory.createPattern(o, DataFactory.namedNode('myP'), s));
     });
 
@@ -588,7 +588,7 @@ describe('Util', () => {
       const p: NameNode = { kind: 'Name', value: 'p' };
       const o = DataFactory.namedNode('o');
       const g = DataFactory.namedNode('g');
-      return expect(util.createQuadPattern(s, p, o, g, { p: { '@reverse': 'myP' } }))
+      return expect(util.createQuadPattern(s, p, o, g, { p: { '@reverse': true, '@id': 'myP' } }))
         .toEqual(OperationFactory.createPattern(o, DataFactory.namedNode('myP'), s, g));
     });
   });

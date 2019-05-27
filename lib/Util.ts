@@ -180,7 +180,7 @@ export class Util {
       throw new Error('No context entry was found for ' + value);
     }
     if (contextValue && !(typeof contextValue === 'string')) {
-      contextValue = contextValue['@id'] || contextValue['@reverse'];
+      contextValue = contextValue['@id'];
     }
     return this.dataFactory.namedNode(contextValue || value);
   }
@@ -231,7 +231,7 @@ export class Util {
                            context: IJsonLdContextNormalized): Algebra.Pattern {
     const predicate: RDF.NamedNode = this.valueToNamedNode(predicateName.value, context);
     if (context && context[predicateName.value]
-      && (<any> context[predicateName.value])['@reverse'] === predicate.value) {
+      && (<any> context[predicateName.value])['@reverse']) {
       return this.operationFactory.createPattern(object, predicate, subject, graph);
     }
     return this.operationFactory.createPattern(subject, predicate, object, graph);

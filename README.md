@@ -712,6 +712,41 @@ SELECT ?hero_name ?hero_friend WHERE {
 }
 ```
 
+### Reversed fields
+
+If you want to reverse the relationship between
+a parent a child node,
+you can use the `@reverse` context option for a field.
+
+Context:
+```json
+{
+    "hero": "http://example.org/hero",
+    "name": "http://example.org/name",
+    "friend": { "@reverse": "http://example.org/friend" }
+}
+```
+
+GraphQL:
+```graphql
+query {
+  hero {
+    friend {
+      name
+    }
+  }
+}
+```
+
+SPARQL:
+```sparql
+SELECT ?hero_friend_name WHERE {
+  ?b1 <http://example.org/hero> ?hero.
+  ?hero_friend <http://example.org/friend> ?hero;
+    <http://example.org/name> ?hero_friend_name.
+}
+```
+
 ## Converting to tree-based results
 
 Using a tool such as [SPARQL-Results+JSON to tree](https://github.com/rubensworks/sparqljson-to-tree.js),

@@ -78,12 +78,12 @@ export class Converter {
 
   /**
    * Translates a GraphQL query into SPARQL algebra.
-   * @param {string} graphqlQuery A GraphQL query string.
+   * @param {string | DocumentNode} graphqlQuery A GraphQL query string or node.
    * @param {IContext} context A JSON-LD context.
    * @param {IConvertOptions} options An options object.
    * @return {Promise<Operation>} A promise resolving to an operation.
    */
-  public async graphqlToSparqlAlgebra(graphqlQuery: string, context: JsonLdContext,
+  public async graphqlToSparqlAlgebra(graphqlQuery: string | DocumentNode, context: JsonLdContext,
                                       options?: IConvertOptions): Promise<Algebra.Operation> {
     return this.graphqlToSparqlAlgebraRawContext(graphqlQuery,
       await this.util.contextParser.parse(context), options);
@@ -91,15 +91,15 @@ export class Converter {
 
   /**
    * Translates a GraphQL query into SPARQL algebra.
-   * @param {string} graphqlQuery A GraphQL query string.
+   * @param {string | DocumentNode} graphqlQuery A GraphQL query string or node.
    * @param {IContext} context A JSON-LD context.
    * @param {IConvertOptions} options An options object.
    * @return {Operation} An operation.
    */
-  public graphqlToSparqlAlgebraRawContext(graphqlQuery: string, context: IJsonLdContextNormalized,
+  public graphqlToSparqlAlgebraRawContext(graphqlQuery: string | DocumentNode, context: IJsonLdContextNormalized,
                                           options?: IConvertOptions): Algebra.Operation {
     options = options || {};
-    const document: DocumentNode = parse(graphqlQuery);
+    const document: DocumentNode = typeof graphqlQuery === 'string' ? parse(graphqlQuery) : graphqlQuery;
     const fragmentDefinitions = this.indexFragments(document);
     const convertContext: IConvertContext = {
       context,

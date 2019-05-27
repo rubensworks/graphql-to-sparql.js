@@ -1122,6 +1122,53 @@ query HeroForEpisode($ep: Episode!) {
               DataFactory.variable('hero_friend_name'),
             ]));
       });
+
+      it('it should convert a pre-parsed query', async () => {
+        const context = {
+          human: 'http://example.org/human',
+          name: 'http://example.org/name',
+        };
+        return expect(await converter.graphqlToSparqlAlgebra({
+          kind: 'Document',
+          definitions: [
+            {
+              kind: 'OperationDefinition',
+              operation: 'query',
+              selectionSet: {
+                kind: 'SelectionSet',
+                selections: [
+                  {
+                    kind: 'Field',
+                    name: { kind: 'Name', value: 'human' },
+                    selectionSet: {
+                      kind: 'SelectionSet',
+                      selections: [
+                        {
+                          kind: 'Field',
+                          name: { kind: 'Name', value: 'name' },
+                        },
+                      ],
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        }, context)).toEqual(OperationFactory.createProject(OperationFactory.createBgp([
+          OperationFactory.createPattern(
+            DataFactory.blankNode('b25'),
+            DataFactory.namedNode('http://example.org/human'),
+            DataFactory.variable('human'),
+          ),
+          OperationFactory.createPattern(
+            DataFactory.variable('human'),
+            DataFactory.namedNode('http://example.org/name'),
+            DataFactory.variable('human_name'),
+          ),
+        ]), [
+          DataFactory.variable('human_name'),
+        ]));
+      });
     });
 
     describe('#indexFragments', () => {

@@ -25,7 +25,7 @@ export class NodeValueHandlerVariable extends NodeValueHandlerAdapter<VariableNo
       if (!meta || meta.mandatory) {
         throw new Error(`Undefined variable: ${id}`);
       } else {
-        return this.util.handleNodeValue({ kind: 'NullValue' }, fieldName, convertContext);
+        return { terms: [this.util.dataFactory.variable(id)] };
       }
     }
 

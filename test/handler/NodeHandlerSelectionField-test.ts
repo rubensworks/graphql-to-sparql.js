@@ -314,6 +314,110 @@ describe('NodeHandlerSelectionField', () => {
           ),
         ]));
     });
+
+    it('should convert a field with one alt argument', async () => {
+      const subject = DataFactory.namedNode('theSubject');
+      const ctx: IConvertContext = {
+        context: {
+          field1: 'http://example.org/field1',
+          field2: 'http://example.org/field2',
+        },
+        graph: DataFactory.defaultGraph(),
+        path: [ 'a' ],
+        subject,
+        singularizeState: SingularizeState.PLURAL,
+        singularizeVariables: {},
+        terminalVariables: [],
+        fragmentDefinitions: {},
+        variablesDict: {},
+        variablesMetaDict: {},
+      };
+      return expect(handler.handle({
+        kind: 'Field',
+        name: { kind: 'Name', value: 'field1' },
+        arguments: [
+          { kind: 'Argument', name: { kind: 'Name', value: 'alt' },
+            value: { kind: 'EnumValue', value: 'field2' } },
+        ],
+      }, ctx)).toEqual(
+        OperationFactory.createPath(
+          subject,
+          OperationFactory.createAlt(
+            OperationFactory.createLink(DataFactory.namedNode('http://example.org/field1')),
+            OperationFactory.createLink(DataFactory.namedNode('http://example.org/field2')),
+          ),
+          DataFactory.variable('a_field1'),
+        ));
+    });
+
+    it('should convert a field with multiple alt arguments', async () => {
+      const subject = DataFactory.namedNode('theSubject');
+      const ctx: IConvertContext = {
+        context: {
+          field1: 'http://example.org/field1',
+          field2: 'http://example.org/field2',
+          field3: 'http://example.org/field3',
+        },
+        graph: DataFactory.defaultGraph(),
+        path: [ 'a' ],
+        subject,
+        singularizeState: SingularizeState.PLURAL,
+        singularizeVariables: {},
+        terminalVariables: [],
+        fragmentDefinitions: {},
+        variablesDict: {},
+        variablesMetaDict: {},
+      };
+      return expect(handler.handle({
+        kind: 'Field',
+        name: { kind: 'Name', value: 'field1' },
+        arguments: [
+          { kind: 'Argument', name: { kind: 'Name', value: 'alt' },
+            value: { kind: 'ListValue', values: [
+                { kind: 'EnumValue', value: 'field2' },
+                { kind: 'EnumValue', value: 'field3' },
+            ] } },
+        ],
+      }, ctx)).toEqual(
+        OperationFactory.createPath(
+          subject,
+          OperationFactory.createAlt(
+            OperationFactory.createAlt(
+              OperationFactory.createLink(DataFactory.namedNode('http://example.org/field1')),
+              OperationFactory.createLink(DataFactory.namedNode('http://example.org/field2')),
+            ),
+            OperationFactory.createLink(DataFactory.namedNode('http://example.org/field3')),
+          ),
+          DataFactory.variable('a_field1'),
+        ));
+    });
+
+    it('should error on an alt argument of invalid kind', async () => {
+      const subject = DataFactory.namedNode('theSubject');
+      const ctx: IConvertContext = {
+        context: {
+          field1: 'http://example.org/field1',
+          field2: 'http://example.org/field2',
+        },
+        graph: DataFactory.defaultGraph(),
+        path: [ 'a' ],
+        subject,
+        singularizeState: SingularizeState.PLURAL,
+        singularizeVariables: {},
+        terminalVariables: [],
+        fragmentDefinitions: {},
+        variablesDict: {},
+        variablesMetaDict: {},
+      };
+      return expect(() => handler.handle({
+        kind: 'Field',
+        name: { kind: 'Name', value: 'field1' },
+        arguments: [
+          { kind: 'Argument', name: { kind: 'Name', value: 'alt' },
+            value: { kind: 'StringValue', value: 'field2' } },
+        ],
+      }, ctx)).toThrow(new Error('Invalid value type for \'alt\' argument, must be EnumValue, but got StringValue'));
+    });
   });
 
 });

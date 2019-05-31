@@ -317,41 +317,45 @@ fragment comparisonFields on Character {
           DataFactory.namedNode('http://example.org/hero'),
           DataFactory.variable('leftComparison'),
         ),
-        OperationFactory.createPattern(
-          DataFactory.variable('leftComparison'),
-          DataFactory.namedNode('http://example.org/episode'),
-          DataFactory.namedNode('http://example.org/types/empire'),
-        ),
       ]),
-      OperationFactory.createLeftJoin(
-        OperationFactory.createBgp([]),
+      OperationFactory.createJoin(
         OperationFactory.createBgp([
           OperationFactory.createPattern(
             DataFactory.variable('leftComparison'),
-            DataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
-            DataFactory.namedNode('http://example.org/types/Character'),
-          ),
-          OperationFactory.createPattern(
-            DataFactory.variable('leftComparison'),
-            DataFactory.namedNode('http://example.org/name'),
-            DataFactory.variable('leftComparison_name'),
-          ),
-          OperationFactory.createPattern(
-            DataFactory.variable('leftComparison'),
-            DataFactory.namedNode('http://example.org/appearsIn'),
-            DataFactory.variable('leftComparison_appearsIn'),
-          ),
-          OperationFactory.createPattern(
-            DataFactory.variable('leftComparison'),
-            DataFactory.namedNode('http://example.org/friends'),
-            DataFactory.variable('leftComparison_friends'),
-          ),
-          OperationFactory.createPattern(
-            DataFactory.variable('leftComparison_friends'),
-            DataFactory.namedNode('http://example.org/name'),
-            DataFactory.variable('leftComparison_friends_name'),
+            DataFactory.namedNode('http://example.org/episode'),
+            DataFactory.namedNode('http://example.org/types/empire'),
           ),
         ]),
+        OperationFactory.createLeftJoin(
+          OperationFactory.createBgp([]),
+          OperationFactory.createBgp([
+            OperationFactory.createPattern(
+              DataFactory.variable('leftComparison'),
+              DataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
+              DataFactory.namedNode('http://example.org/types/Character'),
+            ),
+            OperationFactory.createPattern(
+              DataFactory.variable('leftComparison'),
+              DataFactory.namedNode('http://example.org/name'),
+              DataFactory.variable('leftComparison_name'),
+            ),
+            OperationFactory.createPattern(
+              DataFactory.variable('leftComparison'),
+              DataFactory.namedNode('http://example.org/appearsIn'),
+              DataFactory.variable('leftComparison_appearsIn'),
+            ),
+            OperationFactory.createPattern(
+              DataFactory.variable('leftComparison'),
+              DataFactory.namedNode('http://example.org/friends'),
+              DataFactory.variable('leftComparison_friends'),
+            ),
+            OperationFactory.createPattern(
+              DataFactory.variable('leftComparison_friends'),
+              DataFactory.namedNode('http://example.org/name'),
+              DataFactory.variable('leftComparison_friends_name'),
+            ),
+          ]),
+        ),
       ),
     ),
     OperationFactory.createJoin(
@@ -361,41 +365,45 @@ fragment comparisonFields on Character {
           DataFactory.namedNode('http://example.org/hero'),
           DataFactory.variable('rightComparison'),
         ),
-        OperationFactory.createPattern(
-          DataFactory.variable('rightComparison'),
-          DataFactory.namedNode('http://example.org/episode'),
-          DataFactory.namedNode('http://example.org/types/jedi'),
-        ),
       ]),
-      OperationFactory.createLeftJoin(
-        OperationFactory.createBgp([]),
+      OperationFactory.createJoin(
         OperationFactory.createBgp([
           OperationFactory.createPattern(
             DataFactory.variable('rightComparison'),
-            DataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
-            DataFactory.namedNode('http://example.org/types/Character'),
-          ),
-          OperationFactory.createPattern(
-            DataFactory.variable('rightComparison'),
-            DataFactory.namedNode('http://example.org/name'),
-            DataFactory.variable('rightComparison_name'),
-          ),
-          OperationFactory.createPattern(
-            DataFactory.variable('rightComparison'),
-            DataFactory.namedNode('http://example.org/appearsIn'),
-            DataFactory.variable('rightComparison_appearsIn'),
-          ),
-          OperationFactory.createPattern(
-            DataFactory.variable('rightComparison'),
-            DataFactory.namedNode('http://example.org/friends'),
-            DataFactory.variable('rightComparison_friends'),
-          ),
-          OperationFactory.createPattern(
-            DataFactory.variable('rightComparison_friends'),
-            DataFactory.namedNode('http://example.org/name'),
-            DataFactory.variable('rightComparison_friends_name'),
+            DataFactory.namedNode('http://example.org/episode'),
+            DataFactory.namedNode('http://example.org/types/jedi'),
           ),
         ]),
+        OperationFactory.createLeftJoin(
+          OperationFactory.createBgp([]),
+          OperationFactory.createBgp([
+            OperationFactory.createPattern(
+              DataFactory.variable('rightComparison'),
+              DataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
+              DataFactory.namedNode('http://example.org/types/Character'),
+            ),
+            OperationFactory.createPattern(
+              DataFactory.variable('rightComparison'),
+              DataFactory.namedNode('http://example.org/name'),
+              DataFactory.variable('rightComparison_name'),
+            ),
+            OperationFactory.createPattern(
+              DataFactory.variable('rightComparison'),
+              DataFactory.namedNode('http://example.org/appearsIn'),
+              DataFactory.variable('rightComparison_appearsIn'),
+            ),
+            OperationFactory.createPattern(
+              DataFactory.variable('rightComparison'),
+              DataFactory.namedNode('http://example.org/friends'),
+              DataFactory.variable('rightComparison_friends'),
+            ),
+            OperationFactory.createPattern(
+              DataFactory.variable('rightComparison_friends'),
+              DataFactory.namedNode('http://example.org/name'),
+              DataFactory.variable('rightComparison_friends_name'),
+            ),
+          ]),
+        ),
       ),
     ),
   ), [
@@ -582,58 +590,61 @@ query HeroForEpisode($ep: Episode!) {
                 DataFactory.namedNode('http://example.org/hero'),
                 DataFactory.variable('hero'),
               ),
-              OperationFactory.createPattern(
-                DataFactory.variable('hero'),
-                DataFactory.namedNode('http://example.org/episode'),
-                DataFactory.namedNode('http://example.org/types/jedi'),
-              ),
             ]),
             OperationFactory.createJoin(
               OperationFactory.createBgp([
                 OperationFactory.createPattern(
                   DataFactory.variable('hero'),
-                  DataFactory.namedNode('http://example.org/name'),
-                  DataFactory.variable('hero_name'),
+                  DataFactory.namedNode('http://example.org/episode'),
+                  DataFactory.namedNode('http://example.org/types/jedi'),
                 ),
               ]),
               OperationFactory.createJoin(
-                OperationFactory.createLeftJoin(
-                  OperationFactory.createBgp([]),
-                  OperationFactory.createBgp([
-                    OperationFactory.createPattern(
-                      DataFactory.variable('hero'),
-                      DataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
-                      DataFactory.namedNode('http://example.org/types/droid'),
-                    ),
-                    OperationFactory.createPattern(
-                      DataFactory.variable('hero'),
-                      DataFactory.namedNode('http://example.org/primaryFunction'),
-                      DataFactory.variable('hero_primaryFunction'),
-                    ),
-                  ]),
-                ),
-                OperationFactory.createLeftJoin(
-                  OperationFactory.createBgp([]),
-                  OperationFactory.createBgp([
-                    OperationFactory.createPattern(
-                      DataFactory.variable('hero'),
-                      DataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
-                      DataFactory.namedNode('http://example.org/types/human'),
-                    ),
-                    OperationFactory.createPattern(
-                      DataFactory.variable('hero'),
-                      DataFactory.namedNode('http://example.org/height'),
-                      DataFactory.variable('hero_height'),
-                    ),
-                  ]),
+                OperationFactory.createBgp([
+                  OperationFactory.createPattern(
+                    DataFactory.variable('hero'),
+                    DataFactory.namedNode('http://example.org/name'),
+                    DataFactory.variable('hero_name'),
+                  ),
+                ]),
+                OperationFactory.createJoin(
+                  OperationFactory.createLeftJoin(
+                    OperationFactory.createBgp([]),
+                    OperationFactory.createBgp([
+                      OperationFactory.createPattern(
+                        DataFactory.variable('hero'),
+                        DataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
+                        DataFactory.namedNode('http://example.org/types/droid'),
+                      ),
+                      OperationFactory.createPattern(
+                        DataFactory.variable('hero'),
+                        DataFactory.namedNode('http://example.org/primaryFunction'),
+                        DataFactory.variable('hero_primaryFunction'),
+                      ),
+                    ]),
+                  ),
+                  OperationFactory.createLeftJoin(
+                    OperationFactory.createBgp([]),
+                    OperationFactory.createBgp([
+                      OperationFactory.createPattern(
+                        DataFactory.variable('hero'),
+                        DataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
+                        DataFactory.namedNode('http://example.org/types/human'),
+                      ),
+                      OperationFactory.createPattern(
+                        DataFactory.variable('hero'),
+                        DataFactory.namedNode('http://example.org/height'),
+                        DataFactory.variable('hero_height'),
+                      ),
+                    ]),
+                  ),
                 ),
               ),
-            ),
-          ), [
-            DataFactory.variable('hero_name'),
-            DataFactory.variable('hero_primaryFunction'),
-            DataFactory.variable('hero_height'),
-          ]));
+            )), [
+              DataFactory.variable('hero_name'),
+              DataFactory.variable('hero_primaryFunction'),
+              DataFactory.variable('hero_height'),
+            ]));
       });
 
       it('it should convert a query with a single totalCount select', async () => {
@@ -1227,6 +1238,78 @@ query($varA: String, $varB: String) {
   }
 }
 `, context)).rejects.toThrow(new Error('Undefined variable: varA_'));
+      });
+
+      it('it should convert a query with a field alternative', async () => {
+        const context = {
+          human: 'http://example.org/human',
+          alien: 'http://example.org/alien',
+          name: 'http://example.org/name',
+        };
+        return expect(await converter.graphqlToSparqlAlgebra(`
+query {
+  human(alt: alien) {
+    name
+  }
+}
+`, context)).toEqual(OperationFactory.createProject(
+          OperationFactory.createJoin(
+            OperationFactory.createPath(
+              DataFactory.blankNode('b26'),
+              OperationFactory.createAlt(
+                OperationFactory.createLink(DataFactory.namedNode('http://example.org/human')),
+                OperationFactory.createLink(DataFactory.namedNode('http://example.org/alien')),
+              ),
+              DataFactory.variable('human'),
+            ),
+            OperationFactory.createBgp([
+              OperationFactory.createPattern(
+                DataFactory.variable('human'),
+                DataFactory.namedNode('http://example.org/name'),
+                DataFactory.variable('human_name'),
+              ),
+            ]),
+          ), [
+            DataFactory.variable('human_name'),
+          ]));
+      });
+
+      it('it should convert a query with field alternatives', async () => {
+        const context = {
+          human: 'http://example.org/human',
+          alien: 'http://example.org/alien',
+          belgian: 'http://example.org/belgian',
+          name: 'http://example.org/name',
+        };
+        return expect(await converter.graphqlToSparqlAlgebra(`
+query {
+  human(alt: [alien, belgian]) {
+    name
+  }
+}
+`, context)).toEqual(OperationFactory.createProject(
+          OperationFactory.createJoin(
+            OperationFactory.createPath(
+              DataFactory.blankNode('b27'),
+              OperationFactory.createAlt(
+                OperationFactory.createAlt(
+                  OperationFactory.createLink(DataFactory.namedNode('http://example.org/human')),
+                  OperationFactory.createLink(DataFactory.namedNode('http://example.org/alien')),
+                ),
+                OperationFactory.createLink(DataFactory.namedNode('http://example.org/belgian')),
+              ),
+              DataFactory.variable('human'),
+            ),
+            OperationFactory.createBgp([
+              OperationFactory.createPattern(
+                DataFactory.variable('human'),
+                DataFactory.namedNode('http://example.org/name'),
+                DataFactory.variable('human_name'),
+              ),
+            ]),
+          ), [
+            DataFactory.variable('human_name'),
+          ]));
       });
     });
 

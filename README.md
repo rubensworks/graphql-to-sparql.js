@@ -747,6 +747,39 @@ SELECT ?hero_friend_name WHERE {
 }
 ```
 
+### Alternative fields
+
+If multiple fields are applicable for retrieving a value,
+then you can define all of them via the `alt` argument.
+
+Context:
+```json
+{
+    "hero": "http://example.org/hero",
+    "name": "http://example.org/name",
+    "firstName": "http://example.org/firstName"
+}
+```
+
+GraphQL:
+```graphql
+{
+  hero {
+    name(alt: firstName)
+  }
+}
+```
+
+_If you want to define more than one alternative, you can define them in a list like this: `name(alt: [firstName, nickName])`_
+
+SPARQL:
+```sparql
+SELECT ?hero_name WHERE {
+  ?b1 <http://example.org/hero> ?hero.
+  ?hero (<http://example.org/name>|<http://example.org/firstName>) ?hero_name.
+}
+```
+
 ## Converting to tree-based results
 
 Using a tool such as [SPARQL-Results+JSON to tree](https://github.com/rubensworks/sparqljson-to-tree.js),

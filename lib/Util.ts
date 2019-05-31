@@ -1,5 +1,5 @@
 import * as DefaultDataFactory from "@rdfjs/data-model";
-import {ArgumentNode, FieldNode, NamedTypeNode, NameNode, ValueNode} from "graphql/language";
+import {ArgumentNode, FieldNode, ListValueNode, NamedTypeNode, NameNode, ValueNode} from "graphql/language";
 import {ContextParser, IJsonLdContextNormalized} from "jsonld-context-parser";
 import * as RDF from "rdf-js";
 import {Algebra, Factory} from "sparqlalgebrajs";
@@ -111,9 +111,6 @@ export class Util {
    * @return {Operation} A single joined operation.
    */
   public joinOperations(operations: Algebra.Operation[]): Algebra.Operation {
-    if (!operations.length) {
-      throw new Error('Can not make a join of no operations');
-    }
     if (operations.length === 1) {
       return operations[0];
     }
@@ -235,6 +232,42 @@ export class Util {
       return this.operationFactory.createPattern(object, predicate, subject, graph);
     }
     return this.operationFactory.createPattern(subject, predicate, object, graph);
+  }
+
+  /**
+   * Create a quad path when the predicate is a list node with field alternatives
+   * that need to be translated using the context.
+   * @param {Term} subject The subject.
+   * @param {NameNode} predicateName The name node for the predicate.
+   * @param {Term} object The object.
+   * @param {Term} graph The graph.
+   * @param {IContext} context A context.
+   * @return {Path} A quad property path.
+   */
+  public createQuadPath(subject: RDF.Term, predicateName: NameNode, predicateAlternatives: ListValueNode,
+                        object: RDF.Term, graph: RDF.Term,
+                        context: IJsonLdContextNormalized): Algebra.Path {
+    const predicateInitial: RDF.NamedNode = this.valueToNamedNode(predicateName.value, context);
+    let pathSymbol: Algebra.PropertyPathSymbol = this.operationFactory.createLink(predicateInitial);
+
+    // Add all fields in the list as predicate alternatives
+    for (const predicateAlternative of predicateAlternatives.values) {
+      if (predicateAlternative.kind !== 'EnumValue') {
+        throw new Error('Invalid value type for \'alt\' argument, must be EnumValue, but got '
+          + predicateAlternative.kind);
+      }
+      pathSymbol = this.operationFactory.createAlt(
+        pathSymbol,
+        this.operationFactory.createLink(this.valueToNamedNode(predicateAlternative.value, context)),
+      );
+    }
+
+    // Reverse the path based on the initial predicate
+    if (context && context[predicateName.value]
+      && (<any> context[predicateName.value])['@reverse']) {
+      return this.operationFactory.createPath(object, pathSymbol, subject, graph);
+    }
+    return this.operationFactory.createPath(subject, pathSymbol, object, graph);
   }
 
 }

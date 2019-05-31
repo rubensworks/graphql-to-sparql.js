@@ -77,18 +77,20 @@ export abstract class NodeHandlerSelectionAdapter<T extends SelectionNode> exten
       }
     }
 
-    let patterns: Algebra.Pattern[] = auxiliaryPatterns ? auxiliaryPatterns.concat([]) : [];
+    const operations: Algebra.Operation[] = auxiliaryPatterns
+      ? [this.util.operationFactory.createBgp(auxiliaryPatterns)] : [];
 
     // Define subject and object
     const subjectOutput = this.getNodeQuadContextFieldNode(fieldNode, fieldLabel, convertContext);
     let object: RDF.Term = subjectOutput.subject || this.util.nameToVariable(fieldLabel, convertContext);
     let graph: RDF.Term = subjectOutput.graph || convertContext.graph;
     if (subjectOutput.auxiliaryPatterns) {
-      patterns = patterns.concat(subjectOutput.auxiliaryPatterns);
+      operations.push(this.util.operationFactory.createBgp(subjectOutput.auxiliaryPatterns));
     }
 
     // Check if there is a '_' argument
     // We do this before handling all other arguments so that the order of final triple patterns is sane.
+    let createQuadPattern: boolean = true;
     let overrideObjectTerms: RDF.Term[] = null;
     if (pushTerminalVariables && fieldNode.arguments && fieldNode.arguments.length) {
       for (const argument of fieldNode.arguments) {
@@ -96,10 +98,12 @@ export abstract class NodeHandlerSelectionAdapter<T extends SelectionNode> exten
           // '_'-arguments do not create an additional predicate link, but set the value directly.
           const valueOutput = this.util.handleNodeValue(argument.value, fieldNode.name.value, convertContext);
           overrideObjectTerms = valueOutput.terms;
-          valueOutput.terms.forEach((term) => patterns.push(this.util.createQuadPattern(
-            convertContext.subject, fieldNode.name, term, convertContext.graph, convertContext.context)));
+          operations.push(this.util.operationFactory.createBgp(
+            valueOutput.terms.map((term) => this.util.createQuadPattern(
+              convertContext.subject, fieldNode.name, term, convertContext.graph, convertContext.context)),
+          ));
           if (valueOutput.auxiliaryPatterns) {
-            patterns = patterns.concat(valueOutput.auxiliaryPatterns);
+            operations.push(this.util.operationFactory.createBgp(subjectOutput.auxiliaryPatterns));
           }
           pushTerminalVariables = false;
           break;
@@ -113,23 +117,38 @@ export abstract class NodeHandlerSelectionAdapter<T extends SelectionNode> exten
           graph = valueOutput.terms[0];
           convertContext = { ...convertContext, graph };
           if (valueOutput.auxiliaryPatterns) {
-            patterns = patterns.concat(valueOutput.auxiliaryPatterns);
+            operations.push(this.util.operationFactory.createBgp(subjectOutput.auxiliaryPatterns));
           }
+          break;
+        } else if (argument.name.value === 'alt') {
+          // 'alt'-arguments do not create an additional predicate link, but create alt-property paths.
+
+          let pathValue = argument.value;
+          if (pathValue.kind !== 'ListValue') {
+            pathValue = { kind: 'ListValue', values: [ pathValue ] };
+          }
+
+          operations.push(this.util.createQuadPath(convertContext.subject, fieldNode.name, pathValue, object,
+            convertContext.graph, convertContext.context));
+          createQuadPattern = false;
+
           break;
         }
       }
     }
 
     // Create at least a pattern for the parent node and the current path.
-    if (pushTerminalVariables) {
-      patterns.push(this.util.createQuadPattern(convertContext.subject, fieldNode.name, object,
-        convertContext.graph, convertContext.context));
+    if (pushTerminalVariables && createQuadPattern) {
+      operations.push(this.util.operationFactory.createBgp([
+        this.util.createQuadPattern(convertContext.subject, fieldNode.name, object,
+          convertContext.graph, convertContext.context),
+      ]));
     }
 
     // Create patterns for the node's arguments
     if (fieldNode.arguments && fieldNode.arguments.length) {
       for (const argument of fieldNode.arguments) {
-        if (argument.name.value === '_' || argument.name.value === 'graph') {
+        if (argument.name.value === '_' || argument.name.value === 'graph' || argument.name.value === 'alt') {
           // no-op
         } else if (argument.name.value === 'first') {
           if (argument.value.kind !== 'IntValue') {
@@ -143,12 +162,12 @@ export abstract class NodeHandlerSelectionAdapter<T extends SelectionNode> exten
           offset = parseInt((<IntValueNode> argument.value).value, 10);
         } else {
           const valueOutput = this.util.handleNodeValue(argument.value, argument.name.value, convertContext);
-          for (const term of valueOutput.terms) {
-            patterns.push(this.util.createQuadPattern(
-              object, argument.name, term, convertContext.graph, convertContext.context));
-          }
+          operations.push(this.util.operationFactory.createBgp(
+            valueOutput.terms.map((term) => this.util.createQuadPattern(
+              object, argument.name, term, convertContext.graph, convertContext.context)),
+          ));
           if (valueOutput.auxiliaryPatterns) {
-            patterns = patterns.concat(valueOutput.auxiliaryPatterns);
+            operations.push(this.util.operationFactory.createBgp(subjectOutput.auxiliaryPatterns));
           }
         }
       }
@@ -161,7 +180,7 @@ export abstract class NodeHandlerSelectionAdapter<T extends SelectionNode> exten
     }
 
     // Recursive call for nested selection sets
-    let operation: Algebra.Operation = this.util.operationFactory.createBgp(patterns);
+    let operation: Algebra.Operation = this.util.joinOperations(operations);
     if (fieldNode.selectionSet && fieldNode.selectionSet.selections.length) {
       // Override the object if needed
       if (overrideObjectTerms) {
@@ -191,7 +210,7 @@ export abstract class NodeHandlerSelectionAdapter<T extends SelectionNode> exten
           return true;
         });
 
-      let joinedOperation = this.util.joinOperations([operation]
+      let joinedOperation = this.util.joinOperations(operations
         .concat(selections.map((selectionNode) => this.util.handleNode(selectionNode, subConvertContext))));
 
       // Modify the operation if there was a count selection

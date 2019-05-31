@@ -48,6 +48,10 @@ export interface IConvertContext {
    * The current singularization state.
    */
   singularizeState: SingularizeState;
+  /**
+   * If unknown variables that are being used should NOT throw an error.
+   */
+  ignoreUnknownVariables?: boolean;
 }
 
 /**

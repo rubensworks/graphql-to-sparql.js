@@ -1169,6 +1169,65 @@ query HeroForEpisode($ep: Episode!) {
           DataFactory.variable('human_name'),
         ]));
       });
+
+      it('it should convert a query with non-set variables', async () => {
+        const context = {
+          human: 'http://example.org/human',
+          name: 'http://example.org/name',
+        };
+        return expect(await converter.graphqlToSparqlAlgebra(`
+query($varA: String, $varB: String) {
+  id(_: $varA)
+  human {
+    name(_: $varB)
+  }
+}
+`, context)).toEqual(OperationFactory.createProject(OperationFactory.createBgp([
+  OperationFactory.createPattern(
+            DataFactory.variable('varA'),
+            DataFactory.namedNode('http://example.org/human'),
+            DataFactory.variable('human'),
+          ),
+  OperationFactory.createPattern(
+            DataFactory.variable('human'),
+            DataFactory.namedNode('http://example.org/name'),
+            DataFactory.variable('varB'),
+          ),
+]), [
+  DataFactory.variable('varA'),
+  DataFactory.variable('varB'),
+]));
+      });
+
+      it('it should error on an undefined inner variable', async () => {
+        const context = {
+          human: 'http://example.org/human',
+          name: 'http://example.org/name',
+        };
+        return expect(converter.graphqlToSparqlAlgebra(`
+query($varA: String, $varB: String) {
+  id(_: $varA)
+  human {
+    name(_: $varB_)
+  }
+}
+`, context)).rejects.toThrow(new Error('Undefined variable: varB_'));
+      });
+
+      it('it should error on an undefined id(_) variable', async () => {
+        const context = {
+          human: 'http://example.org/human',
+          name: 'http://example.org/name',
+        };
+        return expect(converter.graphqlToSparqlAlgebra(`
+query($varA: String, $varB: String) {
+  id(_: $varA_)
+  human {
+    name(_: $varB)
+  }
+}
+`, context)).rejects.toThrow(new Error('Undefined variable: varA_'));
+      });
     });
 
     describe('#indexFragments', () => {

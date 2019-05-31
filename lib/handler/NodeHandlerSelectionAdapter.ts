@@ -50,6 +50,15 @@ export abstract class NodeHandlerSelectionAdapter<T extends SelectionNode> exten
     // Ignore 'id' and 'graph' fields, because we have processed them earlier in getNodeQuadContextSelectionSet.
     if (fieldNode.name.value === 'id' || fieldNode.name.value === 'graph') {
       pushTerminalVariables = false;
+
+      // Validate all _-arguments, because even though they were handled before,
+      // the validity of variables could not be checked,
+      // as variablesMetaDict wasn't populated at that time yet.
+      for (const argument of fieldNode.arguments) {
+        if (argument.name.value === '_') {
+          this.util.handleNodeValue(argument.value, fieldNode.name.value, convertContext);
+        }
+      }
     }
 
     // Determine the field label for variable naming, taking into account aliases

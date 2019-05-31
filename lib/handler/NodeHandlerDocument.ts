@@ -19,7 +19,8 @@ export class NodeHandlerDocument extends NodeHandlerAdapter<DocumentNode> {
   public handle(document: DocumentNode, convertContext: IConvertContext): Algebra.Operation {
     const operation = this.util.operationFactory.createProject(<Algebra.Operation> document.definitions
       .map((definition) => {
-        const subjectOutput = this.getNodeQuadContextDefinitionNode(definition, convertContext);
+        const subjectOutput = this.getNodeQuadContextDefinitionNode(definition,
+          { ...convertContext, ignoreUnknownVariables: true });
         const queryParseContext: IConvertContext = {
           ...convertContext,
           graph: subjectOutput.graph || convertContext.graph,

@@ -67,11 +67,11 @@ export abstract class NodeHandlerAdapter<T extends { kind: string }> {
    * @param {IConvertContext} convertContext A convert context.
    * @param {INodeQuadContext} nodeQuadContext The node quad context to populate.
    * @param {string} fieldName The field name to check for.
-   * @param {keyof INodeQuadContext} nodeQuadContextKey The key to fill into the node quad context.
+   * @param {'subject' | 'graph'} nodeQuadContextKey The key to fill into the node quad context.
    */
   public handleNodeQuadContextField(fieldNode: FieldNode, convertContext: IConvertContext,
                                     nodeQuadContext: INodeQuadContext, fieldName: string,
-                                    nodeQuadContextKey: keyof INodeQuadContext) {
+                                    nodeQuadContextKey: 'subject' | 'graph') {
     if (!nodeQuadContext[nodeQuadContextKey] && fieldNode.name.value === fieldName) {
       // Get (or set) the nodeQuadContextKey for fieldName fields
       if (!nodeQuadContext[nodeQuadContextKey]) {

@@ -54,9 +54,11 @@ export abstract class NodeHandlerSelectionAdapter<T extends SelectionNode> exten
       // Validate all _-arguments, because even though they were handled before,
       // the validity of variables could not be checked,
       // as variablesMetaDict wasn't populated at that time yet.
-      for (const argument of fieldNode.arguments) {
-        if (argument.name.value === '_') {
-          this.util.handleNodeValue(argument.value, fieldNode.name.value, convertContext);
+      if (fieldNode.arguments) {
+        for (const argument of fieldNode.arguments) {
+          if (argument.name.value === '_') {
+            this.util.handleNodeValue(argument.value, fieldNode.name.value, convertContext);
+          }
         }
       }
     }

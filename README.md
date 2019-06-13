@@ -15,6 +15,8 @@ Supported JSON-LD context features:
 * `@id`: Identifies the IRI of a term.
 * `@reverse` Reverses the direction of a property.
 
+_Looking for [GraphQL-LD](https://github.com/rubensworks/GraphQL-LD.js)?_
+
 ## Install
 
 ```bash

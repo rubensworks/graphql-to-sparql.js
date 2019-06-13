@@ -115,23 +115,39 @@ export class Util {
       return operations[0];
     }
 
-    // Check if all operations are BGPs
-    let bgps: boolean = true;
+    // Check if which operations are BGPs
+    const bgps: Algebra.Operation[] = [];
+    const nonBgps: Algebra.Operation[] = [];
     for (const operation of operations) {
-      if (operation.type !== 'bgp') {
-        bgps = false;
-        break;
+      if (operation.type === 'bgp') {
+        bgps.push(operation);
+      } else {
+        nonBgps.push(operation);
       }
     }
 
-    if (bgps) {
+    if (bgps.length === operations.length) {
       // Create a big BGP from all BGPs
-      return this.operationFactory.createBgp([].concat.apply([], operations
-        .map((op) => (<Algebra.Bgp> op).patterns)));
-    } else {
+      return this.joinOperationsAsBgp(bgps);
+    } else if (nonBgps.length === operations.length) {
       // Create nested joins
-      return operations.reverse().reduce((prev, cur) => prev ? this.operationFactory.createJoin(cur, prev) : cur, null);
+      return this.joinOperationsAsNestedJoin(nonBgps);
+    } else {
+      // Join as much BGPs together as possible, and join with the other operations
+      return this.joinOperationsAsNestedJoin([
+        this.joinOperationsAsBgp(bgps),
+        this.joinOperationsAsNestedJoin(nonBgps),
+      ]);
     }
+  }
+
+  public joinOperationsAsBgp(operations: Algebra.Operation[]): Algebra.Operation {
+    return this.operationFactory.createBgp([].concat.apply([], operations
+      .map((op) => (<Algebra.Bgp> op).patterns)));
+  }
+
+  public joinOperationsAsNestedJoin(operations: Algebra.Operation[]): Algebra.Operation {
+    return operations.reverse().reduce((prev, cur) => prev ? this.operationFactory.createJoin(cur, prev) : cur, null);
   }
 
   /**

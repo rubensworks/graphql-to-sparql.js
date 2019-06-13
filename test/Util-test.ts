@@ -87,14 +87,14 @@ describe('Util', () => {
         OperationFactory.createLeftJoin(null, null),
       ])).toEqual(
         OperationFactory.createJoin(
-          OperationFactory.createUnion(null, null),
+          OperationFactory.createBgp([
+            OperationFactory.createPattern(<RDF.Term> <any> 'a2', <RDF.Term> <any> 'b2',
+              <RDF.Term> <any> 'c2'),
+            OperationFactory.createPattern(<RDF.Term> <any> 'd2', <RDF.Term> <any> 'e2',
+              <RDF.Term> <any> 'f2'),
+          ]),
           OperationFactory.createJoin(
-            OperationFactory.createBgp([
-              OperationFactory.createPattern(<RDF.Term> <any> 'a2', <RDF.Term> <any> 'b2',
-                <RDF.Term> <any> 'c2'),
-              OperationFactory.createPattern(<RDF.Term> <any> 'd2', <RDF.Term> <any> 'e2',
-                <RDF.Term> <any> 'f2'),
-            ]),
+            OperationFactory.createUnion(null, null),
             OperationFactory.createLeftJoin(null, null),
           ),
         ),

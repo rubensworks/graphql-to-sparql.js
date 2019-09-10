@@ -100,6 +100,42 @@ describe('Util', () => {
         ),
       );
     });
+
+    it('should return a left join from multiple BGPs and one left join', async () => {
+      return expect(util.joinOperations([
+        OperationFactory.createLeftJoin(
+          OperationFactory.createBgp([
+            OperationFactory.createPattern(<RDF.Term> <any> 'x2', <RDF.Term> <any> 'y2',
+              <RDF.Term> <any> 'z2'),
+          ]),
+          OperationFactory.createBgp([
+            OperationFactory.createPattern(<RDF.Term> <any> 'x2O', <RDF.Term> <any> 'y2O',
+              <RDF.Term> <any> 'z2O'),
+          ]),
+        ),
+        OperationFactory.createBgp([
+          OperationFactory.createPattern(<RDF.Term> <any> 'a2', <RDF.Term> <any> 'b2',
+            <RDF.Term> <any> 'c2'),
+          OperationFactory.createPattern(<RDF.Term> <any> 'd2', <RDF.Term> <any> 'e2',
+            <RDF.Term> <any> 'f2'),
+        ]),
+      ])).toEqual(
+        OperationFactory.createLeftJoin(
+          OperationFactory.createBgp([
+            OperationFactory.createPattern(<RDF.Term> <any> 'a2', <RDF.Term> <any> 'b2',
+              <RDF.Term> <any> 'c2'),
+            OperationFactory.createPattern(<RDF.Term> <any> 'd2', <RDF.Term> <any> 'e2',
+              <RDF.Term> <any> 'f2'),
+            OperationFactory.createPattern(<RDF.Term> <any> 'x2', <RDF.Term> <any> 'y2',
+              <RDF.Term> <any> 'z2'),
+          ]),
+          OperationFactory.createBgp([
+            OperationFactory.createPattern(<RDF.Term> <any> 'x2O', <RDF.Term> <any> 'y2O',
+              <RDF.Term> <any> 'z2O'),
+          ]),
+        ),
+      );
+    });
   });
 
   describe('#nameToVariable', () => {

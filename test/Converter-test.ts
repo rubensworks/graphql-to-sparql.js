@@ -310,21 +310,19 @@ fragment comparisonFields on Character {
 }
 `, context)).toEqual(OperationFactory.createProject(
   OperationFactory.createJoin(
-    OperationFactory.createJoin(
-      OperationFactory.createBgp([
-        OperationFactory.createPattern(
-          DataFactory.blankNode('b7'),
-          DataFactory.namedNode('http://example.org/hero'),
-          DataFactory.variable('leftComparison'),
-        ),
-        OperationFactory.createPattern(
-          DataFactory.variable('leftComparison'),
-          DataFactory.namedNode('http://example.org/episode'),
-          DataFactory.namedNode('http://example.org/types/empire'),
-        ),
-      ]),
       OperationFactory.createLeftJoin(
-        OperationFactory.createBgp([]),
+        OperationFactory.createBgp([
+          OperationFactory.createPattern(
+            DataFactory.blankNode('b7'),
+            DataFactory.namedNode('http://example.org/hero'),
+            DataFactory.variable('leftComparison'),
+          ),
+          OperationFactory.createPattern(
+            DataFactory.variable('leftComparison'),
+            DataFactory.namedNode('http://example.org/episode'),
+            DataFactory.namedNode('http://example.org/types/empire'),
+          ),
+        ]),
         OperationFactory.createBgp([
           OperationFactory.createPattern(
             DataFactory.variable('leftComparison'),
@@ -353,22 +351,19 @@ fragment comparisonFields on Character {
           ),
         ]),
       ),
-    ),
-    OperationFactory.createJoin(
-      OperationFactory.createBgp([
-        OperationFactory.createPattern(
-          DataFactory.blankNode('b7'),
-          DataFactory.namedNode('http://example.org/hero'),
-          DataFactory.variable('rightComparison'),
-        ),
-        OperationFactory.createPattern(
-          DataFactory.variable('rightComparison'),
-          DataFactory.namedNode('http://example.org/episode'),
-          DataFactory.namedNode('http://example.org/types/jedi'),
-        ),
-      ]),
       OperationFactory.createLeftJoin(
-        OperationFactory.createBgp([]),
+        OperationFactory.createBgp([
+          OperationFactory.createPattern(
+            DataFactory.blankNode('b7'),
+            DataFactory.namedNode('http://example.org/hero'),
+            DataFactory.variable('rightComparison'),
+          ),
+          OperationFactory.createPattern(
+            DataFactory.variable('rightComparison'),
+            DataFactory.namedNode('http://example.org/episode'),
+            DataFactory.namedNode('http://example.org/types/jedi'),
+          ),
+        ]),
         OperationFactory.createBgp([
           OperationFactory.createPattern(
             DataFactory.variable('rightComparison'),
@@ -397,7 +392,6 @@ fragment comparisonFields on Character {
           ),
         ]),
       ),
-    ),
   ), [
     DataFactory.variable('leftComparison_name'),
     DataFactory.variable('leftComparison_appearsIn'),

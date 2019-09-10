@@ -129,6 +129,17 @@ export class Util {
     if (bgps.length === operations.length) {
       // Create a big BGP from all BGPs
       return this.joinOperationsAsBgp(bgps);
+    } else if (bgps.length === operations.length - 1
+      && nonBgps[0].type === 'leftjoin'
+      && nonBgps[0].left.type === 'bgp') {
+      // Check if we have one left-join (with a BGP on the left), and the rest are BGPs.
+      // If so, merge the BGPS within the left-hand-side of the left-join.
+      const originalLeftJoin: Algebra.LeftJoin = <Algebra.LeftJoin> nonBgps[0];
+      bgps.push(originalLeftJoin.left);
+      return this.operationFactory.createLeftJoin(
+        this.joinOperationsAsBgp(bgps),
+        originalLeftJoin.right,
+      );
     } else if (nonBgps.length === operations.length) {
       // Create nested joins
       return this.joinOperationsAsNestedJoin(nonBgps);

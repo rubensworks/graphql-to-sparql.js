@@ -1,6 +1,6 @@
 import {FieldNode, IntValueNode, SelectionNode} from "graphql/language";
 import * as RDF from "rdf-js";
-import {Algebra} from "sparqlalgebrajs";
+import {Algebra, Util as AlgebraUtil} from "sparqlalgebrajs";
 import {IConvertContext, SingularizeState} from "../IConvertContext";
 import {IConvertSettings} from "../IConvertSettings";
 import {Util} from "../Util";
@@ -255,8 +255,8 @@ export abstract class NodeHandlerSelectionAdapter<T extends SelectionNode> exten
 
     // Wrap the operation in a slice if a 'first' or 'offset' argument was provided.
     if (offset || limit) {
-      operation = this.util.operationFactory
-        .createSlice(this.util.operationFactory.createProject(operation, []), offset, limit);
+      operation = this.util.operationFactory.createSlice(this.util.operationFactory.createProject(
+        operation, AlgebraUtil.inScopeVariables(operation)), offset, limit);
     }
 
     // Override operation if needed

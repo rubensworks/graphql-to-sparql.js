@@ -118,7 +118,11 @@ describe('Converter', () => {
                 DataFactory.namedNode('http://example.org/name'),
                 DataFactory.variable('hero_friends_name'),
               ),
-            ]), []), 10, 2),
+            ]), [
+              DataFactory.variable('hero'),
+              DataFactory.variable('hero_friends'),
+              DataFactory.variable('hero_friends_name'),
+            ]), 10, 2),
           ), [
             DataFactory.variable('hero_name'),
             DataFactory.variable('hero_friends_name'),

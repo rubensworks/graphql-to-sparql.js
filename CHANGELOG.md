@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+<a name="v2.0.1"></a>
+## [v2.0.1](https://github.com/rubensworks/graphql-to-sparql.js/compare/v2.0.0...v2.0.1) - 2019-09-10
+
+### Fixed
+* [Fix `@optional` not working, Closes rubensworks/GraphQL-LD.js#6](https://github.com/rubensworks/graphql-to-sparql.js/commit/3f5ec07d272644143b6cddf739c69ef3dc09c8fd)
+* [Fix empty results when using first and limit args](https://github.com/rubensworks/graphql-to-sparql.js/commit/c8696def4389d879965b49b01fcf90ba0373e49e)
+
 <a name="v2.0.0"></a>
 ## [v2.0.0](https://github.com/rubensworks/graphql-to-sparql.js/compare/v1.5.0...v2.0.0) - 2019-06-13
 

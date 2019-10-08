@@ -85,6 +85,6 @@
     "graphql": "^14.0.0",
     "jsonld-context-parser": "^1.2.0",
     "minimist": "^1.2.0",
-    "sparqlalgebrajs": "^1.5.1"
+    "sparqlalgebrajs": "^2.0.0"
   }
 }

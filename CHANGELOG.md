@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+<a name="v2.0.2"></a>
+## [v2.0.2](https://github.com/rubensworks/graphql-to-sparql.js/compare/v2.0.1...v2.0.2) - 2019-10-16
+
+### Changed
+* [Update sparqlalgebrajs to version 2.0.0](https://github.com/rubensworks/graphql-to-sparql.js/commit/e0241a7d430dfd83586c5db1fc86dc3bb5cc1b1b)
+
 <a name="v2.0.1"></a>
 ## [v2.0.1](https://github.com/rubensworks/graphql-to-sparql.js/compare/v2.0.0...v2.0.1) - 2019-09-10
 

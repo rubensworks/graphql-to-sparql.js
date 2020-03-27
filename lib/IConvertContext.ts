@@ -1,5 +1,5 @@
 import {FragmentDefinitionNode, ValueNode} from "graphql/language";
-import {IJsonLdContextNormalized} from "jsonld-context-parser";
+import {JsonLdContextNormalized} from "jsonld-context-parser";
 import * as RDF from "rdf-js";
 
 /**
@@ -11,7 +11,7 @@ export interface IConvertContext {
   /**
    * A JSON-LD context.
    */
-  context: IJsonLdContextNormalized;
+  context: JsonLdContextNormalized;
   /**
    * The current JSON path within the GraphQL query.
    */

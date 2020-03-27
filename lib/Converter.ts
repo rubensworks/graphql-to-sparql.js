@@ -1,5 +1,5 @@
 import {DefinitionNode, DocumentNode, FragmentDefinitionNode, parse} from "graphql/language";
-import {IJsonLdContextNormalized, JsonLdContext} from "jsonld-context-parser";
+import {JsonLdContextNormalized, JsonLdContext} from "jsonld-context-parser";
 import {Algebra} from "sparqlalgebrajs";
 import {
   NodeHandlerDefinitionFragment,
@@ -96,7 +96,7 @@ export class Converter {
    * @param {IConvertOptions} options An options object.
    * @return {Operation} An operation.
    */
-  public graphqlToSparqlAlgebraRawContext(graphqlQuery: string | DocumentNode, context: IJsonLdContextNormalized,
+  public graphqlToSparqlAlgebraRawContext(graphqlQuery: string | DocumentNode, context: JsonLdContextNormalized,
                                           options?: IConvertOptions): Algebra.Operation {
     options = options || {};
     const document: DocumentNode = typeof graphqlQuery === 'string' ? parse(graphqlQuery) : graphqlQuery;

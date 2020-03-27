@@ -4,6 +4,7 @@ import {Converter} from "../../lib/Converter";
 import {NodeHandlerDefinitionOperation} from "../../lib/handler/NodeHandlerDefinitionOperation";
 import {IVariablesDictionary, SingularizeState} from "../../lib/IConvertContext";
 import {Util} from "../../lib/Util";
+import {JsonLdContextNormalized} from "jsonld-context-parser";
 
 // tslint:disable:object-literal-sort-keys
 
@@ -27,7 +28,7 @@ describe('NodeHandlerDefinitionOperation', () => {
   describe('#handle', () => {
     it('should convert an operation query definition node', async () => {
       const ctx = {
-        context: { theField: 'http://example.org/theField' },
+        context: new JsonLdContextNormalized({ theField: 'http://example.org/theField' }),
         graph: DataFactory.defaultGraph(),
         path: [ 'a' ],
         singularizeState: SingularizeState.PLURAL,
@@ -58,7 +59,7 @@ describe('NodeHandlerDefinitionOperation', () => {
 
     it('should convert an operation query definition node with a directive', async () => {
       const ctx = {
-        context: { theField: 'http://example.org/theField' },
+        context: new JsonLdContextNormalized({ theField: 'http://example.org/theField' }),
         graph: DataFactory.defaultGraph(),
         path: [ 'a' ],
         singularizeState: SingularizeState.PLURAL,

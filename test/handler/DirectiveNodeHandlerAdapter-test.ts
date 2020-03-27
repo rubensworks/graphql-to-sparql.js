@@ -5,6 +5,7 @@ import {Converter} from "../../lib/Converter";
 import {DirectiveNodeHandlerAdapter} from "../../lib/handler/directivenode/DirectiveNodeHandlerAdapter";
 import {IVariablesDictionary} from "../../lib/IConvertContext";
 import {Util} from "../../lib/Util";
+import {JsonLdContextNormalized} from "jsonld-context-parser";
 
 // tslint:disable:object-literal-sort-keys
 
@@ -24,7 +25,7 @@ describe('DirectiveNodeHandlerAdapter', () => {
 
   describe('#getDirectiveConditionalValue', () => {
     const ctx = {
-      context: {},
+      context: new JsonLdContextNormalized({}),
       graph: DataFactory.defaultGraph(),
       path: [ 'parent' ],
       subject: null,

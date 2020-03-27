@@ -16,7 +16,7 @@ export class NodeValueHandlerString extends NodeValueHandlerAdapter<StringValueN
 
   public handle(valueNode: StringValueNode, fieldName: string,
                 convertContext: IConvertContext): IValueNodeHandlerOutput {
-    const contextEntry: any = convertContext.context[fieldName];
+    const contextEntry: any = convertContext.context.getContextRaw()[fieldName];
     let language: string = null;
     let datatype: RDF.NamedNode = null;
     if (contextEntry && typeof contextEntry !== 'string') {

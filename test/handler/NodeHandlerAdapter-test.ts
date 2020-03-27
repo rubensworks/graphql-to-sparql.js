@@ -4,6 +4,7 @@ import {Converter} from "../../lib/Converter";
 import {NodeHandlerAdapter} from "../../lib/handler/NodeHandlerAdapter";
 import {IVariablesDictionary, SingularizeState} from "../../lib/IConvertContext";
 import {Util} from "../../lib/Util";
+import {JsonLdContextNormalized} from "jsonld-context-parser";
 
 // tslint:disable:object-literal-sort-keys
 
@@ -27,7 +28,7 @@ describe('NodeHandlerAdapter', () => {
 
     beforeEach(() => {
       ctx = {
-        context: { theField: 'http://example.org/theField' },
+        context: new JsonLdContextNormalized({ theField: 'http://example.org/theField' }),
         path: [ 'a' ],
         subject: DataFactory.namedNode('subject'),
         terminalVariables: [],

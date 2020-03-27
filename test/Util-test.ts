@@ -5,6 +5,7 @@ import {Factory} from "sparqlalgebrajs";
 import {Converter} from "../lib/Converter";
 import {IConvertContext, IVariablesDictionary, SingularizeState} from "../lib/IConvertContext";
 import {Util} from "../lib/Util";
+import {JsonLdContextNormalized} from "jsonld-context-parser";
 
 // tslint:disable:object-literal-sort-keys
 
@@ -141,7 +142,7 @@ describe('Util', () => {
   describe('#nameToVariable', () => {
     it('should convert a variable with an empty path', async () => {
       const ctx: IConvertContext = {
-        context: {},
+        context: new JsonLdContextNormalized({}),
         graph: DataFactory.defaultGraph(),
         path: [],
         subject: null,
@@ -158,7 +159,7 @@ describe('Util', () => {
 
     it('should convert a variable with a single path element', async () => {
       const ctx: IConvertContext = {
-        context: {},
+        context: new JsonLdContextNormalized({}),
         graph: DataFactory.defaultGraph(),
         path: [ 'abc' ],
         subject: null,
@@ -175,7 +176,7 @@ describe('Util', () => {
 
     it('should convert a variable with multiple path elements', async () => {
       const ctx = {
-        context: {},
+        context: new JsonLdContextNormalized({}),
         graph: DataFactory.defaultGraph(),
         path: [ 'abc', 'def', 'ghi' ],
         subject: null,
@@ -193,30 +194,31 @@ describe('Util', () => {
 
   describe('#valueToNamedNode', () => {
     it('should directly convert a value that is not in the context', async () => {
-      return expect(util.valueToNamedNode('abc', {})).toEqual(DataFactory.namedNode('abc'));
+      return expect(util.valueToNamedNode('abc', new JsonLdContextNormalized({})))
+        .toEqual(DataFactory.namedNode('abc'));
     });
 
     it('should expand a value that is in the context', async () => {
-      return expect(util.valueToNamedNode('abc', { abc: 'http://example.org/abc' }))
+      return expect(util.valueToNamedNode('abc', new JsonLdContextNormalized({ abc: 'http://example.org/abc' })))
         .toEqual(DataFactory.namedNode('http://example.org/abc'));
     });
 
     it('should expand a value that is in the context as an object', async () => {
-      return expect(util.valueToNamedNode('abc', { abc: { '@id': 'http://example.org/abc' } }))
+      return expect(util.valueToNamedNode('abc', new JsonLdContextNormalized({ abc: { '@id': 'http://example.org/abc' } })))
         .toEqual(DataFactory.namedNode('http://example.org/abc'));
     });
   });
 
   describe('#handleNodeValue', () => {
     const ctx: IConvertContext = {
-      context: {
+      context: new JsonLdContextNormalized({
         FOOT: 'http://example.org/types/foot',
         va: 'http://example.org/va',
         vb: 'http://example.org/vb',
         vc: 'http://example.org/vc',
         va_en: { '@id': 'http://example.org/va', "@language": "en" },
         va_datetime: { '@id': 'http://example.org/va', "@type": "http://www.w3.org/2001/XMLSchema#dateTime" },
-      },
+      }),
       graph: DataFactory.defaultGraph(),
       path: [],
       subject: null,
@@ -428,7 +430,7 @@ describe('Util', () => {
 
   describe('#handleDirectiveNode', () => {
     const ctx = {
-      context: {},
+      context: new JsonLdContextNormalized({}),
       graph: DataFactory.defaultGraph(),
       path: [ 'parent' ],
       subject: null,
@@ -597,7 +599,8 @@ describe('Util', () => {
       const p: NameNode = { kind: 'Name', value: 'p' };
       const o = DataFactory.namedNode('o');
       const g = DataFactory.defaultGraph();
-      return expect(util.createQuadPattern(s, p, o, g, { p: 'myP' }))
+      return expect(util.createQuadPattern(s, p, o, g,
+        new JsonLdContextNormalized({ p: 'myP' })))
         .toEqual(OperationFactory.createPattern(s, DataFactory.namedNode('myP'), o));
     });
 
@@ -606,7 +609,8 @@ describe('Util', () => {
       const p: NameNode = { kind: 'Name', value: 'p' };
       const o = DataFactory.namedNode('o');
       const g = DataFactory.defaultGraph();
-      return expect(util.createQuadPattern(s, p, o, g, { p: { '@reverse': true, '@id': 'myP' } }))
+      return expect(util.createQuadPattern(s, p, o, g,
+        new JsonLdContextNormalized({ p: { '@reverse': true, '@id': 'myP' } })))
         .toEqual(OperationFactory.createPattern(o, DataFactory.namedNode('myP'), s));
     });
 
@@ -615,7 +619,8 @@ describe('Util', () => {
       const p: NameNode = { kind: 'Name', value: 'p' };
       const o = DataFactory.namedNode('o');
       const g = DataFactory.namedNode('g');
-      return expect(util.createQuadPattern(s, p, o, g, { p: 'myP' }))
+      return expect(util.createQuadPattern(s, p, o, g,
+        new JsonLdContextNormalized({ p: 'myP' })))
         .toEqual(OperationFactory.createPattern(s, DataFactory.namedNode('myP'), o, g));
     });
 
@@ -624,7 +629,8 @@ describe('Util', () => {
       const p: NameNode = { kind: 'Name', value: 'p' };
       const o = DataFactory.namedNode('o');
       const g = DataFactory.namedNode('g');
-      return expect(util.createQuadPattern(s, p, o, g, { p: { '@reverse': true, '@id': 'myP' } }))
+      return expect(util.createQuadPattern(s, p, o, g,
+        new JsonLdContextNormalized({ p: { '@reverse': true, '@id': 'myP' } })))
         .toEqual(OperationFactory.createPattern(o, DataFactory.namedNode('myP'), s, g));
     });
   });

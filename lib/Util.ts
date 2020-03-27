@@ -1,6 +1,6 @@
 import * as DefaultDataFactory from "@rdfjs/data-model";
 import {ArgumentNode, FieldNode, ListValueNode, NamedTypeNode, NameNode, ValueNode} from "graphql/language";
-import {ContextParser, IJsonLdContextNormalized} from "jsonld-context-parser";
+import {ContextParser, JsonLdContextNormalized, Util as ContextUtil} from "jsonld-context-parser";
 import * as RDF from "rdf-js";
 import {Algebra, Factory} from "sparqlalgebrajs";
 import {IValueNodeHandlerOutput, NodeHandlerAdapter, NodeValueHandlerAdapter} from "./handler";
@@ -198,15 +198,12 @@ export class Util {
    * @param {IContext} context A JSON-LD context.
    * @return {NamedNode} A named node.
    */
-  public valueToNamedNode(value: string, context: IJsonLdContextNormalized): RDF.NamedNode {
-    let contextValue: any = context[value];
+  public valueToNamedNode(value: string, context: JsonLdContextNormalized): RDF.NamedNode {
+    const contextValue: any = context.getContextRaw()[value];
     if (this.settings.requireContext && !contextValue) {
       throw new Error('No context entry was found for ' + value);
     }
-    if (contextValue && !(typeof contextValue === 'string')) {
-      contextValue = contextValue['@id'];
-    }
-    return this.dataFactory.namedNode(contextValue || value);
+    return this.dataFactory.namedNode(contextValue && ContextUtil.getContextValueId(contextValue) || value);
   }
 
   /**
@@ -252,10 +249,10 @@ export class Util {
    * @return {Pattern} A quad pattern.
    */
   public createQuadPattern(subject: RDF.Term, predicateName: NameNode, object: RDF.Term, graph: RDF.Term,
-                           context: IJsonLdContextNormalized): Algebra.Pattern {
+                           context: JsonLdContextNormalized): Algebra.Pattern {
     const predicate: RDF.NamedNode = this.valueToNamedNode(predicateName.value, context);
-    if (context && context[predicateName.value]
-      && (<any> context[predicateName.value])['@reverse']) {
+    if (context && context.getContextRaw()[predicateName.value]
+      && (<any> context.getContextRaw()[predicateName.value])['@reverse']) {
       return this.operationFactory.createPattern(object, predicate, subject, graph);
     }
     return this.operationFactory.createPattern(subject, predicate, object, graph);
@@ -273,7 +270,7 @@ export class Util {
    */
   public createQuadPath(subject: RDF.Term, predicateName: NameNode, predicateAlternatives: ListValueNode,
                         object: RDF.Term, graph: RDF.Term,
-                        context: IJsonLdContextNormalized): Algebra.Path {
+                        context: JsonLdContextNormalized): Algebra.Path {
     const predicateInitial: RDF.NamedNode = this.valueToNamedNode(predicateName.value, context);
     let pathSymbol: Algebra.PropertyPathSymbol = this.operationFactory.createLink(predicateInitial);
 
@@ -290,8 +287,8 @@ export class Util {
     }
 
     // Reverse the path based on the initial predicate
-    if (context && context[predicateName.value]
-      && (<any> context[predicateName.value])['@reverse']) {
+    if (context && context.getContextRaw()[predicateName.value]
+      && (<any> context.getContextRaw()[predicateName.value])['@reverse']) {
       return this.operationFactory.createPath(object, pathSymbol, subject, graph);
     }
     return this.operationFactory.createPath(subject, pathSymbol, object, graph);

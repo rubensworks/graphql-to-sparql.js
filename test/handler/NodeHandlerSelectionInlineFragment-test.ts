@@ -4,6 +4,7 @@ import {Converter} from "../../lib/Converter";
 import {NodeHandlerSelectionInlineFragment} from "../../lib/handler/NodeHandlerSelectionInlineFragment";
 import {IConvertContext, SingularizeState} from "../../lib/IConvertContext";
 import {Util} from "../../lib/Util";
+import {JsonLdContextNormalized} from "jsonld-context-parser";
 
 // tslint:disable:object-literal-sort-keys
 
@@ -28,10 +29,10 @@ describe('NodeHandlerSelectionInlineFragment', () => {
     it('should convert an inline fragment spread selection node', async () => {
       const subject = DataFactory.namedNode('theSubject');
       const ctx: IConvertContext = {
-        context: {
+        context: new JsonLdContextNormalized({
           theField: 'http://example.org/theField',
           Character: 'http://example.org/types/Character',
-        },
+        }),
         graph: DataFactory.defaultGraph(),
         path: [ 'a' ],
         subject,

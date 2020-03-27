@@ -4,6 +4,7 @@ import {Converter} from "../../lib/Converter";
 import {NodeHandlerSelectionField} from "../../lib/handler/NodeHandlerSelectionField";
 import {IConvertContext, IVariablesDictionary, SingularizeState} from "../../lib/IConvertContext";
 import {Util} from "../../lib/Util";
+import {JsonLdContextNormalized} from "jsonld-context-parser";
 
 // tslint:disable:object-literal-sort-keys
 
@@ -28,7 +29,7 @@ describe('NodeHandlerSelectionField', () => {
     it('should convert a field selection node', async () => {
       const subject = DataFactory.namedNode('theSubject');
       const ctx: IConvertContext = {
-        context: { theField: 'http://example.org/theField' },
+        context: new JsonLdContextNormalized({ theField: 'http://example.org/theField' }),
         graph: DataFactory.defaultGraph(),
         path: [ 'a' ],
         subject,
@@ -52,11 +53,11 @@ describe('NodeHandlerSelectionField', () => {
     it('should convert a field selection node with a selection set', async () => {
       const subject = DataFactory.namedNode('theSubject');
       const ctx: IConvertContext = {
-        context: {
+        context: new JsonLdContextNormalized({
           theField: 'http://example.org/theField',
           anotherField: 'http://example.org/anotherField',
           andAnotherField: 'http://example.org/andAnotherField',
-        },
+        }),
         graph: DataFactory.defaultGraph(),
         path: [ 'a' ],
         subject,
@@ -99,11 +100,11 @@ describe('NodeHandlerSelectionField', () => {
     it('should convert a field selection node with arguments', async () => {
       const subject = DataFactory.namedNode('theSubject');
       const ctx: IConvertContext = {
-        context: {
+        context: new JsonLdContextNormalized({
           theField: 'http://example.org/theField',
           anotherField: 'http://example.org/anotherField',
           andAnotherField: 'http://example.org/andAnotherField',
-        },
+        }),
         graph: DataFactory.defaultGraph(),
         path: [ 'a' ],
         subject,
@@ -145,7 +146,7 @@ describe('NodeHandlerSelectionField', () => {
     it('should terminate a field selection node without selection set', async () => {
       const subject = DataFactory.namedNode('theSubject');
       const ctx: IConvertContext = {
-        context: { theField: 'http://example.org/theField' },
+        context: new JsonLdContextNormalized({ theField: 'http://example.org/theField' }),
         graph: DataFactory.defaultGraph(),
         path: [ 'a' ],
         subject,
@@ -165,7 +166,7 @@ describe('NodeHandlerSelectionField', () => {
     it('should terminate a field selection node with an empty selection set', async () => {
       const subject = DataFactory.namedNode('theSubject');
       const ctx: IConvertContext = {
-        context: { theField: 'http://example.org/theField' },
+        context: new JsonLdContextNormalized({ theField: 'http://example.org/theField' }),
         graph: DataFactory.defaultGraph(),
         path: [ 'a' ],
         subject,
@@ -189,7 +190,7 @@ describe('NodeHandlerSelectionField', () => {
     it('should not terminate a field selection node with selection set', async () => {
       const subject = DataFactory.namedNode('theSubject');
       const ctx: IConvertContext = {
-        context: { theField: 'http://example.org/theField' },
+        context: new JsonLdContextNormalized({ theField: 'http://example.org/theField' }),
         graph: DataFactory.defaultGraph(),
         path: [ 'a' ],
         subject,
@@ -218,9 +219,9 @@ describe('NodeHandlerSelectionField', () => {
     it('should convert a field selection node with an alias', async () => {
       const subject = DataFactory.namedNode('theSubject');
       const ctx: IConvertContext = {
-        context: {
+        context: new JsonLdContextNormalized({
           theField: 'http://example.org/theField',
-        },
+        }),
         graph: DataFactory.defaultGraph(),
         path: [ 'a' ],
         subject,
@@ -247,9 +248,9 @@ describe('NodeHandlerSelectionField', () => {
     it('should convert a field selection node with a directive', async () => {
       const subject = DataFactory.namedNode('theSubject');
       const ctx: IConvertContext = {
-        context: {
+        context: new JsonLdContextNormalized({
           theField: 'http://example.org/theField',
-        },
+        }),
         graph: DataFactory.defaultGraph(),
         path: [ 'a' ],
         subject,
@@ -288,10 +289,10 @@ describe('NodeHandlerSelectionField', () => {
     it('should convert the __typename meta field', async () => {
       const subject = DataFactory.namedNode('theSubject');
       const ctx: IConvertContext = {
-        context: {
+        context: new JsonLdContextNormalized({
           theField: 'http://example.org/theField',
           Character: 'http://example.org/types/Character',
-        },
+        }),
         graph: DataFactory.defaultGraph(),
         path: [ 'a' ],
         subject,
@@ -318,10 +319,10 @@ describe('NodeHandlerSelectionField', () => {
     it('should convert a field with one alt argument', async () => {
       const subject = DataFactory.namedNode('theSubject');
       const ctx: IConvertContext = {
-        context: {
+        context: new JsonLdContextNormalized({
           field1: 'http://example.org/field1',
           field2: 'http://example.org/field2',
-        },
+        }),
         graph: DataFactory.defaultGraph(),
         path: [ 'a' ],
         subject,
@@ -353,11 +354,11 @@ describe('NodeHandlerSelectionField', () => {
     it('should convert a field with multiple alt arguments', async () => {
       const subject = DataFactory.namedNode('theSubject');
       const ctx: IConvertContext = {
-        context: {
+        context: new JsonLdContextNormalized({
           field1: 'http://example.org/field1',
           field2: 'http://example.org/field2',
           field3: 'http://example.org/field3',
-        },
+        }),
         graph: DataFactory.defaultGraph(),
         path: [ 'a' ],
         subject,
@@ -395,10 +396,10 @@ describe('NodeHandlerSelectionField', () => {
     it('should error on an alt argument of invalid kind', async () => {
       const subject = DataFactory.namedNode('theSubject');
       const ctx: IConvertContext = {
-        context: {
+        context: new JsonLdContextNormalized({
           field1: 'http://example.org/field1',
           field2: 'http://example.org/field2',
-        },
+        }),
         graph: DataFactory.defaultGraph(),
         path: [ 'a' ],
         subject,

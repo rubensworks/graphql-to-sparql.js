@@ -600,8 +600,18 @@ describe('Util', () => {
       const o = DataFactory.namedNode('o');
       const g = DataFactory.defaultGraph();
       return expect(util.createQuadPattern(s, p, o, g,
-        new JsonLdContextNormalized({ p: 'myP' })))
-        .toEqual(OperationFactory.createPattern(s, DataFactory.namedNode('myP'), o));
+        new JsonLdContextNormalized({ p: 'ex:myP' })))
+        .toEqual(OperationFactory.createPattern(s, DataFactory.namedNode('ex:myP'), o));
+    });
+
+    it('should create a triple pattern for a normal context using @vocab', async () => {
+      const s = DataFactory.namedNode('s');
+      const p: NameNode = { kind: 'Name', value: 'p' };
+      const o = DataFactory.namedNode('o');
+      const g = DataFactory.defaultGraph();
+      const context = await util.contextParser.parse({ '@vocab': 'ex:', 'p': '/myP' });
+      return expect(util.createQuadPattern(s, p, o, g, context))
+        .toEqual(OperationFactory.createPattern(s, DataFactory.namedNode('ex:/myP'), o));
     });
 
     it('should create a triple pattern for a reversed context', async () => {
@@ -610,8 +620,8 @@ describe('Util', () => {
       const o = DataFactory.namedNode('o');
       const g = DataFactory.defaultGraph();
       return expect(util.createQuadPattern(s, p, o, g,
-        new JsonLdContextNormalized({ p: { '@reverse': true, '@id': 'myP' } })))
-        .toEqual(OperationFactory.createPattern(o, DataFactory.namedNode('myP'), s));
+        new JsonLdContextNormalized({ p: { '@reverse': true, '@id': 'ex:myP' } })))
+        .toEqual(OperationFactory.createPattern(o, DataFactory.namedNode('ex:myP'), s));
     });
 
     it('should create a quad pattern for a normal context', async () => {
@@ -620,8 +630,8 @@ describe('Util', () => {
       const o = DataFactory.namedNode('o');
       const g = DataFactory.namedNode('g');
       return expect(util.createQuadPattern(s, p, o, g,
-        new JsonLdContextNormalized({ p: 'myP' })))
-        .toEqual(OperationFactory.createPattern(s, DataFactory.namedNode('myP'), o, g));
+        new JsonLdContextNormalized({ p: 'ex:myP' })))
+        .toEqual(OperationFactory.createPattern(s, DataFactory.namedNode('ex:myP'), o, g));
     });
 
     it('should create a quad pattern for a reversed context', async () => {
@@ -630,8 +640,8 @@ describe('Util', () => {
       const o = DataFactory.namedNode('o');
       const g = DataFactory.namedNode('g');
       return expect(util.createQuadPattern(s, p, o, g,
-        new JsonLdContextNormalized({ p: { '@reverse': true, '@id': 'myP' } })))
-        .toEqual(OperationFactory.createPattern(o, DataFactory.namedNode('myP'), s, g));
+        new JsonLdContextNormalized({ p: { '@reverse': true, '@id': 'ex:myP' } })))
+        .toEqual(OperationFactory.createPattern(o, DataFactory.namedNode('ex:myP'), s, g));
     });
   });
 

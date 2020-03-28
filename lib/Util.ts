@@ -199,11 +199,11 @@ export class Util {
    * @return {NamedNode} A named node.
    */
   public valueToNamedNode(value: string, context: JsonLdContextNormalized): RDF.NamedNode {
-    const contextValue: any = context.getContextRaw()[value];
+    const contextValue = context.expandTerm(value, true);
     if (this.settings.requireContext && !contextValue) {
       throw new Error('No context entry was found for ' + value);
     }
-    return this.dataFactory.namedNode(contextValue && ContextUtil.getContextValueId(contextValue) || value);
+    return this.dataFactory.namedNode(contextValue || value);
   }
 
   /**

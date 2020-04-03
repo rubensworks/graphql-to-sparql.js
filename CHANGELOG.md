@@ -1,6 +1,16 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+<a name="v2.1.0"></a>
+## [v2.1.0](https://github.com/rubensworks/graphql-to-sparql.js/compare/v2.0.2...v2.1.0) - 2020-04-03
+
+### Changed
+* [Update to jsonld-context-parser 2.0.0, adding JSON-LD 1.1 expansion support](https://github.com/rubensworks/graphql-to-sparql.js/commit/14b4f2a4deeeabad1114d60bb6c1f89c7e20655f)
+* [Update to graphql version with included typings, Closes #32](https://github.com/rubensworks/graphql-to-sparql.js/commit/890770855a84cc4f08bcbcbfd4551b99c7c2221d)
+
+### Fixed
+* [Fix not all JSON-LD expansion options being possible, Closes #35](https://github.com/rubensworks/graphql-to-sparql.js/commit/b1b3a9c4cd451aba034ba14e659a7677a0afb445)
+
 <a name="v2.0.2"></a>
 ## [v2.0.2](https://github.com/rubensworks/graphql-to-sparql.js/compare/v2.0.1...v2.0.2) - 2019-10-16
 

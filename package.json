@@ -82,7 +82,7 @@
     "@rdfjs/data-model": "^1.1.1",
     "@types/rdf-js": "^2.0.1",
     "graphql": "^14.5.8",
-    "jsonld-context-parser": "^1.2.0",
+    "jsonld-context-parser": "^2.0.0",
     "minimist": "^1.2.0",
     "sparqlalgebrajs": "^2.0.0"
   }

@@ -504,6 +504,11 @@
   resolved "https://registry.yarnpkg.com/@types/color-name/-/color-name-1.1.1.tgz#1c1261bbeaa10a8055bbc5d8ab84b7b2afc846a0"
   integrity sha512-rr+OQyAjxze7GgWrSaJwydHStIhHq2lvY3BOC2Mj7KnzI7XK0Uw1TOOdI9lDoajEbSWLiYgoo4f1R51erQfhPQ==
 
+"@types/isomorphic-fetch@^0.0.35":
+  version "0.0.35"
+  resolved "https://registry.yarnpkg.com/@types/isomorphic-fetch/-/isomorphic-fetch-0.0.35.tgz#c1c0d402daac324582b6186b91f8905340ea3361"
+  integrity sha512-DaZNUvLDCAnCTjgwxgiL1eQdxIKEpNLOlTNtAgnZc50bG2copGhRrFN9/PxPBuJe+tZVLCbQ7ls0xveXVRPkvw==
+
 "@types/istanbul-lib-coverage@*", "@types/istanbul-lib-coverage@^2.0.0", "@types/istanbul-lib-coverage@^2.0.1":
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/@types/istanbul-lib-coverage/-/istanbul-lib-coverage-2.0.1.tgz#42995b446db9a48a11a07ec083499a860e9138ff"
@@ -540,6 +545,11 @@
   version "9.6.5"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-9.6.5.tgz#ee700810fdf49ac1c399fc5980b7559b3e5a381d"
   integrity sha512-NOLEgsT6UiDTjnWG5Hd2Mg25LRyz/oe8ql3wbjzgSFeRzRROhPmtlsvIrei4B46UjERF0td9SZ1ZXPLOdcrBHg==
+
+"@types/node@^13.1.0":
+  version "13.11.0"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-13.11.0.tgz#390ea202539c61c8fa6ba4428b57e05bc36dc47b"
+  integrity sha512-uM4mnmsIIPK/yeO+42F2RQhGUIs39K2RFmugcJANppXe6J1nvH87PvzPZYpza7Xhhs8Yn9yIAVdLZ84z61+0xQ==
 
 "@types/rdf-js@^2.0.1":
   version "2.0.1"
@@ -960,6 +970,11 @@ camelcase@^5.3.1:
   version "5.3.1"
   resolved "https://registry.yarnpkg.com/camelcase/-/camelcase-5.3.1.tgz#e3c9b31569e106811df242f715725a1f4c494320"
   integrity sha512-L28STB170nwWS63UjtlEOE3dldQApaJXZkOI1uMFfzf3rRuPegHaHesyee+YxQ+W6SvRDQV6UrdOdRiR153wJg==
+
+canonicalize@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/canonicalize/-/canonicalize-1.0.1.tgz#657b4f3fa38a6ecb97a9e5b7b26d7a19cc6e0da9"
+  integrity sha512-N3cmB3QLhS5TJ5smKFf1w42rJXWe6C1qP01z4dxJiI5v269buii4fLHWETDyf7yEd0azGLNC63VxNMiPd2u0Cg==
 
 capture-exit@^1.2.0:
   version "1.2.0"
@@ -2685,13 +2700,16 @@ json5@^2.1.0:
   dependencies:
     minimist "^1.2.0"
 
-jsonld-context-parser@^1.2.0:
-  version "1.2.0"
-  resolved "https://registry.yarnpkg.com/jsonld-context-parser/-/jsonld-context-parser-1.2.0.tgz#fdae622dd4c937c455fb819ec1f88845c2f58f36"
-  integrity sha512-9ZKnRg2Y/GkFefDVuH44wNTO3V1HefUB4+shDdRhF9Ar0xiGceD1GMON99QDp/r0pYqFb4CCT5J7WCzT5RWJoQ==
+jsonld-context-parser@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/jsonld-context-parser/-/jsonld-context-parser-2.0.0.tgz#2c4ea08d1b137cde7ba2376e26f56d3fcb519779"
+  integrity sha512-dfoLe73CCrqHTM2O6zb5oVoZF2TwDfjZnn6XAlbarvhIR+bQ+6Vkkw+yAXKBmZ7n4Jqdyr14qJHtuc9IP1sTFg==
   dependencies:
+    "@types/isomorphic-fetch" "^0.0.35"
+    "@types/node" "^13.1.0"
+    canonicalize "^1.0.1"
     isomorphic-fetch "^2.2.1"
-    relative-to-absolute-iri "^1.0.2"
+    relative-to-absolute-iri "^1.0.5"
 
 jsprim@^1.2.2:
   version "1.4.1"
@@ -3600,10 +3618,10 @@ regex-not@^1.0.0, regex-not@^1.0.2:
     extend-shallow "^3.0.2"
     safe-regex "^1.1.0"
 
-relative-to-absolute-iri@^1.0.2:
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/relative-to-absolute-iri/-/relative-to-absolute-iri-1.0.2.tgz#5ad2fa26569f46523ab8428cb7d5247005c51544"
-  integrity sha512-2tAsyCpb/ozT6w8BSaz//u7iRIW621FsMbC8el4VqzvtuntevEFfWNM/Wr9ubodzGa9OwBNwOHERRKqw9toKOA==
+relative-to-absolute-iri@^1.0.5:
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/relative-to-absolute-iri/-/relative-to-absolute-iri-1.0.5.tgz#9ddc91cad85898d10724864a62aacfb35caf5766"
+  integrity sha512-sHpUlpF3fRWtTcBa8uBIwQ+Z/YnjDjerocV3q0FrP8T9oZ3z6d61I12ZcGlGr9jW2cQbcCkErCT9XLcN18ZLaQ==
 
 remove-trailing-separator@^1.0.1:
   version "1.1.0"

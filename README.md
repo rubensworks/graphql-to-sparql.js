@@ -493,7 +493,7 @@ This is done using the `_` argument, which takes a value.
 GraphQL:
 ```graphql
 {
-  name(_:'Han Solo')
+  name(_:"Han Solo")
   description
 }
 ```

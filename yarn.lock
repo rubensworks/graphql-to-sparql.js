@@ -558,6 +558,13 @@
   dependencies:
     "@types/node" "*"
 
+"@types/rdf-js@^3.0.0":
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/@types/rdf-js/-/rdf-js-3.0.0.tgz#7c45210d34b3ccc301b84f462bec5698d63bea1a"
+  integrity sha512-IUUXkMAt1iU7XhrNnjwPHeYkk5s71T8m95FoZmpjhi/3ngA0hyeQxST5i1Ul1y/dh/lePH1u4BwTH3ZKULYSIg==
+  dependencies:
+    "@types/node" "*"
+
 "@types/stack-utils@^1.0.1":
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/@types/stack-utils/-/stack-utils-1.0.1.tgz#0a851d3bd96498fa25c33ab7278ed3bd65f06c3e"

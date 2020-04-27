@@ -80,7 +80,7 @@
   },
   "dependencies": {
     "@rdfjs/data-model": "^1.1.1",
-    "@types/rdf-js": "^2.0.1",
+    "@types/rdf-js": "^3.0.0",
     "graphql": "^15.0.0",
     "jsonld-context-parser": "^2.0.0",
     "minimist": "^1.2.0",

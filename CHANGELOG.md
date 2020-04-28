@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+<a name="v2.1.1"></a>
+## [v2.1.1](https://github.com/rubensworks/graphql-to-sparql.js/compare/v2.1.0...v2.1.1) - 2020-04-28
+
+### Changed
+* [Update dependency @types/rdf-js to v3 (#45)](https://github.com/rubensworks/graphql-to-sparql.js/commit/65f411bbf6b3d751ae7f665863f2d0b5df207d70)
+* [Update dependency graphql to v15](https://github.com/rubensworks/graphql-to-sparql.js/commit/a74af1cc4753ca9d4c702e33d45b8d50084563cd)
+
 <a name="v2.1.0"></a>
 ## [v2.1.0](https://github.com/rubensworks/graphql-to-sparql.js/compare/v2.0.2...v2.1.0) - 2020-04-03
 

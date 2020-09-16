@@ -1,10 +1,11 @@
-import * as DataFactory from "@rdfjs/data-model";
-import {DirectiveNode} from "graphql";
+import {DataFactory} from "rdf-data-factory";
 import {Converter} from "../../lib/Converter";
 import {NodeHandlerAdapter} from "../../lib/handler/NodeHandlerAdapter";
-import {IVariablesDictionary, SingularizeState} from "../../lib/IConvertContext";
+import {IVariablesDictionary} from "../../lib/IConvertContext";
 import {Util} from "../../lib/Util";
 import {JsonLdContextNormalized} from "jsonld-context-parser";
+
+const DF = new DataFactory();
 
 // tslint:disable:object-literal-sort-keys
 
@@ -30,7 +31,7 @@ describe('NodeHandlerAdapter', () => {
       ctx = {
         context: new JsonLdContextNormalized({ theField: 'http://example.org/theField' }),
         path: [ 'a' ],
-        subject: DataFactory.namedNode('subject'),
+        subject: DF.namedNode('subject'),
         terminalVariables: [],
         fragmentDefinitions: {},
         variablesDict: <IVariablesDictionary> {
@@ -81,8 +82,8 @@ describe('NodeHandlerAdapter', () => {
             name: { kind: 'Name', value: 'field3' },
           },
         ],
-      }, 'field', ctx)).toEqual({ subject: DataFactory.variable('a_id') });
-      expect(ctx.terminalVariables).toEqual([ DataFactory.variable('a_id') ]);
+      }, 'field', ctx)).toEqual({ subject: DF.variable('a_id') });
+      expect(ctx.terminalVariables).toEqual([ DF.variable('a_id') ]);
     });
 
     it('should return a variable id for an id field with alias', async () => {
@@ -103,8 +104,8 @@ describe('NodeHandlerAdapter', () => {
             name: { kind: 'Name', value: 'field3' },
           },
         ],
-      }, 'field', ctx)).toEqual({ subject: DataFactory.variable('a_myId') });
-      expect(ctx.terminalVariables).toEqual([ DataFactory.variable('a_myId') ]);
+      }, 'field', ctx)).toEqual({ subject: DF.variable('a_myId') });
+      expect(ctx.terminalVariables).toEqual([ DF.variable('a_myId') ]);
     });
 
     it('should return a variable id for an id field with non-_ args', async () => {
@@ -136,7 +137,7 @@ describe('NodeHandlerAdapter', () => {
             name: { kind: 'Name', value: 'field3' },
           },
         ],
-      }, 'field', ctx)).toEqual({ subject: DataFactory.variable('a_id') });
+      }, 'field', ctx)).toEqual({ subject: DF.variable('a_id') });
     });
 
     it('should return a concrete id for an id field with _ arg', async () => {
@@ -164,7 +165,7 @@ describe('NodeHandlerAdapter', () => {
             name: { kind: 'Name', value: 'field3' },
           },
         ],
-      }, 'field', ctx)).toEqual({ subject: DataFactory.namedNode('http://ex.org/val') });
+      }, 'field', ctx)).toEqual({ subject: DF.namedNode('http://ex.org/val') });
       expect(ctx.terminalVariables).toEqual([]);
     });
 
@@ -216,8 +217,8 @@ describe('NodeHandlerAdapter', () => {
             name: { kind: 'Name', value: 'field3' },
           },
         ],
-      }, 'field', ctx)).toEqual({ graph: DataFactory.variable('a_graph') });
-      expect(ctx.terminalVariables).toEqual([ DataFactory.variable('a_graph') ]);
+      }, 'field', ctx)).toEqual({ graph: DF.variable('a_graph') });
+      expect(ctx.terminalVariables).toEqual([ DF.variable('a_graph') ]);
     });
 
     it('should return a variable id for an graph field with alias', async () => {
@@ -238,8 +239,8 @@ describe('NodeHandlerAdapter', () => {
             name: { kind: 'Name', value: 'field3' },
           },
         ],
-      }, 'field', ctx)).toEqual({ graph: DataFactory.variable('a_myGraph') });
-      expect(ctx.terminalVariables).toEqual([ DataFactory.variable('a_myGraph') ]);
+      }, 'field', ctx)).toEqual({ graph: DF.variable('a_myGraph') });
+      expect(ctx.terminalVariables).toEqual([ DF.variable('a_myGraph') ]);
     });
 
     it('should return a variable graph for a graph field with non-_ args', async () => {
@@ -271,7 +272,7 @@ describe('NodeHandlerAdapter', () => {
             name: { kind: 'Name', value: 'field3' },
           },
         ],
-      }, 'field', ctx)).toEqual({ graph: DataFactory.variable('a_graph') });
+      }, 'field', ctx)).toEqual({ graph: DF.variable('a_graph') });
     });
 
     it('should return a concrete graph for a graph field with _ arg', async () => {
@@ -299,7 +300,7 @@ describe('NodeHandlerAdapter', () => {
             name: { kind: 'Name', value: 'field3' },
           },
         ],
-      }, 'field', ctx)).toEqual({ graph: DataFactory.namedNode('http://ex.org/val') });
+      }, 'field', ctx)).toEqual({ graph: DF.namedNode('http://ex.org/val') });
       expect(ctx.terminalVariables).toEqual([]);
     });
 

@@ -1,11 +1,12 @@
-import * as DataFactory from "@rdfjs/data-model";
-import {literal, namedNode} from "@rdfjs/data-model";
+import {DataFactory} from "rdf-data-factory";
 import {DirectiveNode} from "graphql";
 import {Converter} from "../../lib/Converter";
 import {DirectiveNodeHandlerAdapter} from "../../lib/handler/directivenode/DirectiveNodeHandlerAdapter";
 import {IVariablesDictionary} from "../../lib/IConvertContext";
 import {Util} from "../../lib/Util";
 import {JsonLdContextNormalized} from "jsonld-context-parser";
+
+const DF = new DataFactory();
 
 // tslint:disable:object-literal-sort-keys
 
@@ -26,7 +27,7 @@ describe('DirectiveNodeHandlerAdapter', () => {
   describe('#getDirectiveConditionalValue', () => {
     const ctx = {
       context: new JsonLdContextNormalized({}),
-      graph: DataFactory.defaultGraph(),
+      graph: DF.defaultGraph(),
       path: [ 'parent' ],
       subject: null,
       singularizeState: null,
@@ -81,7 +82,7 @@ describe('DirectiveNodeHandlerAdapter', () => {
           },
         ] };
       return expect(adapter.getDirectiveConditionalValue(directive, ctx))
-        .toEqual(literal('true', namedNode('http://www.w3.org/2001/XMLSchema#boolean')));
+        .toEqual(DF.literal('true', DF.namedNode('http://www.w3.org/2001/XMLSchema#boolean')));
     });
   });
 });

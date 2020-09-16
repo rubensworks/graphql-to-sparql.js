@@ -1,4 +1,4 @@
-import * as DataFactory from "@rdfjs/data-model";
+import {DataFactory} from "rdf-data-factory";
 import {Factory} from "sparqlalgebrajs";
 import {Converter} from "../../lib/Converter";
 import {NodeHandlerSelectionField} from "../../lib/handler/NodeHandlerSelectionField";
@@ -8,7 +8,8 @@ import {JsonLdContextNormalized} from "jsonld-context-parser";
 
 // tslint:disable:object-literal-sort-keys
 
-const OperationFactory = new Factory(DataFactory);
+const DF = new DataFactory();
+const OperationFactory = new Factory(DF);
 
 describe('NodeHandlerSelectionField', () => {
 
@@ -27,10 +28,10 @@ describe('NodeHandlerSelectionField', () => {
 
   describe('#handle', () => {
     it('should convert a field selection node', async () => {
-      const subject = DataFactory.namedNode('theSubject');
+      const subject = DF.namedNode('theSubject');
       const ctx: IConvertContext = {
         context: new JsonLdContextNormalized({ theField: 'http://example.org/theField' }),
-        graph: DataFactory.defaultGraph(),
+        graph: DF.defaultGraph(),
         path: [ 'a' ],
         subject,
         singularizeState: SingularizeState.PLURAL,
@@ -44,21 +45,21 @@ describe('NodeHandlerSelectionField', () => {
         .toEqual(OperationFactory.createBgp([
           OperationFactory.createPattern(
             subject,
-            DataFactory.namedNode('http://example.org/theField'),
-            DataFactory.variable('a_theField'),
+            DF.namedNode('http://example.org/theField'),
+            DF.variable('a_theField'),
           ),
         ]));
     });
 
     it('should convert a field selection node with a selection set', async () => {
-      const subject = DataFactory.namedNode('theSubject');
+      const subject = DF.namedNode('theSubject');
       const ctx: IConvertContext = {
         context: new JsonLdContextNormalized({
           theField: 'http://example.org/theField',
           anotherField: 'http://example.org/anotherField',
           andAnotherField: 'http://example.org/andAnotherField',
         }),
-        graph: DataFactory.defaultGraph(),
+        graph: DF.defaultGraph(),
         path: [ 'a' ],
         subject,
         singularizeState: SingularizeState.PLURAL,
@@ -81,31 +82,31 @@ describe('NodeHandlerSelectionField', () => {
       }, ctx)).toEqual(OperationFactory.createBgp([
         OperationFactory.createPattern(
           subject,
-          DataFactory.namedNode('http://example.org/theField'),
-          DataFactory.variable('a_theField'),
+          DF.namedNode('http://example.org/theField'),
+          DF.variable('a_theField'),
         ),
         OperationFactory.createPattern(
-          DataFactory.variable('a_theField'),
-          DataFactory.namedNode('http://example.org/anotherField'),
-          DataFactory.variable('a_theField_anotherField'),
+          DF.variable('a_theField'),
+          DF.namedNode('http://example.org/anotherField'),
+          DF.variable('a_theField_anotherField'),
         ),
         OperationFactory.createPattern(
-          DataFactory.variable('a_theField'),
-          DataFactory.namedNode('http://example.org/andAnotherField'),
-          DataFactory.variable('a_theField_andAnotherField'),
+          DF.variable('a_theField'),
+          DF.namedNode('http://example.org/andAnotherField'),
+          DF.variable('a_theField_andAnotherField'),
         ),
       ]));
     });
 
     it('should convert a field selection node with arguments', async () => {
-      const subject = DataFactory.namedNode('theSubject');
+      const subject = DF.namedNode('theSubject');
       const ctx: IConvertContext = {
         context: new JsonLdContextNormalized({
           theField: 'http://example.org/theField',
           anotherField: 'http://example.org/anotherField',
           andAnotherField: 'http://example.org/andAnotherField',
         }),
-        graph: DataFactory.defaultGraph(),
+        graph: DF.defaultGraph(),
         path: [ 'a' ],
         subject,
         singularizeState: SingularizeState.PLURAL,
@@ -127,27 +128,27 @@ describe('NodeHandlerSelectionField', () => {
       }, ctx)).toEqual(OperationFactory.createBgp([
         OperationFactory.createPattern(
           subject,
-          DataFactory.namedNode('http://example.org/theField'),
-          DataFactory.variable('a_theField'),
+          DF.namedNode('http://example.org/theField'),
+          DF.variable('a_theField'),
         ),
         OperationFactory.createPattern(
-          DataFactory.variable('a_theField'),
-          DataFactory.namedNode('http://example.org/anotherField'),
-          DataFactory.literal('abc'),
+          DF.variable('a_theField'),
+          DF.namedNode('http://example.org/anotherField'),
+          DF.literal('abc'),
         ),
         OperationFactory.createPattern(
-          DataFactory.variable('a_theField'),
-          DataFactory.namedNode('http://example.org/andAnotherField'),
-          DataFactory.literal('def'),
+          DF.variable('a_theField'),
+          DF.namedNode('http://example.org/andAnotherField'),
+          DF.literal('def'),
         ),
       ]));
     });
 
     it('should terminate a field selection node without selection set', async () => {
-      const subject = DataFactory.namedNode('theSubject');
+      const subject = DF.namedNode('theSubject');
       const ctx: IConvertContext = {
         context: new JsonLdContextNormalized({ theField: 'http://example.org/theField' }),
-        graph: DataFactory.defaultGraph(),
+        graph: DF.defaultGraph(),
         path: [ 'a' ],
         subject,
         singularizeState: SingularizeState.PLURAL,
@@ -159,15 +160,15 @@ describe('NodeHandlerSelectionField', () => {
       };
       handler.handle({ kind: 'Field', name: { kind: 'Name', value: 'theField' } }, ctx);
       return expect(ctx.terminalVariables).toEqual([
-        DataFactory.variable('a_theField'),
+        DF.variable('a_theField'),
       ]);
     });
 
     it('should terminate a field selection node with an empty selection set', async () => {
-      const subject = DataFactory.namedNode('theSubject');
+      const subject = DF.namedNode('theSubject');
       const ctx: IConvertContext = {
         context: new JsonLdContextNormalized({ theField: 'http://example.org/theField' }),
-        graph: DataFactory.defaultGraph(),
+        graph: DF.defaultGraph(),
         path: [ 'a' ],
         subject,
         singularizeState: SingularizeState.PLURAL,
@@ -183,15 +184,15 @@ describe('NodeHandlerSelectionField', () => {
         selectionSet: { kind: 'SelectionSet', selections: [] },
       }, ctx);
       return expect(ctx.terminalVariables).toEqual([
-        DataFactory.variable('a_theField'),
+        DF.variable('a_theField'),
       ]);
     });
 
     it('should not terminate a field selection node with selection set', async () => {
-      const subject = DataFactory.namedNode('theSubject');
+      const subject = DF.namedNode('theSubject');
       const ctx: IConvertContext = {
         context: new JsonLdContextNormalized({ theField: 'http://example.org/theField' }),
-        graph: DataFactory.defaultGraph(),
+        graph: DF.defaultGraph(),
         path: [ 'a' ],
         subject,
         singularizeState: SingularizeState.PLURAL,
@@ -212,17 +213,17 @@ describe('NodeHandlerSelectionField', () => {
         },
       }, ctx);
       return expect(ctx.terminalVariables).toEqual([
-        DataFactory.variable('a_theField_anotherField'),
+        DF.variable('a_theField_anotherField'),
       ]);
     });
 
     it('should convert a field selection node with an alias', async () => {
-      const subject = DataFactory.namedNode('theSubject');
+      const subject = DF.namedNode('theSubject');
       const ctx: IConvertContext = {
         context: new JsonLdContextNormalized({
           theField: 'http://example.org/theField',
         }),
-        graph: DataFactory.defaultGraph(),
+        graph: DF.defaultGraph(),
         path: [ 'a' ],
         subject,
         singularizeState: SingularizeState.PLURAL,
@@ -239,19 +240,19 @@ describe('NodeHandlerSelectionField', () => {
       }, ctx)).toEqual(OperationFactory.createBgp([
         OperationFactory.createPattern(
           subject,
-          DataFactory.namedNode('http://example.org/theField'),
-          DataFactory.variable('a_theAliasField'),
+          DF.namedNode('http://example.org/theField'),
+          DF.variable('a_theAliasField'),
         ),
       ]));
     });
 
     it('should convert a field selection node with a directive', async () => {
-      const subject = DataFactory.namedNode('theSubject');
+      const subject = DF.namedNode('theSubject');
       const ctx: IConvertContext = {
         context: new JsonLdContextNormalized({
           theField: 'http://example.org/theField',
         }),
-        graph: DataFactory.defaultGraph(),
+        graph: DF.defaultGraph(),
         path: [ 'a' ],
         subject,
         singularizeState: SingularizeState.PLURAL,
@@ -280,20 +281,20 @@ describe('NodeHandlerSelectionField', () => {
       }, ctx)).toEqual(OperationFactory.createBgp([
         OperationFactory.createPattern(
           subject,
-          DataFactory.namedNode('http://example.org/theField'),
-          DataFactory.variable('a_theAliasField'),
+          DF.namedNode('http://example.org/theField'),
+          DF.variable('a_theAliasField'),
         ),
       ]));
     });
 
     it('should convert the __typename meta field', async () => {
-      const subject = DataFactory.namedNode('theSubject');
+      const subject = DF.namedNode('theSubject');
       const ctx: IConvertContext = {
         context: new JsonLdContextNormalized({
           theField: 'http://example.org/theField',
           Character: 'http://example.org/types/Character',
         }),
-        graph: DataFactory.defaultGraph(),
+        graph: DF.defaultGraph(),
         path: [ 'a' ],
         subject,
         singularizeState: SingularizeState.PLURAL,
@@ -310,20 +311,20 @@ describe('NodeHandlerSelectionField', () => {
         OperationFactory.createBgp([
           OperationFactory.createPattern(
             subject,
-            DataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
-            DataFactory.variable('a___typename'),
+            DF.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
+            DF.variable('a___typename'),
           ),
         ]));
     });
 
     it('should convert a field with one alt argument', async () => {
-      const subject = DataFactory.namedNode('theSubject');
+      const subject = DF.namedNode('theSubject');
       const ctx: IConvertContext = {
         context: new JsonLdContextNormalized({
           field1: 'http://example.org/field1',
           field2: 'http://example.org/field2',
         }),
-        graph: DataFactory.defaultGraph(),
+        graph: DF.defaultGraph(),
         path: [ 'a' ],
         subject,
         singularizeState: SingularizeState.PLURAL,
@@ -344,22 +345,22 @@ describe('NodeHandlerSelectionField', () => {
         OperationFactory.createPath(
           subject,
           OperationFactory.createAlt(
-            OperationFactory.createLink(DataFactory.namedNode('http://example.org/field1')),
-            OperationFactory.createLink(DataFactory.namedNode('http://example.org/field2')),
+            OperationFactory.createLink(DF.namedNode('http://example.org/field1')),
+            OperationFactory.createLink(DF.namedNode('http://example.org/field2')),
           ),
-          DataFactory.variable('a_field1'),
+          DF.variable('a_field1'),
         ));
     });
 
     it('should convert a field with multiple alt arguments', async () => {
-      const subject = DataFactory.namedNode('theSubject');
+      const subject = DF.namedNode('theSubject');
       const ctx: IConvertContext = {
         context: new JsonLdContextNormalized({
           field1: 'http://example.org/field1',
           field2: 'http://example.org/field2',
           field3: 'http://example.org/field3',
         }),
-        graph: DataFactory.defaultGraph(),
+        graph: DF.defaultGraph(),
         path: [ 'a' ],
         subject,
         singularizeState: SingularizeState.PLURAL,
@@ -384,23 +385,23 @@ describe('NodeHandlerSelectionField', () => {
           subject,
           OperationFactory.createAlt(
             OperationFactory.createAlt(
-              OperationFactory.createLink(DataFactory.namedNode('http://example.org/field1')),
-              OperationFactory.createLink(DataFactory.namedNode('http://example.org/field2')),
+              OperationFactory.createLink(DF.namedNode('http://example.org/field1')),
+              OperationFactory.createLink(DF.namedNode('http://example.org/field2')),
             ),
-            OperationFactory.createLink(DataFactory.namedNode('http://example.org/field3')),
+            OperationFactory.createLink(DF.namedNode('http://example.org/field3')),
           ),
-          DataFactory.variable('a_field1'),
+          DF.variable('a_field1'),
         ));
     });
 
     it('should error on an alt argument of invalid kind', async () => {
-      const subject = DataFactory.namedNode('theSubject');
+      const subject = DF.namedNode('theSubject');
       const ctx: IConvertContext = {
         context: new JsonLdContextNormalized({
           field1: 'http://example.org/field1',
           field2: 'http://example.org/field2',
         }),
-        graph: DataFactory.defaultGraph(),
+        graph: DF.defaultGraph(),
         path: [ 'a' ],
         subject,
         singularizeState: SingularizeState.PLURAL,

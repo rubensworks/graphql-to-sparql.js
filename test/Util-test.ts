@@ -1,4 +1,4 @@
-import * as DataFactory from "@rdfjs/data-model";
+import {DataFactory} from "rdf-data-factory";
 import {DirectiveNode, NameNode} from "graphql";
 import * as RDF from "rdf-js";
 import {Factory} from "sparqlalgebrajs";
@@ -9,7 +9,8 @@ import {JsonLdContextNormalized} from "jsonld-context-parser";
 
 // tslint:disable:object-literal-sort-keys
 
-const OperationFactory = new Factory(DataFactory);
+const DF = new DataFactory();
+const OperationFactory = new Factory(DF);
 
 describe('Util', () => {
 
@@ -143,7 +144,7 @@ describe('Util', () => {
     it('should convert a variable with an empty path', async () => {
       const ctx: IConvertContext = {
         context: new JsonLdContextNormalized({}),
-        graph: DataFactory.defaultGraph(),
+        graph: DF.defaultGraph(),
         path: [],
         subject: null,
         singularizeState: SingularizeState.PLURAL,
@@ -154,13 +155,13 @@ describe('Util', () => {
         variablesMetaDict: {},
       };
       return expect(util.nameToVariable('varName', ctx))
-        .toEqual(DataFactory.namedNode('varName'));
+        .toEqual(DF.variable('varName'));
     });
 
     it('should convert a variable with a single path element', async () => {
       const ctx: IConvertContext = {
         context: new JsonLdContextNormalized({}),
-        graph: DataFactory.defaultGraph(),
+        graph: DF.defaultGraph(),
         path: [ 'abc' ],
         subject: null,
         singularizeState: SingularizeState.PLURAL,
@@ -171,13 +172,13 @@ describe('Util', () => {
         variablesMetaDict: {},
       };
       return expect(util.nameToVariable('varName', ctx))
-        .toEqual(DataFactory.namedNode('abc_varName'));
+        .toEqual(DF.variable('abc_varName'));
     });
 
     it('should convert a variable with multiple path elements', async () => {
       const ctx = {
         context: new JsonLdContextNormalized({}),
-        graph: DataFactory.defaultGraph(),
+        graph: DF.defaultGraph(),
         path: [ 'abc', 'def', 'ghi' ],
         subject: null,
         singularizeState: SingularizeState.PLURAL,
@@ -188,24 +189,24 @@ describe('Util', () => {
         variablesMetaDict: {},
       };
       return expect(util.nameToVariable('varName', ctx))
-        .toEqual(DataFactory.namedNode('abc_def_ghi_varName'));
+        .toEqual(DF.variable('abc_def_ghi_varName'));
     });
   });
 
   describe('#valueToNamedNode', () => {
     it('should directly convert a value that is not in the context', async () => {
       return expect(util.valueToNamedNode('abc', new JsonLdContextNormalized({})))
-        .toEqual(DataFactory.namedNode('abc'));
+        .toEqual(DF.namedNode('abc'));
     });
 
     it('should expand a value that is in the context', async () => {
       return expect(util.valueToNamedNode('abc', new JsonLdContextNormalized({ abc: 'http://example.org/abc' })))
-        .toEqual(DataFactory.namedNode('http://example.org/abc'));
+        .toEqual(DF.namedNode('http://example.org/abc'));
     });
 
     it('should expand a value that is in the context as an object', async () => {
       return expect(util.valueToNamedNode('abc', new JsonLdContextNormalized({ abc: { '@id': 'http://example.org/abc' } })))
-        .toEqual(DataFactory.namedNode('http://example.org/abc'));
+        .toEqual(DF.namedNode('http://example.org/abc'));
     });
   });
 
@@ -219,7 +220,7 @@ describe('Util', () => {
         va_en: { '@id': 'http://example.org/va', "@language": "en" },
         va_datetime: { '@id': 'http://example.org/va', "@type": "http://www.w3.org/2001/XMLSchema#dateTime" },
       }),
-      graph: DataFactory.defaultGraph(),
+      graph: DF.defaultGraph(),
       path: [],
       subject: null,
       singularizeState: SingularizeState.PLURAL,
@@ -243,7 +244,7 @@ describe('Util', () => {
     it('should convert a variable that is defined', async () => {
       return expect(util.handleNodeValue(
         { kind: 'Variable', name: { kind: 'Name', value: 'myVar1' } }, 'va', ctx))
-        .toEqual({ terms: [ DataFactory.literal('myValue1') ] });
+        .toEqual({ terms: [ DF.literal('myValue1') ] });
     });
 
     it('should error when an unknown variable is not defined', async () => {
@@ -269,60 +270,60 @@ describe('Util', () => {
     it('should convert an int', async () => {
       return expect(util.handleNodeValue(
         { kind: 'IntValue', value: '123' }, 'va', ctx))
-        .toEqual({ terms: [ DataFactory.literal('123',
-            DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#integer')) ] });
+        .toEqual({ terms: [ DF.literal('123',
+            DF.namedNode('http://www.w3.org/2001/XMLSchema#integer')) ] });
     });
 
     it('should convert a float', async () => {
       return expect(util.handleNodeValue(
         { kind: 'FloatValue', value: '123.1' }, 'va', ctx))
-        .toEqual({ terms: [ DataFactory.literal('123.1',
-            DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#float')) ] });
+        .toEqual({ terms: [ DF.literal('123.1',
+            DF.namedNode('http://www.w3.org/2001/XMLSchema#float')) ] });
     });
 
     it('should convert a string', async () => {
       return expect(util.handleNodeValue(
         { kind: 'StringValue', value: 'abc' }, 'va', ctx))
-        .toEqual({ terms: [ DataFactory.literal('abc') ] });
+        .toEqual({ terms: [ DF.literal('abc') ] });
     });
 
     it('should convert a languaged string', async () => {
       return expect(util.handleNodeValue(
         { kind: 'StringValue', value: 'abc' }, 'va_en', ctx))
-        .toEqual({ terms: [ DataFactory.literal('abc', 'en') ] });
+        .toEqual({ terms: [ DF.literal('abc', 'en') ] });
     });
 
     it('should convert a datatyped string', async () => {
       return expect(util.handleNodeValue(
         { kind: 'StringValue', value: 'abc' }, 'va_datetime', ctx))
-        .toEqual({ terms: [ DataFactory.literal('abc', DataFactory
+        .toEqual({ terms: [ DF.literal('abc', DF
             .namedNode('http://www.w3.org/2001/XMLSchema#dateTime')) ] });
     });
 
     it('should convert a true boolean', async () => {
       return expect(util.handleNodeValue(
         { kind: 'BooleanValue', value: true }, 'va', ctx))
-        .toEqual({ terms: [ DataFactory.literal('true',
-            DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#boolean')) ] });
+        .toEqual({ terms: [ DF.literal('true',
+            DF.namedNode('http://www.w3.org/2001/XMLSchema#boolean')) ] });
     });
 
     it('should convert a false boolean', async () => {
       return expect(util.handleNodeValue(
         { kind: 'BooleanValue', value: false }, 'va', ctx))
-        .toEqual({ terms: [ DataFactory.literal('false',
-            DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#boolean')) ] });
+        .toEqual({ terms: [ DF.literal('false',
+            DF.namedNode('http://www.w3.org/2001/XMLSchema#boolean')) ] });
     });
 
     it('should convert a null value', async () => {
       return expect(util.handleNodeValue(
         { kind: 'NullValue' }, 'va', ctx))
-        .toEqual({ terms: [ DataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#nil') ] });
+        .toEqual({ terms: [ DF.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#nil') ] });
     });
 
     it('should convert an enum value', async () => {
       return expect(util.handleNodeValue(
         { kind: 'EnumValue', value: 'FOOT' }, 'va', ctx))
-        .toEqual({ terms: [ DataFactory.namedNode('http://example.org/types/foot') ] });
+        .toEqual({ terms: [ DF.namedNode('http://example.org/types/foot') ] });
     });
 
     it('should convert a list value in non-RDF-list-mode', async () => {
@@ -333,12 +334,12 @@ describe('Util', () => {
             { kind: 'BooleanValue', value: false },
         ] }, 'va', ctx);
       expect(out.terms).toEqual([
-        DataFactory.literal('false',
-          DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#boolean')),
-        DataFactory.literal('true',
-          DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#boolean')),
-        DataFactory.literal('false',
-          DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#boolean')),
+        DF.literal('false',
+          DF.namedNode('http://www.w3.org/2001/XMLSchema#boolean')),
+        DF.literal('true',
+          DF.namedNode('http://www.w3.org/2001/XMLSchema#boolean')),
+        DF.literal('false',
+          DF.namedNode('http://www.w3.org/2001/XMLSchema#boolean')),
       ]);
     });
 
@@ -358,41 +359,41 @@ describe('Util', () => {
       expect(out.auxiliaryPatterns[0].subject).toEqual(out.auxiliaryPatterns[1].subject);
       expect(out.auxiliaryPatterns[0].subject.termType).toEqual('BlankNode');
       expect(out.auxiliaryPatterns[0].predicate)
-        .toEqual(DataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#first'));
+        .toEqual(DF.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#first'));
       expect(out.auxiliaryPatterns[0].object)
-        .toEqual(DataFactory.literal('false',
-          DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#boolean')));
+        .toEqual(DF.literal('false',
+          DF.namedNode('http://www.w3.org/2001/XMLSchema#boolean')));
       expect(out.auxiliaryPatterns[1].subject.termType).toEqual('BlankNode');
       expect(out.auxiliaryPatterns[1].predicate)
-        .toEqual(DataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#rest'));
+        .toEqual(DF.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#rest'));
       expect(out.auxiliaryPatterns[1].object.termType).toEqual('BlankNode');
 
       expect(out.auxiliaryPatterns[1].object).toEqual(out.auxiliaryPatterns[2].subject);
       expect(out.auxiliaryPatterns[2].subject).toEqual(out.auxiliaryPatterns[3].subject);
       expect(out.auxiliaryPatterns[2].subject.termType).toEqual('BlankNode');
       expect(out.auxiliaryPatterns[2].predicate)
-        .toEqual(DataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#first'));
+        .toEqual(DF.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#first'));
       expect(out.auxiliaryPatterns[2].object)
-        .toEqual(DataFactory.literal('true',
-          DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#boolean')));
+        .toEqual(DF.literal('true',
+          DF.namedNode('http://www.w3.org/2001/XMLSchema#boolean')));
       expect(out.auxiliaryPatterns[3].subject.termType).toEqual('BlankNode');
       expect(out.auxiliaryPatterns[3].predicate)
-        .toEqual(DataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#rest'));
+        .toEqual(DF.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#rest'));
       expect(out.auxiliaryPatterns[3].object.termType).toEqual('BlankNode');
 
       expect(out.auxiliaryPatterns[3].object).toEqual(out.auxiliaryPatterns[4].subject);
       expect(out.auxiliaryPatterns[4].subject).toEqual(out.auxiliaryPatterns[5].subject);
       expect(out.auxiliaryPatterns[4].subject.termType).toEqual('BlankNode');
       expect(out.auxiliaryPatterns[4].predicate)
-        .toEqual(DataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#first'));
+        .toEqual(DF.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#first'));
       expect(out.auxiliaryPatterns[4].object)
-        .toEqual(DataFactory.literal('false',
-          DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#boolean')));
+        .toEqual(DF.literal('false',
+          DF.namedNode('http://www.w3.org/2001/XMLSchema#boolean')));
       expect(out.auxiliaryPatterns[5].subject.termType).toEqual('BlankNode');
       expect(out.auxiliaryPatterns[5].predicate)
-        .toEqual(DataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#rest'));
+        .toEqual(DF.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#rest'));
       expect(out.auxiliaryPatterns[5].object)
-        .toEqual(DataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#nil'));
+        .toEqual(DF.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#nil'));
     });
 
     it('should convert an object value', async () => {
@@ -407,31 +408,31 @@ describe('Util', () => {
 
       expect(out.auxiliaryPatterns[0].subject).toEqual(out.terms[0]);
       expect(out.auxiliaryPatterns[0].predicate)
-        .toEqual(DataFactory.namedNode('http://example.org/va'));
+        .toEqual(DF.namedNode('http://example.org/va'));
       expect(out.auxiliaryPatterns[0].object)
-        .toEqual(DataFactory.literal('false',
-          DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#boolean')));
+        .toEqual(DF.literal('false',
+          DF.namedNode('http://www.w3.org/2001/XMLSchema#boolean')));
 
       expect(out.auxiliaryPatterns[1].subject).toEqual(out.terms[0]);
       expect(out.auxiliaryPatterns[1].predicate)
-        .toEqual(DataFactory.namedNode('http://example.org/vb'));
+        .toEqual(DF.namedNode('http://example.org/vb'));
       expect(out.auxiliaryPatterns[1].object)
-        .toEqual(DataFactory.literal('true',
-          DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#boolean')));
+        .toEqual(DF.literal('true',
+          DF.namedNode('http://www.w3.org/2001/XMLSchema#boolean')));
 
       expect(out.auxiliaryPatterns[2].subject).toEqual(out.terms[0]);
       expect(out.auxiliaryPatterns[2].predicate)
-        .toEqual(DataFactory.namedNode('http://example.org/vc'));
+        .toEqual(DF.namedNode('http://example.org/vc'));
       expect(out.auxiliaryPatterns[2].object)
-        .toEqual(DataFactory.literal('false',
-          DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#boolean')));
+        .toEqual(DF.literal('false',
+          DF.namedNode('http://www.w3.org/2001/XMLSchema#boolean')));
     });
   });
 
   describe('#handleDirectiveNode', () => {
     const ctx = {
       context: new JsonLdContextNormalized({}),
-      graph: DataFactory.defaultGraph(),
+      graph: DF.defaultGraph(),
       path: [ 'parent' ],
       subject: null,
       singularizeState: null,
@@ -576,17 +577,17 @@ describe('Util', () => {
       expect(ignore).toBeFalsy();
       expect(operationOverrider(OperationFactory.createBgp([
         OperationFactory.createPattern(
-          DataFactory.namedNode('s'),
-          DataFactory.namedNode('p'),
-          DataFactory.namedNode('o'),
+          DF.namedNode('s'),
+          DF.namedNode('p'),
+          DF.namedNode('o'),
         ),
       ]))).toEqual(OperationFactory.createLeftJoin(
         OperationFactory.createBgp([]),
         OperationFactory.createBgp([
           OperationFactory.createPattern(
-            DataFactory.namedNode('s'),
-            DataFactory.namedNode('p'),
-            DataFactory.namedNode('o'),
+            DF.namedNode('s'),
+            DF.namedNode('p'),
+            DF.namedNode('o'),
           ),
         ]),
       ));
@@ -595,53 +596,53 @@ describe('Util', () => {
 
   describe('#createQuadPattern', () => {
     it('should create a triple pattern for a normal context', async () => {
-      const s = DataFactory.namedNode('s');
+      const s = DF.namedNode('s');
       const p: NameNode = { kind: 'Name', value: 'p' };
-      const o = DataFactory.namedNode('o');
-      const g = DataFactory.defaultGraph();
+      const o = DF.namedNode('o');
+      const g = DF.defaultGraph();
       return expect(util.createQuadPattern(s, p, o, g,
         new JsonLdContextNormalized({ p: 'ex:myP' })))
-        .toEqual(OperationFactory.createPattern(s, DataFactory.namedNode('ex:myP'), o));
+        .toEqual(OperationFactory.createPattern(s, DF.namedNode('ex:myP'), o));
     });
 
     it('should create a triple pattern for a normal context using @vocab', async () => {
-      const s = DataFactory.namedNode('s');
+      const s = DF.namedNode('s');
       const p: NameNode = { kind: 'Name', value: 'p' };
-      const o = DataFactory.namedNode('o');
-      const g = DataFactory.defaultGraph();
+      const o = DF.namedNode('o');
+      const g = DF.defaultGraph();
       const context = await util.contextParser.parse({ '@vocab': 'ex:', 'p': '/myP' });
       return expect(util.createQuadPattern(s, p, o, g, context))
-        .toEqual(OperationFactory.createPattern(s, DataFactory.namedNode('ex:/myP'), o));
+        .toEqual(OperationFactory.createPattern(s, DF.namedNode('ex:/myP'), o));
     });
 
     it('should create a triple pattern for a reversed context', async () => {
-      const s = DataFactory.namedNode('s');
+      const s = DF.namedNode('s');
       const p: NameNode = { kind: 'Name', value: 'p' };
-      const o = DataFactory.namedNode('o');
-      const g = DataFactory.defaultGraph();
+      const o = DF.namedNode('o');
+      const g = DF.defaultGraph();
       return expect(util.createQuadPattern(s, p, o, g,
         new JsonLdContextNormalized({ p: { '@reverse': true, '@id': 'ex:myP' } })))
-        .toEqual(OperationFactory.createPattern(o, DataFactory.namedNode('ex:myP'), s));
+        .toEqual(OperationFactory.createPattern(o, DF.namedNode('ex:myP'), s));
     });
 
     it('should create a quad pattern for a normal context', async () => {
-      const s = DataFactory.namedNode('s');
+      const s = DF.namedNode('s');
       const p: NameNode = { kind: 'Name', value: 'p' };
-      const o = DataFactory.namedNode('o');
-      const g = DataFactory.namedNode('g');
+      const o = DF.namedNode('o');
+      const g = DF.namedNode('g');
       return expect(util.createQuadPattern(s, p, o, g,
         new JsonLdContextNormalized({ p: 'ex:myP' })))
-        .toEqual(OperationFactory.createPattern(s, DataFactory.namedNode('ex:myP'), o, g));
+        .toEqual(OperationFactory.createPattern(s, DF.namedNode('ex:myP'), o, g));
     });
 
     it('should create a quad pattern for a reversed context', async () => {
-      const s = DataFactory.namedNode('s');
+      const s = DF.namedNode('s');
       const p: NameNode = { kind: 'Name', value: 'p' };
-      const o = DataFactory.namedNode('o');
-      const g = DataFactory.namedNode('g');
+      const o = DF.namedNode('o');
+      const g = DF.namedNode('g');
       return expect(util.createQuadPattern(s, p, o, g,
         new JsonLdContextNormalized({ p: { '@reverse': true, '@id': 'ex:myP' } })))
-        .toEqual(OperationFactory.createPattern(o, DataFactory.namedNode('ex:myP'), s, g));
+        .toEqual(OperationFactory.createPattern(o, DF.namedNode('ex:myP'), s, g));
     });
   });
 

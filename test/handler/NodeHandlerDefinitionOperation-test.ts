@@ -1,4 +1,4 @@
-import * as DataFactory from "@rdfjs/data-model";
+import {DataFactory} from "rdf-data-factory";
 import {Factory} from "sparqlalgebrajs";
 import {Converter} from "../../lib/Converter";
 import {NodeHandlerDefinitionOperation} from "../../lib/handler/NodeHandlerDefinitionOperation";
@@ -8,7 +8,8 @@ import {JsonLdContextNormalized} from "jsonld-context-parser";
 
 // tslint:disable:object-literal-sort-keys
 
-const OperationFactory = new Factory(DataFactory);
+const DF = new DataFactory();
+const OperationFactory = new Factory(DF);
 
 describe('NodeHandlerDefinitionOperation', () => {
 
@@ -29,11 +30,11 @@ describe('NodeHandlerDefinitionOperation', () => {
     it('should convert an operation query definition node', async () => {
       const ctx = {
         context: new JsonLdContextNormalized({ theField: 'http://example.org/theField' }),
-        graph: DataFactory.defaultGraph(),
+        graph: DF.defaultGraph(),
         path: [ 'a' ],
         singularizeState: SingularizeState.PLURAL,
         singularizeVariables: {},
-        subject: DataFactory.namedNode('subject'),
+        subject: DF.namedNode('subject'),
         terminalVariables: [],
         fragmentDefinitions: {},
         variablesDict: {},
@@ -50,9 +51,9 @@ describe('NodeHandlerDefinitionOperation', () => {
         },
       }, ctx)).toEqual(OperationFactory.createBgp([
         OperationFactory.createPattern(
-          DataFactory.namedNode('subject'),
-          DataFactory.namedNode('http://example.org/theField'),
-          DataFactory.variable('a_theField'),
+          DF.namedNode('subject'),
+          DF.namedNode('http://example.org/theField'),
+          DF.variable('a_theField'),
         ),
       ]));
     });
@@ -60,11 +61,11 @@ describe('NodeHandlerDefinitionOperation', () => {
     it('should convert an operation query definition node with a directive', async () => {
       const ctx = {
         context: new JsonLdContextNormalized({ theField: 'http://example.org/theField' }),
-        graph: DataFactory.defaultGraph(),
+        graph: DF.defaultGraph(),
         path: [ 'a' ],
         singularizeState: SingularizeState.PLURAL,
         singularizeVariables: {},
-        subject: DataFactory.namedNode('subject'),
+        subject: DF.namedNode('subject'),
         terminalVariables: [],
         fragmentDefinitions: {},
         variablesDict: <IVariablesDictionary> {
@@ -92,9 +93,9 @@ describe('NodeHandlerDefinitionOperation', () => {
         ],
       }, ctx)).toEqual(OperationFactory.createBgp([
         OperationFactory.createPattern(
-          DataFactory.namedNode('subject'),
-          DataFactory.namedNode('http://example.org/theField'),
-          DataFactory.variable('a_theField'),
+          DF.namedNode('subject'),
+          DF.namedNode('http://example.org/theField'),
+          DF.variable('a_theField'),
         ),
       ]));
     });

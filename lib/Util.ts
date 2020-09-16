@@ -1,6 +1,6 @@
-import * as DefaultDataFactory from "@rdfjs/data-model";
+import {DataFactory} from "rdf-data-factory";
 import {ArgumentNode, FieldNode, ListValueNode, NamedTypeNode, NameNode, ValueNode} from "graphql/language";
-import {ContextParser, JsonLdContextNormalized, Util as ContextUtil} from "jsonld-context-parser";
+import {ContextParser, JsonLdContextNormalized} from "jsonld-context-parser";
 import * as RDF from "rdf-js";
 import {Algebra, Factory} from "sparqlalgebrajs";
 import {IValueNodeHandlerOutput, NodeHandlerAdapter, NodeValueHandlerAdapter} from "./handler";
@@ -29,7 +29,7 @@ export class Util {
 
   constructor(settings: IConvertSettings) {
     this.settings = settings;
-    this.dataFactory = settings.dataFactory || DefaultDataFactory;
+    this.dataFactory = settings.dataFactory || new DataFactory();
     this.operationFactory = new Factory(this.dataFactory);
     this.contextParser = new ContextParser();
   }

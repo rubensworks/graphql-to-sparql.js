@@ -1,4 +1,4 @@
-import * as DataFactory from "@rdfjs/data-model";
+import {DataFactory} from "rdf-data-factory";
 import {DocumentNode} from "graphql";
 import {Factory} from "sparqlalgebrajs";
 import {Converter} from "../lib/Converter";
@@ -6,9 +6,14 @@ import {IVariablesDictionary} from "../lib/IConvertContext";
 
 // tslint:disable:object-literal-sort-keys
 
-const OperationFactory = new Factory(DataFactory);
+const DF = new DataFactory();
+const OperationFactory = new Factory(DF);
 
 describe('Converter', () => {
+
+  beforeEach(() => {
+    DF.resetBlankNodeCounter();
+  });
 
   describe('without default data factory', () => {
     let converter: Converter;
@@ -31,17 +36,17 @@ describe('Converter', () => {
 }
 `, context)).toEqual(OperationFactory.createProject(OperationFactory.createBgp([
   OperationFactory.createPattern(
-    DataFactory.blankNode('b1'),
-    DataFactory.namedNode('http://example.org/human'),
-    DataFactory.variable('human'),
+    DF.variable('df_0'),
+    DF.namedNode('http://example.org/human'),
+    DF.variable('human'),
   ),
   OperationFactory.createPattern(
-    DataFactory.variable('human'),
-    DataFactory.namedNode('http://example.org/name'),
-    DataFactory.variable('human_name'),
+    DF.variable('human'),
+    DF.namedNode('http://example.org/name'),
+    DF.variable('human_name'),
   ),
 ]), [
-  DataFactory.variable('human_name'),
+  DF.variable('human_name'),
 ]));
       });
 
@@ -59,22 +64,22 @@ describe('Converter', () => {
 }
 `, context)).toEqual(OperationFactory.createProject(OperationFactory.createBgp([
   OperationFactory.createPattern(
-    DataFactory.blankNode('b2'),
-    DataFactory.namedNode('http://example.org/human'),
-    DataFactory.variable('human'),
+    DF.variable('df_0'),
+    DF.namedNode('http://example.org/human'),
+    DF.variable('human'),
   ),
   OperationFactory.createPattern(
-    DataFactory.variable('human'),
-    DataFactory.namedNode('http://example.org/id'),
-    DataFactory.literal('1000'),
+    DF.variable('human'),
+    DF.namedNode('http://example.org/id'),
+    DF.literal('1000'),
   ),
   OperationFactory.createPattern(
-    DataFactory.variable('human'),
-    DataFactory.namedNode('http://example.org/name'),
-    DataFactory.variable('human_name'),
+    DF.variable('human'),
+    DF.namedNode('http://example.org/name'),
+    DF.variable('human_name'),
   ),
 ]), [
-  DataFactory.variable('human_name'),
+  DF.variable('human_name'),
 ]));
       });
 
@@ -97,35 +102,35 @@ describe('Converter', () => {
           OperationFactory.createJoin(
             OperationFactory.createBgp([
               OperationFactory.createPattern(
-                DataFactory.blankNode('b3'),
-                DataFactory.namedNode('http://example.org/hero'),
-                DataFactory.variable('hero'),
+                DF.variable('df_0'),
+                DF.namedNode('http://example.org/hero'),
+                DF.variable('hero'),
               ),
               OperationFactory.createPattern(
-                DataFactory.variable('hero'),
-                DataFactory.namedNode('http://example.org/name'),
-                DataFactory.variable('hero_name'),
+                DF.variable('hero'),
+                DF.namedNode('http://example.org/name'),
+                DF.variable('hero_name'),
               ),
             ]),
             OperationFactory.createSlice(OperationFactory.createProject(OperationFactory.createBgp([
               OperationFactory.createPattern(
-                DataFactory.variable('hero'),
-                DataFactory.namedNode('http://example.org/friends'),
-                DataFactory.variable('hero_friends'),
+                DF.variable('hero'),
+                DF.namedNode('http://example.org/friends'),
+                DF.variable('hero_friends'),
               ),
               OperationFactory.createPattern(
-                DataFactory.variable('hero_friends'),
-                DataFactory.namedNode('http://example.org/name'),
-                DataFactory.variable('hero_friends_name'),
+                DF.variable('hero_friends'),
+                DF.namedNode('http://example.org/name'),
+                DF.variable('hero_friends_name'),
               ),
             ]), [
-              DataFactory.variable('hero'),
-              DataFactory.variable('hero_friends'),
-              DataFactory.variable('hero_friends_name'),
+              DF.variable('hero'),
+              DF.variable('hero_friends'),
+              DF.variable('hero_friends_name'),
             ]), 10, 2),
           ), [
-            DataFactory.variable('hero_name'),
-            DataFactory.variable('hero_friends_name'),
+            DF.variable('hero_name'),
+            DF.variable('hero_friends_name'),
           ]));
       });
 
@@ -148,33 +153,33 @@ describe('Converter', () => {
 }
 `, context)).toEqual(OperationFactory.createProject(OperationFactory.createBgp([
   OperationFactory.createPattern(
-    DataFactory.blankNode('b4'),
-    DataFactory.namedNode('http://example.org/human'),
-    DataFactory.variable('human'),
+    DF.variable('df_0'),
+    DF.namedNode('http://example.org/human'),
+    DF.variable('human'),
   ),
   OperationFactory.createPattern(
-    DataFactory.variable('human'),
-    DataFactory.namedNode('http://example.org/id'),
-    DataFactory.literal('1000'),
+    DF.variable('human'),
+    DF.namedNode('http://example.org/id'),
+    DF.literal('1000'),
   ),
   OperationFactory.createPattern(
-    DataFactory.variable('human'),
-    DataFactory.namedNode('http://example.org/name'),
-    DataFactory.variable('human_name'),
+    DF.variable('human'),
+    DF.namedNode('http://example.org/name'),
+    DF.variable('human_name'),
   ),
   OperationFactory.createPattern(
-    DataFactory.variable('human'),
-    DataFactory.namedNode('http://example.org/friends'),
-    DataFactory.variable('human_friends'),
+    DF.variable('human'),
+    DF.namedNode('http://example.org/friends'),
+    DF.variable('human_friends'),
   ),
   OperationFactory.createPattern(
-    DataFactory.variable('human_friends'),
-    DataFactory.namedNode('http://example.org/name'),
-    DataFactory.variable('human_friends_name'),
+    DF.variable('human_friends'),
+    DF.namedNode('http://example.org/name'),
+    DF.variable('human_friends_name'),
   ),
 ]), [
-  DataFactory.variable('human_name'),
-  DataFactory.variable('human_friends_name'),
+  DF.variable('human_name'),
+  DF.variable('human_friends_name'),
 ]));
       });
 
@@ -196,33 +201,33 @@ describe('Converter', () => {
 }
 `, context)).toEqual(OperationFactory.createProject(OperationFactory.createBgp([
   OperationFactory.createPattern(
-    DataFactory.blankNode('b5'),
-    DataFactory.namedNode('http://example.org/human'),
-    DataFactory.variable('human'),
+    DF.variable('df_0'),
+    DF.namedNode('http://example.org/human'),
+    DF.variable('human'),
   ),
   OperationFactory.createPattern(
-    DataFactory.variable('human'),
-    DataFactory.namedNode('http://example.org/id'),
-    DataFactory.literal('1000'),
+    DF.variable('human'),
+    DF.namedNode('http://example.org/id'),
+    DF.literal('1000'),
   ),
   OperationFactory.createPattern(
-    DataFactory.variable('human'),
-    DataFactory.namedNode('http://example.org/name'),
-    DataFactory.variable('human_name'),
+    DF.variable('human'),
+    DF.namedNode('http://example.org/name'),
+    DF.variable('human_name'),
   ),
   OperationFactory.createPattern(
-    DataFactory.variable('human'),
-    DataFactory.namedNode('http://example.org/height'),
-    DataFactory.variable('human_height'),
+    DF.variable('human'),
+    DF.namedNode('http://example.org/height'),
+    DF.variable('human_height'),
   ),
   OperationFactory.createPattern(
-    DataFactory.variable('human_height'),
-    DataFactory.namedNode('http://example.org/unit'),
-    DataFactory.namedNode('http://example.org/types/foot'),
+    DF.variable('human_height'),
+    DF.namedNode('http://example.org/unit'),
+    DF.namedNode('http://example.org/types/foot'),
   ),
 ]), [
-  DataFactory.variable('human_name'),
-  DataFactory.variable('human_height'),
+  DF.variable('human_name'),
+  DF.variable('human_height'),
 ]));
       });
 
@@ -245,38 +250,38 @@ describe('Converter', () => {
 }
 `, context)).toEqual(OperationFactory.createProject(OperationFactory.createBgp([
   OperationFactory.createPattern(
-    DataFactory.blankNode('b6'),
-    DataFactory.namedNode('http://example.org/hero'),
-    DataFactory.variable('empireHero'),
+    DF.variable('df_0'),
+    DF.namedNode('http://example.org/hero'),
+    DF.variable('empireHero'),
   ),
   OperationFactory.createPattern(
-    DataFactory.variable('empireHero'),
-    DataFactory.namedNode('http://example.org/episode'),
-    DataFactory.namedNode('http://example.org/types/empire'),
+    DF.variable('empireHero'),
+    DF.namedNode('http://example.org/episode'),
+    DF.namedNode('http://example.org/types/empire'),
   ),
   OperationFactory.createPattern(
-    DataFactory.variable('empireHero'),
-    DataFactory.namedNode('http://example.org/name'),
-    DataFactory.variable('empireHero_name'),
+    DF.variable('empireHero'),
+    DF.namedNode('http://example.org/name'),
+    DF.variable('empireHero_name'),
   ),
   OperationFactory.createPattern(
-    DataFactory.blankNode('b6'),
-    DataFactory.namedNode('http://example.org/hero'),
-    DataFactory.variable('jediHero'),
+    DF.variable('df_0'),
+    DF.namedNode('http://example.org/hero'),
+    DF.variable('jediHero'),
   ),
   OperationFactory.createPattern(
-    DataFactory.variable('jediHero'),
-    DataFactory.namedNode('http://example.org/episode'),
-    DataFactory.namedNode('http://example.org/types/jedi'),
+    DF.variable('jediHero'),
+    DF.namedNode('http://example.org/episode'),
+    DF.namedNode('http://example.org/types/jedi'),
   ),
   OperationFactory.createPattern(
-    DataFactory.variable('jediHero'),
-    DataFactory.namedNode('http://example.org/name'),
-    DataFactory.variable('jediHero_name'),
+    DF.variable('jediHero'),
+    DF.namedNode('http://example.org/name'),
+    DF.variable('jediHero_name'),
   ),
 ]), [
-  DataFactory.variable('empireHero_name'),
-  DataFactory.variable('jediHero_name'),
+  DF.variable('empireHero_name'),
+  DF.variable('jediHero_name'),
 ]));
       });
 
@@ -313,92 +318,92 @@ fragment comparisonFields on Character {
       OperationFactory.createLeftJoin(
         OperationFactory.createBgp([
           OperationFactory.createPattern(
-            DataFactory.blankNode('b7'),
-            DataFactory.namedNode('http://example.org/hero'),
-            DataFactory.variable('leftComparison'),
+            DF.variable('df_0'),
+            DF.namedNode('http://example.org/hero'),
+            DF.variable('leftComparison'),
           ),
           OperationFactory.createPattern(
-            DataFactory.variable('leftComparison'),
-            DataFactory.namedNode('http://example.org/episode'),
-            DataFactory.namedNode('http://example.org/types/empire'),
+            DF.variable('leftComparison'),
+            DF.namedNode('http://example.org/episode'),
+            DF.namedNode('http://example.org/types/empire'),
           ),
         ]),
         OperationFactory.createBgp([
           OperationFactory.createPattern(
-            DataFactory.variable('leftComparison'),
-            DataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
-            DataFactory.namedNode('http://example.org/types/Character'),
+            DF.variable('leftComparison'),
+            DF.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
+            DF.namedNode('http://example.org/types/Character'),
           ),
           OperationFactory.createPattern(
-            DataFactory.variable('leftComparison'),
-            DataFactory.namedNode('http://example.org/name'),
-            DataFactory.variable('leftComparison_name'),
+            DF.variable('leftComparison'),
+            DF.namedNode('http://example.org/name'),
+            DF.variable('leftComparison_name'),
           ),
           OperationFactory.createPattern(
-            DataFactory.variable('leftComparison'),
-            DataFactory.namedNode('http://example.org/appearsIn'),
-            DataFactory.variable('leftComparison_appearsIn'),
+            DF.variable('leftComparison'),
+            DF.namedNode('http://example.org/appearsIn'),
+            DF.variable('leftComparison_appearsIn'),
           ),
           OperationFactory.createPattern(
-            DataFactory.variable('leftComparison'),
-            DataFactory.namedNode('http://example.org/friends'),
-            DataFactory.variable('leftComparison_friends'),
+            DF.variable('leftComparison'),
+            DF.namedNode('http://example.org/friends'),
+            DF.variable('leftComparison_friends'),
           ),
           OperationFactory.createPattern(
-            DataFactory.variable('leftComparison_friends'),
-            DataFactory.namedNode('http://example.org/name'),
-            DataFactory.variable('leftComparison_friends_name'),
+            DF.variable('leftComparison_friends'),
+            DF.namedNode('http://example.org/name'),
+            DF.variable('leftComparison_friends_name'),
           ),
         ]),
       ),
       OperationFactory.createLeftJoin(
         OperationFactory.createBgp([
           OperationFactory.createPattern(
-            DataFactory.blankNode('b7'),
-            DataFactory.namedNode('http://example.org/hero'),
-            DataFactory.variable('rightComparison'),
+            DF.variable('df_0'),
+            DF.namedNode('http://example.org/hero'),
+            DF.variable('rightComparison'),
           ),
           OperationFactory.createPattern(
-            DataFactory.variable('rightComparison'),
-            DataFactory.namedNode('http://example.org/episode'),
-            DataFactory.namedNode('http://example.org/types/jedi'),
+            DF.variable('rightComparison'),
+            DF.namedNode('http://example.org/episode'),
+            DF.namedNode('http://example.org/types/jedi'),
           ),
         ]),
         OperationFactory.createBgp([
           OperationFactory.createPattern(
-            DataFactory.variable('rightComparison'),
-            DataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
-            DataFactory.namedNode('http://example.org/types/Character'),
+            DF.variable('rightComparison'),
+            DF.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
+            DF.namedNode('http://example.org/types/Character'),
           ),
           OperationFactory.createPattern(
-            DataFactory.variable('rightComparison'),
-            DataFactory.namedNode('http://example.org/name'),
-            DataFactory.variable('rightComparison_name'),
+            DF.variable('rightComparison'),
+            DF.namedNode('http://example.org/name'),
+            DF.variable('rightComparison_name'),
           ),
           OperationFactory.createPattern(
-            DataFactory.variable('rightComparison'),
-            DataFactory.namedNode('http://example.org/appearsIn'),
-            DataFactory.variable('rightComparison_appearsIn'),
+            DF.variable('rightComparison'),
+            DF.namedNode('http://example.org/appearsIn'),
+            DF.variable('rightComparison_appearsIn'),
           ),
           OperationFactory.createPattern(
-            DataFactory.variable('rightComparison'),
-            DataFactory.namedNode('http://example.org/friends'),
-            DataFactory.variable('rightComparison_friends'),
+            DF.variable('rightComparison'),
+            DF.namedNode('http://example.org/friends'),
+            DF.variable('rightComparison_friends'),
           ),
           OperationFactory.createPattern(
-            DataFactory.variable('rightComparison_friends'),
-            DataFactory.namedNode('http://example.org/name'),
-            DataFactory.variable('rightComparison_friends_name'),
+            DF.variable('rightComparison_friends'),
+            DF.namedNode('http://example.org/name'),
+            DF.variable('rightComparison_friends_name'),
           ),
         ]),
       ),
   ), [
-    DataFactory.variable('leftComparison_name'),
-    DataFactory.variable('leftComparison_appearsIn'),
-    DataFactory.variable('leftComparison_friends_name'),
-    DataFactory.variable('rightComparison_name'),
-    DataFactory.variable('rightComparison_appearsIn'),
-    DataFactory.variable('rightComparison_friends_name'),
+    DF.variable('leftComparison_name'),
+    DF.variable('leftComparison_appearsIn'),
+    DF.variable('leftComparison_friends_name'),
+    DF.variable('rightComparison_name'),
+    DF.variable('rightComparison_appearsIn'),
+    DF.variable('rightComparison_friends_name'),
   ]));
       });
 
@@ -424,32 +429,32 @@ query HeroNameAndFriends($episode: Episode) {
 }
 `, context, { variablesDict })).toEqual(OperationFactory.createProject(OperationFactory.createBgp([
   OperationFactory.createPattern(
-    DataFactory.blankNode('b8'),
-    DataFactory.namedNode('http://example.org/hero'),
-    DataFactory.variable('hero'),
+    DF.variable('df_0'),
+    DF.namedNode('http://example.org/hero'),
+    DF.variable('hero'),
   ),
   OperationFactory.createPattern(
-    DataFactory.variable('hero'),
-    DataFactory.namedNode('http://example.org/episode'),
-    DataFactory.namedNode('http://example.org/types/jedi'),
+    DF.variable('hero'),
+    DF.namedNode('http://example.org/episode'),
+    DF.namedNode('http://example.org/types/jedi'),
   ),
   OperationFactory.createPattern(
-    DataFactory.variable('hero'),
-    DataFactory.namedNode('http://example.org/name'),
-    DataFactory.variable('hero_name'),
+    DF.variable('hero'),
+    DF.namedNode('http://example.org/name'),
+    DF.variable('hero_name'),
   ),
   OperationFactory.createPattern(
-    DataFactory.variable('hero'),
-    DataFactory.namedNode('http://example.org/friends'),
-    DataFactory.variable('hero_friends'),
+    DF.variable('hero'),
+    DF.namedNode('http://example.org/friends'),
+    DF.variable('hero_friends'),
   ),
   OperationFactory.createPattern(
-    DataFactory.variable('hero_friends'),
-    DataFactory.namedNode('http://example.org/name'),
-    DataFactory.variable('hero_friends_name'),
+    DF.variable('hero_friends'),
+    DF.namedNode('http://example.org/name'),
+    DF.variable('hero_friends_name'),
 )]), [
-  DataFactory.variable('hero_name'),
-  DataFactory.variable('hero_friends_name'),
+  DF.variable('hero_name'),
+  DF.variable('hero_friends_name'),
 ]));
       });
 
@@ -472,32 +477,32 @@ query HeroNameAndFriends($episode: Episode = JEDI) {
 }
 `, context)).toEqual(OperationFactory.createProject(OperationFactory.createBgp([
   OperationFactory.createPattern(
-    DataFactory.blankNode('b9'),
-    DataFactory.namedNode('http://example.org/hero'),
-    DataFactory.variable('hero'),
+    DF.variable('df_0'),
+    DF.namedNode('http://example.org/hero'),
+    DF.variable('hero'),
   ),
   OperationFactory.createPattern(
-    DataFactory.variable('hero'),
-    DataFactory.namedNode('http://example.org/episode'),
-    DataFactory.namedNode('http://example.org/types/jedi'),
+    DF.variable('hero'),
+    DF.namedNode('http://example.org/episode'),
+    DF.namedNode('http://example.org/types/jedi'),
   ),
   OperationFactory.createPattern(
-    DataFactory.variable('hero'),
-    DataFactory.namedNode('http://example.org/name'),
-    DataFactory.variable('hero_name'),
+    DF.variable('hero'),
+    DF.namedNode('http://example.org/name'),
+    DF.variable('hero_name'),
   ),
   OperationFactory.createPattern(
-    DataFactory.variable('hero'),
-    DataFactory.namedNode('http://example.org/friends'),
-    DataFactory.variable('hero_friends'),
+    DF.variable('hero'),
+    DF.namedNode('http://example.org/friends'),
+    DF.variable('hero_friends'),
   ),
   OperationFactory.createPattern(
-    DataFactory.variable('hero_friends'),
-    DataFactory.namedNode('http://example.org/name'),
-    DataFactory.variable('hero_friends_name'),
+    DF.variable('hero_friends'),
+    DF.namedNode('http://example.org/name'),
+    DF.variable('hero_friends_name'),
 )]), [
-  DataFactory.variable('hero_name'),
-  DataFactory.variable('hero_friends_name'),
+  DF.variable('hero_name'),
+  DF.variable('hero_friends_name'),
 ]));
       });
 
@@ -524,21 +529,21 @@ query Hero($episode: Episode, $withFriends: Boolean!) {
 }
 `, context, { variablesDict })).toEqual(OperationFactory.createProject(OperationFactory.createBgp([
   OperationFactory.createPattern(
-    DataFactory.blankNode('b10'),
-    DataFactory.namedNode('http://example.org/hero'),
-    DataFactory.variable('hero'),
+    DF.variable('df_0'),
+    DF.namedNode('http://example.org/hero'),
+    DF.variable('hero'),
   ),
   OperationFactory.createPattern(
-    DataFactory.variable('hero'),
-    DataFactory.namedNode('http://example.org/episode'),
-    DataFactory.namedNode('http://example.org/types/jedi'),
+    DF.variable('hero'),
+    DF.namedNode('http://example.org/episode'),
+    DF.namedNode('http://example.org/types/jedi'),
   ),
   OperationFactory.createPattern(
-    DataFactory.variable('hero'),
-    DataFactory.namedNode('http://example.org/name'),
-    DataFactory.variable('hero_name'),
+    DF.variable('hero'),
+    DF.namedNode('http://example.org/name'),
+    DF.variable('hero_name'),
   )]), [
-    DataFactory.variable('hero_name'),
+    DF.variable('hero_name'),
   ]));
       });
 
@@ -572,19 +577,19 @@ query HeroForEpisode($ep: Episode!) {
           OperationFactory.createJoin(
             OperationFactory.createBgp([
               OperationFactory.createPattern(
-                DataFactory.blankNode('b11'),
-                DataFactory.namedNode('http://example.org/hero'),
-                DataFactory.variable('hero'),
+                DF.variable('df_0'),
+                DF.namedNode('http://example.org/hero'),
+                DF.variable('hero'),
               ),
               OperationFactory.createPattern(
-                DataFactory.variable('hero'),
-                DataFactory.namedNode('http://example.org/episode'),
-                DataFactory.namedNode('http://example.org/types/jedi'),
+                DF.variable('hero'),
+                DF.namedNode('http://example.org/episode'),
+                DF.namedNode('http://example.org/types/jedi'),
               ),
               OperationFactory.createPattern(
-                DataFactory.variable('hero'),
-                DataFactory.namedNode('http://example.org/name'),
-                DataFactory.variable('hero_name'),
+                DF.variable('hero'),
+                DF.namedNode('http://example.org/name'),
+                DF.variable('hero_name'),
               ),
             ]),
             OperationFactory.createJoin(
@@ -592,14 +597,14 @@ query HeroForEpisode($ep: Episode!) {
                 OperationFactory.createBgp([]),
                 OperationFactory.createBgp([
                   OperationFactory.createPattern(
-                    DataFactory.variable('hero'),
-                    DataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
-                    DataFactory.namedNode('http://example.org/types/droid'),
+                    DF.variable('hero'),
+                    DF.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
+                    DF.namedNode('http://example.org/types/droid'),
                   ),
                   OperationFactory.createPattern(
-                    DataFactory.variable('hero'),
-                    DataFactory.namedNode('http://example.org/primaryFunction'),
-                    DataFactory.variable('hero_primaryFunction'),
+                    DF.variable('hero'),
+                    DF.namedNode('http://example.org/primaryFunction'),
+                    DF.variable('hero_primaryFunction'),
                   ),
                 ]),
               ),
@@ -607,22 +612,22 @@ query HeroForEpisode($ep: Episode!) {
                 OperationFactory.createBgp([]),
                 OperationFactory.createBgp([
                   OperationFactory.createPattern(
-                    DataFactory.variable('hero'),
-                    DataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
-                    DataFactory.namedNode('http://example.org/types/human'),
+                    DF.variable('hero'),
+                    DF.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
+                    DF.namedNode('http://example.org/types/human'),
                   ),
                   OperationFactory.createPattern(
-                    DataFactory.variable('hero'),
-                    DataFactory.namedNode('http://example.org/height'),
-                    DataFactory.variable('hero_height'),
+                    DF.variable('hero'),
+                    DF.namedNode('http://example.org/height'),
+                    DF.variable('hero_height'),
                   ),
                 ]),
               ),
             ),
           ), [
-            DataFactory.variable('hero_name'),
-            DataFactory.variable('hero_primaryFunction'),
-            DataFactory.variable('hero_height'),
+            DF.variable('hero_name'),
+            DF.variable('hero_primaryFunction'),
+            DF.variable('hero_height'),
           ]));
       });
 
@@ -646,9 +651,9 @@ query HeroForEpisode($ep: Episode!) {
           OperationFactory.createJoin(
             OperationFactory.createBgp([
               OperationFactory.createPattern(
-                DataFactory.blankNode('b12'),
-                DataFactory.namedNode('http://example.org/hero'),
-                DataFactory.variable('hero'),
+                DF.variable('df_0'),
+                DF.namedNode('http://example.org/hero'),
+                DF.variable('hero'),
               ),
             ]),
             OperationFactory.createProject(
@@ -656,26 +661,26 @@ query HeroForEpisode($ep: Episode!) {
                 OperationFactory.createGroup(
                   OperationFactory.createBgp([
                     OperationFactory.createPattern(
-                      DataFactory.variable('hero'),
-                      DataFactory.namedNode('http://example.org/friends'),
-                      DataFactory.variable('hero_friends'),
+                      DF.variable('hero'),
+                      DF.namedNode('http://example.org/friends'),
+                      DF.variable('hero_friends'),
                     )],
                   ),
                   [],
                   [OperationFactory.createBoundAggregate(
-                    DataFactory.variable('var0'),
+                    DF.variable('var0'),
                     'count',
-                    OperationFactory.createTermExpression(DataFactory.variable('hero_friends')),
+                    OperationFactory.createTermExpression(DF.variable('hero_friends')),
                     false,
                   )],
                 ),
-                DataFactory.variable('hero_friends_totalCount'),
-                OperationFactory.createTermExpression(DataFactory.variable('var0')),
+                DF.variable('hero_friends_totalCount'),
+                OperationFactory.createTermExpression(DF.variable('var0')),
               ),
-              [DataFactory.variable('hero_friends_totalCount')],
+              [DF.variable('hero_friends_totalCount')],
             ),
           ), [
-            DataFactory.variable('hero_friends_totalCount'),
+            DF.variable('hero_friends_totalCount'),
           ]));
       });
 
@@ -700,23 +705,23 @@ query HeroForEpisode($ep: Episode!) {
           OperationFactory.createJoin(
             OperationFactory.createBgp([
               OperationFactory.createPattern(
-                DataFactory.blankNode('b13'),
-                DataFactory.namedNode('http://example.org/hero'),
-                DataFactory.variable('hero'),
+                DF.variable('df_0'),
+                DF.namedNode('http://example.org/hero'),
+                DF.variable('hero'),
               ),
             ]),
             OperationFactory.createJoin(
               OperationFactory.createProject(
                 OperationFactory.createBgp([
                   OperationFactory.createPattern(
-                    DataFactory.variable('hero'),
-                    DataFactory.namedNode('http://example.org/friends'),
-                    DataFactory.variable('hero_friends'),
+                    DF.variable('hero'),
+                    DF.namedNode('http://example.org/friends'),
+                    DF.variable('hero_friends'),
                   ),
                   OperationFactory.createPattern(
-                    DataFactory.variable('hero_friends'),
-                    DataFactory.namedNode('http://example.org/name'),
-                    DataFactory.variable('hero_friends_name'),
+                    DF.variable('hero_friends'),
+                    DF.namedNode('http://example.org/name'),
+                    DF.variable('hero_friends_name'),
                   ),
                 ]),
                 [],
@@ -726,28 +731,28 @@ query HeroForEpisode($ep: Episode!) {
                   OperationFactory.createGroup(
                     OperationFactory.createBgp([
                       OperationFactory.createPattern(
-                        DataFactory.variable('hero'),
-                        DataFactory.namedNode('http://example.org/friends'),
-                        DataFactory.variable('hero_friends'),
+                        DF.variable('hero'),
+                        DF.namedNode('http://example.org/friends'),
+                        DF.variable('hero_friends'),
                       )],
                     ),
                     [],
                     [OperationFactory.createBoundAggregate(
-                      DataFactory.variable('var0'),
+                      DF.variable('var0'),
                       'count',
-                      OperationFactory.createTermExpression(DataFactory.variable('hero_friends')),
+                      OperationFactory.createTermExpression(DF.variable('hero_friends')),
                       false,
                     )],
                   ),
-                  DataFactory.variable('hero_friends_totalCount'),
-                  OperationFactory.createTermExpression(DataFactory.variable('var0')),
+                  DF.variable('hero_friends_totalCount'),
+                  OperationFactory.createTermExpression(DF.variable('var0')),
                 ),
-                [DataFactory.variable('hero_friends_totalCount')],
+                [DF.variable('hero_friends_totalCount')],
               ),
             ),
           ), [
-            DataFactory.variable('hero_friends_name'),
-            DataFactory.variable('hero_friends_totalCount'),
+            DF.variable('hero_friends_name'),
+            DF.variable('hero_friends_totalCount'),
           ]));
       });
 
@@ -766,17 +771,17 @@ query HeroForEpisode($ep: Episode!) {
 }
 `, context)).toEqual(OperationFactory.createProject(OperationFactory.createBgp([
   OperationFactory.createPattern(
-    DataFactory.blankNode('b14'),
-    DataFactory.namedNode('http://example.org/#human'),
-    DataFactory.variable('human'),
+    DF.variable('df_0'),
+    DF.namedNode('http://example.org/#human'),
+    DF.variable('human'),
   ),
   OperationFactory.createPattern(
-    DataFactory.variable('human'),
-    DataFactory.namedNode('http://example.org/#name'),
-    DataFactory.variable('human_name'),
+    DF.variable('human'),
+    DF.namedNode('http://example.org/#name'),
+    DF.variable('human_name'),
   ),
 ]), [
-  DataFactory.variable('human_name'),
+  DF.variable('human_name'),
 ]));
       });
 
@@ -792,14 +797,14 @@ query HeroForEpisode($ep: Episode!) {
 `, context)).toEqual(
           OperationFactory.createProject(OperationFactory.createBgp([
             OperationFactory.createPattern(
-              DataFactory.variable('id'),
-              DataFactory.namedNode('http://example.org/name'),
-              DataFactory.variable('name'),
+              DF.variable('id'),
+              DF.namedNode('http://example.org/name'),
+              DF.variable('name'),
             ),
           ]),
             [
-              DataFactory.variable('id'),
-              DataFactory.variable('name'),
+              DF.variable('id'),
+              DF.variable('name'),
             ]));
       });
 
@@ -818,19 +823,19 @@ query HeroForEpisode($ep: Episode!) {
 `, context)).toEqual(
           OperationFactory.createProject(OperationFactory.createBgp([
             OperationFactory.createPattern(
-                DataFactory.blankNode('b15'),
-                DataFactory.namedNode('http://example.org/hero'),
-                DataFactory.variable('hero_id'),
+                DF.variable('df_0'),
+                DF.namedNode('http://example.org/hero'),
+                DF.variable('hero_id'),
               ),
             OperationFactory.createPattern(
-                DataFactory.variable('hero_id'),
-                DataFactory.namedNode('http://example.org/name'),
-                DataFactory.variable('hero_name'),
+                DF.variable('hero_id'),
+                DF.namedNode('http://example.org/name'),
+                DF.variable('hero_name'),
               ),
           ]),
             [
-              DataFactory.variable('hero_id'),
-              DataFactory.variable('hero_name'),
+              DF.variable('hero_id'),
+              DF.variable('hero_name'),
             ]));
       });
 
@@ -847,9 +852,9 @@ query HeroForEpisode($ep: Episode!) {
 `, context)).toEqual(
           OperationFactory.createProject(OperationFactory.createBgp([
             OperationFactory.createPattern(
-                DataFactory.blankNode('b16'),
-                DataFactory.namedNode('http://example.org/hero'),
-                DataFactory.namedNode('http://example.org/HanSolo'),
+                DF.variable('df_0'),
+                DF.namedNode('http://example.org/hero'),
+                DF.namedNode('http://example.org/HanSolo'),
               ),
           ]),
             []));
@@ -870,18 +875,18 @@ query HeroForEpisode($ep: Episode!) {
 `, context)).toEqual(
           OperationFactory.createProject(OperationFactory.createBgp([
             OperationFactory.createPattern(
-                DataFactory.blankNode('b17'),
-                DataFactory.namedNode('http://example.org/hero'),
-                DataFactory.namedNode('http://example.org/HanSolo'),
+                DF.variable('df_0'),
+                DF.namedNode('http://example.org/hero'),
+                DF.namedNode('http://example.org/HanSolo'),
             ),
             OperationFactory.createPattern(
-                DataFactory.namedNode('http://example.org/HanSolo'),
-                DataFactory.namedNode('http://example.org/name'),
-                DataFactory.variable('hero_name'),
+                DF.namedNode('http://example.org/HanSolo'),
+                DF.namedNode('http://example.org/name'),
+                DF.variable('hero_name'),
               ),
           ]),
             [
-              DataFactory.variable('hero_name'),
+              DF.variable('hero_name'),
             ]));
       });
 
@@ -897,15 +902,15 @@ query HeroForEpisode($ep: Episode!) {
 `, context)).toEqual(
           OperationFactory.createProject(OperationFactory.createBgp([
             OperationFactory.createPattern(
-                DataFactory.blankNode('b18'),
-                DataFactory.namedNode('http://example.org/name'),
-                DataFactory.variable('name'),
-                DataFactory.variable('graph'),
+                DF.variable('df_0'),
+                DF.namedNode('http://example.org/name'),
+                DF.variable('name'),
+                DF.variable('graph'),
               ),
           ]),
             [
-              DataFactory.variable('graph'),
-              DataFactory.variable('name'),
+              DF.variable('graph'),
+              DF.variable('name'),
             ]));
       });
 
@@ -922,14 +927,14 @@ query HeroForEpisode($ep: Episode!) {
 `, context)).toEqual(
           OperationFactory.createProject(OperationFactory.createBgp([
             OperationFactory.createPattern(
-                DataFactory.blankNode('b19'),
-                DataFactory.namedNode('http://example.org/name'),
-                DataFactory.variable('name'),
-                DataFactory.namedNode('http://example.org/graph1'),
+                DF.variable('df_0'),
+                DF.namedNode('http://example.org/name'),
+                DF.variable('name'),
+                DF.namedNode('http://example.org/graph1'),
               ),
           ]),
             [
-              DataFactory.variable('name'),
+              DF.variable('name'),
             ]));
       });
 
@@ -948,20 +953,20 @@ query HeroForEpisode($ep: Episode!) {
 `, context)).toEqual(
           OperationFactory.createProject(OperationFactory.createBgp([
             OperationFactory.createPattern(
-                DataFactory.blankNode('b20'),
-                DataFactory.namedNode('http://example.org/hero'),
-                DataFactory.variable('hero'),
+                DF.variable('df_0'),
+                DF.namedNode('http://example.org/hero'),
+                DF.variable('hero'),
             ),
             OperationFactory.createPattern(
-                DataFactory.variable('hero'),
-                DataFactory.namedNode('http://example.org/name'),
-                DataFactory.variable('hero_name'),
-                DataFactory.variable('hero_graph'),
+                DF.variable('hero'),
+                DF.namedNode('http://example.org/name'),
+                DF.variable('hero_name'),
+                DF.variable('hero_graph'),
               ),
           ]),
             [
-              DataFactory.variable('hero_graph'),
-              DataFactory.variable('hero_name'),
+              DF.variable('hero_graph'),
+              DF.variable('hero_name'),
             ]));
       });
 
@@ -978,14 +983,14 @@ query HeroForEpisode($ep: Episode!) {
 `, context)).toEqual(
           OperationFactory.createProject(OperationFactory.createBgp([
             OperationFactory.createPattern(
-                DataFactory.blankNode('b21'),
-                DataFactory.namedNode('http://example.org/hero'),
-                DataFactory.variable('hero'),
-                DataFactory.namedNode('http://example.org/graph1'),
+                DF.variable('df_0'),
+                DF.namedNode('http://example.org/hero'),
+                DF.variable('hero'),
+                DF.namedNode('http://example.org/graph1'),
               ),
           ]),
             [
-              DataFactory.variable('hero'),
+              DF.variable('hero'),
             ]));
       });
 
@@ -1004,20 +1009,20 @@ query HeroForEpisode($ep: Episode!) {
 `, context)).toEqual(
           OperationFactory.createProject(OperationFactory.createBgp([
             OperationFactory.createPattern(
-                DataFactory.blankNode('b22'),
-                DataFactory.namedNode('http://example.org/hero'),
-                DataFactory.variable('hero'),
-                DataFactory.namedNode('http://example.org/graph1'),
+                DF.variable('df_0'),
+                DF.namedNode('http://example.org/hero'),
+                DF.variable('hero'),
+                DF.namedNode('http://example.org/graph1'),
             ),
             OperationFactory.createPattern(
-                DataFactory.variable('hero'),
-                DataFactory.namedNode('http://example.org/name'),
-                DataFactory.variable('hero_name'),
-                DataFactory.namedNode('http://example.org/graph1'),
+                DF.variable('hero'),
+                DF.namedNode('http://example.org/name'),
+                DF.variable('hero_name'),
+                DF.namedNode('http://example.org/graph1'),
               ),
           ]),
             [
-              DataFactory.variable('hero_name'),
+              DF.variable('hero_name'),
             ]));
       });
 
@@ -1039,9 +1044,9 @@ query HeroForEpisode($ep: Episode!) {
             OperationFactory.createJoin(
               OperationFactory.createBgp([
                 OperationFactory.createPattern(
-                    DataFactory.blankNode('b23'),
-                    DataFactory.namedNode('http://example.org/hero'),
-                    DataFactory.variable('hero'),
+                    DF.variable('df_0'),
+                    DF.namedNode('http://example.org/hero'),
+                    DF.variable('hero'),
                   ),
               ],
               ),
@@ -1050,9 +1055,9 @@ query HeroForEpisode($ep: Episode!) {
                   OperationFactory.createBgp([]),
                   OperationFactory.createBgp([
                     OperationFactory.createPattern(
-                        DataFactory.variable('hero'),
-                        DataFactory.namedNode('http://example.org/name'),
-                        DataFactory.variable('hero_name'),
+                        DF.variable('hero'),
+                        DF.namedNode('http://example.org/name'),
+                        DF.variable('hero_name'),
                       ),
                   ],
                   ),
@@ -1061,17 +1066,17 @@ query HeroForEpisode($ep: Episode!) {
                   OperationFactory.createBgp([]),
                   OperationFactory.createBgp([
                     OperationFactory.createPattern(
-                        DataFactory.variable('hero'),
-                        DataFactory.namedNode('http://example.org/friend'),
-                        DataFactory.variable('hero_friend'),
+                        DF.variable('hero'),
+                        DF.namedNode('http://example.org/friend'),
+                        DF.variable('hero_friend'),
                       ),
                   ],
                   ),
                 ),
               ),
             ), [
-              DataFactory.variable('hero_name'),
-              DataFactory.variable('hero_friend'),
+              DF.variable('hero_name'),
+              DF.variable('hero_friend'),
             ]));
       });
 
@@ -1093,23 +1098,23 @@ query HeroForEpisode($ep: Episode!) {
 `, context)).toEqual(
           OperationFactory.createProject(OperationFactory.createBgp([
             OperationFactory.createPattern(
-                DataFactory.blankNode('b24'),
-                DataFactory.namedNode('http://example.org/hero'),
-                DataFactory.variable('hero'),
+                DF.variable('df_0'),
+                DF.namedNode('http://example.org/hero'),
+                DF.variable('hero'),
             ),
             OperationFactory.createPattern(
-                DataFactory.variable('hero_friend'),
-                DataFactory.namedNode('http://example.org/friend'),
-                DataFactory.variable('hero'),
+                DF.variable('hero_friend'),
+                DF.namedNode('http://example.org/friend'),
+                DF.variable('hero'),
             ),
             OperationFactory.createPattern(
-                DataFactory.variable('hero_friend'),
-                DataFactory.namedNode('http://example.org/name'),
-                DataFactory.variable('hero_friend_name'),
+                DF.variable('hero_friend'),
+                DF.namedNode('http://example.org/name'),
+                DF.variable('hero_friend_name'),
             ),
           ]),
             [
-              DataFactory.variable('hero_friend_name'),
+              DF.variable('hero_friend_name'),
             ]));
       });
 
@@ -1146,17 +1151,17 @@ query HeroForEpisode($ep: Episode!) {
           ],
         }, context)).toEqual(OperationFactory.createProject(OperationFactory.createBgp([
           OperationFactory.createPattern(
-            DataFactory.blankNode('b25'),
-            DataFactory.namedNode('http://example.org/human'),
-            DataFactory.variable('human'),
+            DF.variable('df_0'),
+            DF.namedNode('http://example.org/human'),
+            DF.variable('human'),
           ),
           OperationFactory.createPattern(
-            DataFactory.variable('human'),
-            DataFactory.namedNode('http://example.org/name'),
-            DataFactory.variable('human_name'),
+            DF.variable('human'),
+            DF.namedNode('http://example.org/name'),
+            DF.variable('human_name'),
           ),
         ]), [
-          DataFactory.variable('human_name'),
+          DF.variable('human_name'),
         ]));
       });
 
@@ -1174,18 +1179,18 @@ query($varA: String, $varB: String) {
 }
 `, context)).toEqual(OperationFactory.createProject(OperationFactory.createBgp([
   OperationFactory.createPattern(
-            DataFactory.variable('varA'),
-            DataFactory.namedNode('http://example.org/human'),
-            DataFactory.variable('human'),
+            DF.variable('varA'),
+            DF.namedNode('http://example.org/human'),
+            DF.variable('human'),
           ),
   OperationFactory.createPattern(
-            DataFactory.variable('human'),
-            DataFactory.namedNode('http://example.org/name'),
-            DataFactory.variable('varB'),
+            DF.variable('human'),
+            DF.namedNode('http://example.org/name'),
+            DF.variable('varB'),
           ),
 ]), [
-  DataFactory.variable('varA'),
-  DataFactory.variable('varB'),
+  DF.variable('varA'),
+  DF.variable('varB'),
 ]));
       });
 
@@ -1235,21 +1240,21 @@ query {
           OperationFactory.createJoin(
             OperationFactory.createBgp([
               OperationFactory.createPattern(
-                DataFactory.variable('human'),
-                DataFactory.namedNode('http://example.org/name'),
-                DataFactory.variable('human_name'),
+                DF.variable('human'),
+                DF.namedNode('http://example.org/name'),
+                DF.variable('human_name'),
               ),
             ]),
             OperationFactory.createPath(
-              DataFactory.blankNode('b26'),
+              DF.variable('df_0'),
               OperationFactory.createAlt(
-                OperationFactory.createLink(DataFactory.namedNode('http://example.org/human')),
-                OperationFactory.createLink(DataFactory.namedNode('http://example.org/alien')),
+                OperationFactory.createLink(DF.namedNode('http://example.org/human')),
+                OperationFactory.createLink(DF.namedNode('http://example.org/alien')),
               ),
-              DataFactory.variable('human'),
+              DF.variable('human'),
             ),
           ), [
-            DataFactory.variable('human_name'),
+            DF.variable('human_name'),
           ]));
       });
 
@@ -1270,24 +1275,24 @@ query {
           OperationFactory.createJoin(
             OperationFactory.createBgp([
               OperationFactory.createPattern(
-                DataFactory.variable('human'),
-                DataFactory.namedNode('http://example.org/name'),
-                DataFactory.variable('human_name'),
+                DF.variable('human'),
+                DF.namedNode('http://example.org/name'),
+                DF.variable('human_name'),
               ),
             ]),
             OperationFactory.createPath(
-              DataFactory.blankNode('b27'),
+              DF.variable('df_0'),
               OperationFactory.createAlt(
                 OperationFactory.createAlt(
-                  OperationFactory.createLink(DataFactory.namedNode('http://example.org/human')),
-                  OperationFactory.createLink(DataFactory.namedNode('http://example.org/alien')),
+                  OperationFactory.createLink(DF.namedNode('http://example.org/human')),
+                  OperationFactory.createLink(DF.namedNode('http://example.org/alien')),
                 ),
-                OperationFactory.createLink(DataFactory.namedNode('http://example.org/belgian')),
+                OperationFactory.createLink(DF.namedNode('http://example.org/belgian')),
               ),
-              DataFactory.variable('human'),
+              DF.variable('human'),
             ),
           ), [
-            DataFactory.variable('human_name'),
+            DF.variable('human_name'),
           ]));
       });
     });

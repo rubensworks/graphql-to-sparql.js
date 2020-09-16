@@ -1,4 +1,4 @@
-import * as DataFactory from "@rdfjs/data-model";
+import {DataFactory} from "rdf-data-factory";
 import {Factory} from "sparqlalgebrajs";
 import {Converter} from "../../lib/Converter";
 import {NodeHandlerSelectionFragmentSpread} from "../../lib/handler/NodeHandlerSelectionFragmentSpread";
@@ -8,7 +8,8 @@ import {JsonLdContextNormalized} from "jsonld-context-parser";
 
 // tslint:disable:object-literal-sort-keys
 
-const OperationFactory = new Factory(DataFactory);
+const DF = new DataFactory();
+const OperationFactory = new Factory(DF);
 
 describe('NodeHandlerSelectionFragmentSpread', () => {
 
@@ -27,13 +28,13 @@ describe('NodeHandlerSelectionFragmentSpread', () => {
 
   describe('#handle', () => {
     it('should convert a fragment spread selection node', async () => {
-      const subject = DataFactory.namedNode('theSubject');
+      const subject = DF.namedNode('theSubject');
       const ctx: IConvertContext = {
         context: new JsonLdContextNormalized({
           theField: 'http://example.org/theField',
           Character: 'http://example.org/types/Character',
         }),
-        graph: DataFactory.defaultGraph(),
+        graph: DF.defaultGraph(),
         path: [ 'a' ],
         subject,
         singularizeState: SingularizeState.PLURAL,
@@ -66,13 +67,13 @@ describe('NodeHandlerSelectionFragmentSpread', () => {
         OperationFactory.createBgp([
           OperationFactory.createPattern(
             subject,
-            DataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
-            DataFactory.namedNode('http://example.org/types/Character'),
+            DF.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
+            DF.namedNode('http://example.org/types/Character'),
           ),
           OperationFactory.createPattern(
             subject,
-            DataFactory.namedNode('http://example.org/theField'),
-            DataFactory.variable('a_theField'),
+            DF.namedNode('http://example.org/theField'),
+            DF.variable('a_theField'),
           ),
         ]),
       ));

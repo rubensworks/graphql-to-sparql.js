@@ -1,6 +1,6 @@
 # GraphQL to SPARQL
 
-[![Build Status](https://travis-ci.org/rubensworks/graphql-to-sparql.js.svg?branch=master)](https://travis-ci.org/rubensworks/graphql-to-sparql.js)
+[![Build status](https://github.com/rubensworks/graphql-to-sparql.js/workflows/CI/badge.svg)](https://github.com/rubensworks/graphql-to-sparql.js/actions?query=workflow%3ACI)
 [![Coverage Status](https://coveralls.io/repos/github/rubensworks/graphql-to-sparql.js/badge.svg?branch=master)](https://coveralls.io/github/rubensworks/graphql-to-sparql.js?branch=master)
 [![npm version](https://badge.fury.io/js/graphql-to-sparql.svg)](https://www.npmjs.com/package/graphql-to-sparql)
 

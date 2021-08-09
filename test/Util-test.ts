@@ -176,7 +176,7 @@ describe('Util', () => {
     });
 
     it('should convert a variable with multiple path elements', async () => {
-      const ctx = {
+      const ctx: IConvertContext = {
         context: new JsonLdContextNormalized({}),
         graph: DF.defaultGraph(),
         path: [ 'abc', 'def', 'ghi' ],
@@ -430,7 +430,7 @@ describe('Util', () => {
   });
 
   describe('#handleDirectiveNode', () => {
-    const ctx = {
+    const ctx: IConvertContext = {
       context: new JsonLdContextNormalized({}),
       graph: DF.defaultGraph(),
       path: [ 'parent' ],

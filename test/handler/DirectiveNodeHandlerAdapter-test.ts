@@ -2,7 +2,7 @@ import {DataFactory} from "rdf-data-factory";
 import {DirectiveNode} from "graphql";
 import {Converter} from "../../lib/Converter";
 import {DirectiveNodeHandlerAdapter} from "../../lib/handler/directivenode/DirectiveNodeHandlerAdapter";
-import {IVariablesDictionary} from "../../lib/IConvertContext";
+import { IConvertContext, IVariablesDictionary } from "../../lib/IConvertContext";
 import {Util} from "../../lib/Util";
 import {JsonLdContextNormalized} from "jsonld-context-parser";
 
@@ -25,7 +25,7 @@ describe('DirectiveNodeHandlerAdapter', () => {
   });
 
   describe('#getDirectiveConditionalValue', () => {
-    const ctx = {
+    const ctx: IConvertContext = {
       context: new JsonLdContextNormalized({}),
       graph: DF.defaultGraph(),
       path: [ 'parent' ],

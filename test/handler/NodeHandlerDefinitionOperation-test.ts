@@ -2,7 +2,7 @@ import {DataFactory} from "rdf-data-factory";
 import {Factory} from "sparqlalgebrajs";
 import {Converter} from "../../lib/Converter";
 import {NodeHandlerDefinitionOperation} from "../../lib/handler/NodeHandlerDefinitionOperation";
-import {IVariablesDictionary, SingularizeState} from "../../lib/IConvertContext";
+import { IConvertContext, IVariablesDictionary, SingularizeState } from "../../lib/IConvertContext";
 import {Util} from "../../lib/Util";
 import {JsonLdContextNormalized} from "jsonld-context-parser";
 
@@ -28,7 +28,7 @@ describe('NodeHandlerDefinitionOperation', () => {
 
   describe('#handle', () => {
     it('should convert an operation query definition node', async () => {
-      const ctx = {
+      const ctx: IConvertContext = {
         context: new JsonLdContextNormalized({ theField: 'http://example.org/theField' }),
         graph: DF.defaultGraph(),
         path: [ 'a' ],
@@ -59,7 +59,7 @@ describe('NodeHandlerDefinitionOperation', () => {
     });
 
     it('should convert an operation query definition node with a directive', async () => {
-      const ctx = {
+      const ctx: IConvertContext = {
         context: new JsonLdContextNormalized({ theField: 'http://example.org/theField' }),
         graph: DF.defaultGraph(),
         path: [ 'a' ],

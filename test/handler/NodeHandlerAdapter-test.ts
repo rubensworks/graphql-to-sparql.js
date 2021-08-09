@@ -1,7 +1,7 @@
 import {DataFactory} from "rdf-data-factory";
 import {Converter} from "../../lib/Converter";
 import {NodeHandlerAdapter} from "../../lib/handler/NodeHandlerAdapter";
-import {IVariablesDictionary} from "../../lib/IConvertContext";
+import { IConvertContext, IVariablesDictionary } from "../../lib/IConvertContext";
 import {Util} from "../../lib/Util";
 import {JsonLdContextNormalized} from "jsonld-context-parser";
 
@@ -25,10 +25,10 @@ describe('NodeHandlerAdapter', () => {
   });
 
   describe('#getNodeQuadContextSelectionSet', () => {
-    let ctx;
+    let ctx: IConvertContext;
 
     beforeEach(() => {
-      ctx = {
+      ctx = <IConvertContext> {
         context: new JsonLdContextNormalized({ theField: 'http://example.org/theField' }),
         path: [ 'a' ],
         subject: DF.namedNode('subject'),

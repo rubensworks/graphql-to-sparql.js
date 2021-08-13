@@ -1,6 +1,6 @@
 import {DocumentNode} from "graphql";
 import {DefinitionNode} from "graphql/language";
-import * as RDF from "rdf-js";
+import * as RDF from "@rdfjs/types";
 import {Algebra, Factory, Util as AlgebraUtil} from "sparqlalgebrajs";
 import {IConvertContext} from "../IConvertContext";
 import {IConvertSettings} from "../IConvertSettings";

@@ -1,5 +1,5 @@
 import {BooleanValueNode} from "graphql/language";
-import * as RDF from "rdf-js";
+import * as RDF from "@rdfjs/types";
 import {IConvertContext} from "../../IConvertContext";
 import {IConvertSettings} from "../../IConvertSettings";
 import {Util} from "../../Util";

@@ -1,5 +1,5 @@
 import {FieldNode, IntValueNode, SelectionNode} from "graphql/language";
-import * as RDF from "rdf-js";
+import * as RDF from "@rdfjs/types";
 import {Algebra, Util as AlgebraUtil} from "sparqlalgebrajs";
 import {IConvertContext, SingularizeState} from "../IConvertContext";
 import {IConvertSettings} from "../IConvertSettings";

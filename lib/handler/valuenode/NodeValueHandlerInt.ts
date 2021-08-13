@@ -3,7 +3,7 @@ import {IConvertContext} from "../../IConvertContext";
 import {IConvertSettings} from "../../IConvertSettings";
 import {Util} from "../../Util";
 import {IValueNodeHandlerOutput, NodeValueHandlerAdapter} from "./NodeValueHandlerAdapter";
-import * as RDF from "rdf-js";
+import * as RDF from "@rdfjs/types";
 
 /**
  * Converts GraphQL ints to RDF integer terms.

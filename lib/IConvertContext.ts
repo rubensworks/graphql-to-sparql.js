@@ -1,6 +1,6 @@
 import {FragmentDefinitionNode, ValueNode} from "graphql/language";
 import {JsonLdContextNormalized} from "jsonld-context-parser";
-import * as RDF from "rdf-js";
+import * as RDF from "@rdfjs/types";
 
 /**
  * A context object that is passed through conversion steps.

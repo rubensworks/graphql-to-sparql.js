@@ -1,6 +1,6 @@
 import {DataFactory} from "rdf-data-factory";
 import {DirectiveNode, NameNode} from "graphql";
-import * as RDF from "rdf-js";
+import * as RDF from "@rdfjs/types";
 import {Factory} from "sparqlalgebrajs";
 import {Converter} from "../lib/Converter";
 import {IConvertContext, IVariablesDictionary, SingularizeState} from "../lib/IConvertContext";

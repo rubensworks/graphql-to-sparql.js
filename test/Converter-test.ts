@@ -6,7 +6,7 @@ import {IVariablesDictionary} from "../lib/IConvertContext";
 
 // tslint:disable:object-literal-sort-keys
 
-const DF = new DataFactory();
+const DF = new DataFactory({ blankNodePrefix: 'df_' });
 const OperationFactory = new Factory(DF);
 
 describe('Converter', () => {
@@ -19,7 +19,7 @@ describe('Converter', () => {
     let converter: Converter;
 
     beforeEach(() => {
-      converter = new Converter();
+      converter = new Converter({ dataFactory: new DataFactory({ blankNodePrefix: 'df_' }) });
     });
 
     describe('#graphqlToSparqlAlgebra', () => {

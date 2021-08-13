@@ -1,7 +1,7 @@
 import {DataFactory} from "rdf-data-factory";
 import {ArgumentNode, FieldNode, ListValueNode, NamedTypeNode, NameNode, ValueNode} from "graphql/language";
 import {ContextParser, JsonLdContextNormalized} from "jsonld-context-parser";
-import * as RDF from "rdf-js";
+import * as RDF from "@rdfjs/types";
 import {Algebra, Factory} from "sparqlalgebrajs";
 import {IValueNodeHandlerOutput, NodeHandlerAdapter, NodeValueHandlerAdapter} from "./handler";
 import {IConvertContext} from "./IConvertContext";

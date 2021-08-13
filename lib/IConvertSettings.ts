@@ -1,4 +1,4 @@
-import * as RDF from "rdf-js";
+import * as RDF from "@rdfjs/types";
 
 /**
  * Constructor settings object interface for {@link Converter}.

@@ -96,7 +96,7 @@ export class Util {
    * @return {IDirectiveNodeHandlerOutput} The directive node handler output or null.
    */
   public handleDirectiveNode(directiveContext: IDirectiveContext, convertContext: IConvertContext)
-    : IDirectiveNodeHandlerOutput {
+    : IDirectiveNodeHandlerOutput | null {
     const directiveNodeHandler = this.directiveNodeHandlers[directiveContext.directive.name.value];
     if (!directiveNodeHandler) {
       return null;
@@ -131,14 +131,14 @@ export class Util {
       return this.joinOperationsAsBgp(bgps);
     } else if (bgps.length === operations.length - 1
       && nonBgps[0].type === 'leftjoin'
-      && nonBgps[0].left.type === 'bgp') {
+      && nonBgps[0].input[0].type === 'bgp') {
       // Check if we have one left-join (with a BGP on the left), and the rest are BGPs.
       // If so, merge the BGPS within the left-hand-side of the left-join.
       const originalLeftJoin: Algebra.LeftJoin = <Algebra.LeftJoin> nonBgps[0];
-      bgps.push(originalLeftJoin.left);
+      bgps.push(originalLeftJoin.input[0]);
       return this.operationFactory.createLeftJoin(
         this.joinOperationsAsBgp(bgps),
-        originalLeftJoin.right,
+        originalLeftJoin.input[1],
       );
     } else if (nonBgps.length === operations.length) {
       // Create nested joins
@@ -153,12 +153,12 @@ export class Util {
   }
 
   public joinOperationsAsBgp(operations: Algebra.Operation[]): Algebra.Operation {
-    return this.operationFactory.createBgp([].concat.apply([], operations
+    return this.operationFactory.createBgp((<Algebra.Pattern[]> []).concat.apply([], operations
       .map((op) => (<Algebra.Bgp> op).patterns)));
   }
 
   public joinOperationsAsNestedJoin(operations: Algebra.Operation[]): Algebra.Operation {
-    return operations.reverse().reduce((prev, cur) => prev ? this.operationFactory.createJoin(cur, prev) : cur, null);
+    return this.operationFactory.createJoin(operations);
   }
 
   /**
@@ -188,7 +188,7 @@ export class Util {
    * @return {Variable} A variable.
    */
   public nameToVariable(fieldLabel: string, convertContext: IConvertContext): RDF.Variable {
-    return this.dataFactory.variable((convertContext.path.length
+    return this.dataFactory.variable!((convertContext.path.length
       ? convertContext.path.join(this.settings.variableDelimiter) + this.settings.variableDelimiter : '') + fieldLabel);
   }
 
@@ -213,7 +213,7 @@ export class Util {
    * @param {string} name The name of an argument.
    * @return {ArgumentNode} The named argument.
    */
-  public getArgument(args: ReadonlyArray<ArgumentNode> | null, name: string): ArgumentNode {
+  public getArgument(args: ReadonlyArray<ArgumentNode> | undefined, name: string): ArgumentNode | undefined {
     if (args) {
       for (const argument of args) {
         if (argument.name.value === name) {
@@ -221,7 +221,6 @@ export class Util {
         }
       }
     }
-    return null;
   }
 
   /**
@@ -280,10 +279,10 @@ export class Util {
         throw new Error('Invalid value type for \'alt\' argument, must be EnumValue, but got '
           + predicateAlternative.kind);
       }
-      pathSymbol = this.operationFactory.createAlt(
+      pathSymbol = this.operationFactory.createAlt([
         pathSymbol,
         this.operationFactory.createLink(this.valueToNamedNode(predicateAlternative.value, context)),
-      );
+      ]);
     }
 
     // Reverse the path based on the initial predicate

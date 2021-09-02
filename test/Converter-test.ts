@@ -99,7 +99,7 @@ describe('Converter', () => {
   }
 }
 `, context)).toEqual(OperationFactory.createProject(
-          OperationFactory.createJoin(
+          OperationFactory.createJoin([
             OperationFactory.createBgp([
               OperationFactory.createPattern(
                 DF.variable('df_0'),
@@ -128,7 +128,7 @@ describe('Converter', () => {
               DF.variable('hero_friends'),
               DF.variable('hero_friends_name'),
             ]), 10, 2),
-          ), [
+          ]), [
             DF.variable('hero_name'),
             DF.variable('hero_friends_name'),
           ]));
@@ -314,8 +314,8 @@ fragment comparisonFields on Character {
   }
 }
 `, context)).toEqual(OperationFactory.createProject(
-  OperationFactory.createJoin(
-      OperationFactory.createLeftJoin(
+  OperationFactory.createJoin([
+    OperationFactory.createLeftJoin(
         OperationFactory.createBgp([
           OperationFactory.createPattern(
             DF.variable('df_0'),
@@ -356,7 +356,7 @@ fragment comparisonFields on Character {
           ),
         ]),
       ),
-      OperationFactory.createLeftJoin(
+    OperationFactory.createLeftJoin(
         OperationFactory.createBgp([
           OperationFactory.createPattern(
             DF.variable('df_0'),
@@ -397,7 +397,7 @@ fragment comparisonFields on Character {
           ),
         ]),
       ),
-  ), [
+  ]), [
     DF.variable('leftComparison_name'),
     DF.variable('leftComparison_appearsIn'),
     DF.variable('leftComparison_friends_name'),
@@ -574,7 +574,7 @@ query HeroForEpisode($ep: Episode!) {
   }
 }
 `, context, { variablesDict })).toEqual(OperationFactory.createProject(
-          OperationFactory.createJoin(
+          OperationFactory.createJoin([
             OperationFactory.createBgp([
               OperationFactory.createPattern(
                 DF.variable('df_0'),
@@ -592,7 +592,7 @@ query HeroForEpisode($ep: Episode!) {
                 DF.variable('hero_name'),
               ),
             ]),
-            OperationFactory.createJoin(
+            OperationFactory.createJoin([
               OperationFactory.createLeftJoin(
                 OperationFactory.createBgp([]),
                 OperationFactory.createBgp([
@@ -623,8 +623,8 @@ query HeroForEpisode($ep: Episode!) {
                   ),
                 ]),
               ),
-            ),
-          ), [
+            ]),
+          ]), [
             DF.variable('hero_name'),
             DF.variable('hero_primaryFunction'),
             DF.variable('hero_height'),
@@ -648,7 +648,7 @@ query HeroForEpisode($ep: Episode!) {
   }
 }
 `, context)).toEqual(OperationFactory.createProject(
-          OperationFactory.createJoin(
+          OperationFactory.createJoin([
             OperationFactory.createBgp([
               OperationFactory.createPattern(
                 DF.variable('df_0'),
@@ -679,7 +679,7 @@ query HeroForEpisode($ep: Episode!) {
               ),
               [DF.variable('hero_friends_totalCount')],
             ),
-          ), [
+          ]), [
             DF.variable('hero_friends_totalCount'),
           ]));
       });
@@ -702,7 +702,7 @@ query HeroForEpisode($ep: Episode!) {
   }
 }
 `, context)).toEqual(OperationFactory.createProject(
-          OperationFactory.createJoin(
+          OperationFactory.createJoin([
             OperationFactory.createBgp([
               OperationFactory.createPattern(
                 DF.variable('df_0'),
@@ -710,7 +710,7 @@ query HeroForEpisode($ep: Episode!) {
                 DF.variable('hero'),
               ),
             ]),
-            OperationFactory.createJoin(
+            OperationFactory.createJoin([
               OperationFactory.createProject(
                 OperationFactory.createBgp([
                   OperationFactory.createPattern(
@@ -749,8 +749,8 @@ query HeroForEpisode($ep: Episode!) {
                 ),
                 [DF.variable('hero_friends_totalCount')],
               ),
-            ),
-          ), [
+            ]),
+          ]), [
             DF.variable('hero_friends_name'),
             DF.variable('hero_friends_totalCount'),
           ]));
@@ -1041,7 +1041,7 @@ query HeroForEpisode($ep: Episode!) {
 }
 `, context)).toEqual(
           OperationFactory.createProject(
-            OperationFactory.createJoin(
+            OperationFactory.createJoin([
               OperationFactory.createBgp([
                 OperationFactory.createPattern(
                     DF.variable('df_0'),
@@ -1050,7 +1050,7 @@ query HeroForEpisode($ep: Episode!) {
                   ),
               ],
               ),
-              OperationFactory.createJoin(
+              OperationFactory.createJoin([
                 OperationFactory.createLeftJoin(
                   OperationFactory.createBgp([]),
                   OperationFactory.createBgp([
@@ -1073,8 +1073,8 @@ query HeroForEpisode($ep: Episode!) {
                   ],
                   ),
                 ),
-              ),
-            ), [
+              ]),
+            ]), [
               DF.variable('hero_name'),
               DF.variable('hero_friend'),
             ]));
@@ -1237,7 +1237,7 @@ query {
   }
 }
 `, context)).toEqual(OperationFactory.createProject(
-          OperationFactory.createJoin(
+          OperationFactory.createJoin([
             OperationFactory.createBgp([
               OperationFactory.createPattern(
                 DF.variable('human'),
@@ -1247,13 +1247,13 @@ query {
             ]),
             OperationFactory.createPath(
               DF.variable('df_0'),
-              OperationFactory.createAlt(
+              OperationFactory.createAlt([
                 OperationFactory.createLink(DF.namedNode('http://example.org/human')),
                 OperationFactory.createLink(DF.namedNode('http://example.org/alien')),
-              ),
+              ]),
               DF.variable('human'),
             ),
-          ), [
+          ]), [
             DF.variable('human_name'),
           ]));
       });
@@ -1272,7 +1272,7 @@ query {
   }
 }
 `, context)).toEqual(OperationFactory.createProject(
-          OperationFactory.createJoin(
+          OperationFactory.createJoin([
             OperationFactory.createBgp([
               OperationFactory.createPattern(
                 DF.variable('human'),
@@ -1282,16 +1282,16 @@ query {
             ]),
             OperationFactory.createPath(
               DF.variable('df_0'),
-              OperationFactory.createAlt(
-                OperationFactory.createAlt(
+              OperationFactory.createAlt([
+                OperationFactory.createAlt([
                   OperationFactory.createLink(DF.namedNode('http://example.org/human')),
                   OperationFactory.createLink(DF.namedNode('http://example.org/alien')),
-                ),
+                ]),
                 OperationFactory.createLink(DF.namedNode('http://example.org/belgian')),
-              ),
+              ]),
               DF.variable('human'),
             ),
-          ), [
+          ]), [
             DF.variable('human_name'),
           ]));
       });

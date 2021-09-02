@@ -17,10 +17,10 @@ export class NodeHandlerDocument extends NodeHandlerAdapter<DocumentNode> {
   }
 
   public handle(document: DocumentNode, convertContext: IConvertContext): Algebra.Operation {
-    const operation = this.util.operationFactory.createProject(<Algebra.Operation> document.definitions
+    const definitionOperations = document.definitions
       .map((definition) => {
         const subjectOutput = this.getNodeQuadContextDefinitionNode(definition,
-          { ...convertContext, ignoreUnknownVariables: true });
+          {...convertContext, ignoreUnknownVariables: true});
         const queryParseContext: IConvertContext = {
           ...convertContext,
           graph: subjectOutput.graph || convertContext.graph,
@@ -34,16 +34,10 @@ export class NodeHandlerDocument extends NodeHandlerAdapter<DocumentNode> {
           ]);
         }
         return definitionOperation;
-      })
-      .reduce((prev: Algebra.Operation, current: Algebra.Operation) => {
-        if (!current) {
-          return prev;
-        }
-        if (!prev) {
-          return current;
-        }
-        return this.util.operationFactory.createUnion(prev, current);
-      }, null), convertContext.terminalVariables);
+      });
+    const operation = this.util.operationFactory.createProject(
+      definitionOperations.length === 1 ? definitionOperations[0] : this.util.operationFactory.createUnion(definitionOperations),
+      convertContext.terminalVariables);
 
     // Convert blank nodes to variables
     return this.translateBlankNodesToVariables(operation);
@@ -53,15 +47,15 @@ export class NodeHandlerDocument extends NodeHandlerAdapter<DocumentNode> {
    * Get the quad context of a definition node that should be used for the whole definition node.
    * @param {DefinitionNode} definition A definition node.
    * @param {IConvertContext} convertContext A convert context.
-   * @return {INodeQuadContext | null} The subject and optional auxiliary patterns.
+   * @return {INodeQuadContext} The subject and optional auxiliary patterns.
    */
   public getNodeQuadContextDefinitionNode(definition: DefinitionNode, convertContext: IConvertContext)
-    : INodeQuadContext | null {
+    : INodeQuadContext {
     if (definition.kind === 'OperationDefinition') {
       return this.getNodeQuadContextSelectionSet(definition.selectionSet,
         definition.name ? definition.name.value : '', convertContext);
     }
-    return null;
+    throw new Error(`Unsupported definition: ${definition.kind}`);
   }
 
   /**

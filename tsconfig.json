@@ -14,7 +14,11 @@
     "sourceMap": true,
     "inlineSources": true,
     "declaration": true,
-    "importHelpers": false
+    "importHelpers": false,
+
+    "strict": true,
+    "strictFunctionTypes": false,
+    "strictPropertyInitialization": false
   },
   "include": [
     "index.ts",

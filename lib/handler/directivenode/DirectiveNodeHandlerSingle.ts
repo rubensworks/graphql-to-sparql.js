@@ -20,7 +20,7 @@ export class DirectiveNodeHandlerSingle extends DirectiveNodeHandlerAdapter {
     if (this.isDirectiveScopeAll(directiveContext.directive)) {
       convertContext.singularizeState = SingularizeState.SINGLE;
     }
-    convertContext.singularizeVariables
+    convertContext.singularizeVariables!
       [this.util.nameToVariable(directiveContext.fieldLabel, convertContext).value] = true;
     return {};
   }

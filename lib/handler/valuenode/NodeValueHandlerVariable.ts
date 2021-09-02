@@ -25,7 +25,7 @@ export class NodeValueHandlerVariable extends NodeValueHandlerAdapter<VariableNo
       if (!convertContext.ignoreUnknownVariables && (!meta || meta.mandatory)) {
         throw new Error(`Undefined variable: ${id}`);
       } else {
-        const variable = this.util.dataFactory.variable(id);
+        const variable = this.util.dataFactory.variable!(id);
         if (convertContext.terminalVariables.map((v) => v.value).indexOf(id) < 0) {
           convertContext.terminalVariables.push(variable);
         }

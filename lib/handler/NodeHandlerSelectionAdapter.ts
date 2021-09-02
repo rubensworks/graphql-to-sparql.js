@@ -20,10 +20,10 @@ export abstract class NodeHandlerSelectionAdapter<T extends SelectionNode> exten
    * @param {FieldNode} field A field node.
    * @param {string} fieldLabel A field label.
    * @param {IConvertContext} convertContext A convert context.
-   * @return {INodeQuadContext | null} The subject and optional auxiliary patterns.
+   * @return {INodeQuadContext} The subject and optional auxiliary patterns.
    */
   public getNodeQuadContextFieldNode(field: FieldNode, fieldLabel: string, convertContext: IConvertContext)
-    : INodeQuadContext | null {
+    : INodeQuadContext {
     return this.getNodeQuadContextSelectionSet(field.selectionSet, fieldLabel, {
       ...convertContext,
       path: this.util.appendFieldToPath(convertContext.path, fieldLabel),
@@ -68,7 +68,7 @@ export abstract class NodeHandlerSelectionAdapter<T extends SelectionNode> exten
 
     // Handle the singular/plural scope
     if (convertContext.singularizeState === SingularizeState.SINGLE) {
-      convertContext.singularizeVariables[this.util.nameToVariable(fieldLabel, convertContext).value] = true;
+      convertContext.singularizeVariables![this.util.nameToVariable(fieldLabel, convertContext).value] = true;
     }
 
     // Handle meta fields
@@ -93,7 +93,7 @@ export abstract class NodeHandlerSelectionAdapter<T extends SelectionNode> exten
     // Check if there is a '_' argument
     // We do this before handling all other arguments so that the order of final triple patterns is sane.
     let createQuadPattern: boolean = true;
-    let overrideObjectTerms: RDF.Term[] = null;
+    let overrideObjectTerms: RDF.Term[] | null = null;
     if (pushTerminalVariables && fieldNode.arguments && fieldNode.arguments.length) {
       for (const argument of fieldNode.arguments) {
         if (argument.name.value === '_') {
@@ -105,7 +105,7 @@ export abstract class NodeHandlerSelectionAdapter<T extends SelectionNode> exten
               convertContext.subject, fieldNode.name, term, convertContext.graph, convertContext.context)),
           ));
           if (valueOutput.auxiliaryPatterns) {
-            operations.push(this.util.operationFactory.createBgp(subjectOutput.auxiliaryPatterns));
+            operations.push(this.util.operationFactory.createBgp(valueOutput.auxiliaryPatterns));
           }
           pushTerminalVariables = false;
           break;
@@ -119,7 +119,7 @@ export abstract class NodeHandlerSelectionAdapter<T extends SelectionNode> exten
           graph = valueOutput.terms[0];
           convertContext = { ...convertContext, graph };
           if (valueOutput.auxiliaryPatterns) {
-            operations.push(this.util.operationFactory.createBgp(subjectOutput.auxiliaryPatterns));
+            operations.push(this.util.operationFactory.createBgp(valueOutput.auxiliaryPatterns));
           }
           break;
         } else if (argument.name.value === 'alt') {
@@ -169,7 +169,7 @@ export abstract class NodeHandlerSelectionAdapter<T extends SelectionNode> exten
               object, argument.name, term, convertContext.graph, convertContext.context)),
           ));
           if (valueOutput.auxiliaryPatterns) {
-            operations.push(this.util.operationFactory.createBgp(subjectOutput.auxiliaryPatterns));
+            operations.push(this.util.operationFactory.createBgp(valueOutput.auxiliaryPatterns));
           }
         }
       }
@@ -218,9 +218,9 @@ export abstract class NodeHandlerSelectionAdapter<T extends SelectionNode> exten
       // Modify the operation if there was a count selection
       if (totalCount) {
         // Create to a count aggregation
-        const expressionVariable = this.util.dataFactory.variable('var' + this.settings.expressionVariableCounter++);
+        const expressionVariable = this.util.dataFactory.variable!('var' + this.settings.expressionVariableCounter!++);
         const countOverVariable: RDF.Variable = this.util.dataFactory
-          .variable(object.value + this.settings.variableDelimiter + 'totalCount');
+          .variable!(object.value + this.settings.variableDelimiter + 'totalCount');
         const aggregator: Algebra.BoundAggregate = this.util.operationFactory.createBoundAggregate(expressionVariable,
           'count', this.util.operationFactory.createTermExpression(object), false);
 
@@ -239,10 +239,10 @@ export abstract class NodeHandlerSelectionAdapter<T extends SelectionNode> exten
         if (!selections.length) {
           joinedOperation = countProject;
         } else {
-          joinedOperation = this.util.operationFactory.createJoin(
+          joinedOperation = this.util.operationFactory.createJoin([
             this.util.operationFactory.createProject(joinedOperation, []),
             countProject,
-          );
+          ]);
         }
       }
 
@@ -270,10 +270,10 @@ export abstract class NodeHandlerSelectionAdapter<T extends SelectionNode> exten
    * @param {Term} subject The subject.
    * @param {string} fieldLabel The field label to convert.
    * @param {Pattern[]} auxiliaryPatterns Optional patterns that should be part of the BGP.
-   * @return {Operation} An operation or null.
+   * @return {Operation} An operation or undefined.
    */
   public handleMetaField(convertContext: IConvertContext, fieldLabel: string,
-                         auxiliaryPatterns?: Algebra.Pattern[]): Algebra.Operation {
+                         auxiliaryPatterns?: Algebra.Pattern[]): Algebra.Operation | undefined {
     // TODO: in the future, we should add support for GraphQL wide range of introspection features:
     // http://graphql.org/learn/introspection/
     if (fieldLabel === '__typename') {
@@ -288,7 +288,6 @@ export abstract class NodeHandlerSelectionAdapter<T extends SelectionNode> exten
         ),
       ].concat(auxiliaryPatterns || []));
     }
-    return null;
   }
 
 }

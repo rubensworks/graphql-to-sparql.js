@@ -28,7 +28,7 @@ describe('NodeHandlerAdapter', () => {
     let ctx: IConvertContext;
 
     beforeEach(() => {
-      ctx = <IConvertContext> {
+      ctx = <IConvertContext> <any> {
         context: new JsonLdContextNormalized({ theField: 'http://example.org/theField' }),
         path: [ 'a' ],
         subject: DF.namedNode('subject'),
@@ -42,7 +42,7 @@ describe('NodeHandlerAdapter', () => {
     });
 
     it('should be empty for no selection set', async () => {
-      return expect(adapter.getNodeQuadContextSelectionSet(null, 'field', ctx)).toEqual({});
+      return expect(adapter.getNodeQuadContextSelectionSet(undefined, 'field', ctx)).toEqual({});
     });
 
     it('should be empty for unknown fields', async () => {

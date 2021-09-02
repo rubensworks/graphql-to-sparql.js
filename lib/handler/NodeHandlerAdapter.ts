@@ -45,7 +45,7 @@ export abstract class NodeHandlerAdapter<T extends { kind: string }> {
    * @param {IConvertContext} convertContext A convert context.
    * @return {INodeQuadContext} The subject, graph and auxiliary patterns.
    */
-  public getNodeQuadContextSelectionSet(selectionSet: SelectionSetNode | null, fieldLabel: string,
+  public getNodeQuadContextSelectionSet(selectionSet: SelectionSetNode | undefined, fieldLabel: string,
                                         convertContext: IConvertContext)
     : INodeQuadContext {
     const nodeQuadContext: INodeQuadContext = {};
@@ -111,8 +111,11 @@ export abstract class NodeHandlerAdapter<T extends { kind: string }> {
    * @param {IConvertContext} convertContext A convert context.
    * @return {IDirectiveNodeHandlerOutput[]} The directive node handler outputs, or null if it should be ignored.
    */
-  public getDirectiveOutputs(directives: ReadonlyArray<DirectiveNode> | null,
-                             fieldLabel: string, convertContext: IConvertContext): IDirectiveNodeHandlerOutput[] {
+  public getDirectiveOutputs(
+    directives: ReadonlyArray<DirectiveNode> | undefined,
+    fieldLabel: string,
+    convertContext: IConvertContext,
+  ): IDirectiveNodeHandlerOutput[] | null {
     const outputs: IDirectiveNodeHandlerOutput[] = [];
     if (directives) {
       for (const directive of directives) {

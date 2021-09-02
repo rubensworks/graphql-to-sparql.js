@@ -23,8 +23,8 @@ export class NodeHandlerSelectionFragmentSpread extends NodeHandlerSelectionAdap
 
     // Wrap in an OPTIONAL, as this pattern should only apply if the type applies
     const fieldNode: FieldNode = {
-      alias: null,
-      arguments: null,
+      alias: undefined,
+      arguments: undefined,
       directives: fragmentDefinitionNode.directives,
       kind: 'Field',
       name: fragmentSpreadNode.name,

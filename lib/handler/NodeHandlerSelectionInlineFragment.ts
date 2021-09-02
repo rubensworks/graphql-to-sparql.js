@@ -17,8 +17,8 @@ export class NodeHandlerSelectionInlineFragment extends NodeHandlerSelectionAdap
   public handle(inlineFragmentNode: InlineFragmentNode, convertContext: IConvertContext): Algebra.Operation {
     // Wrap in an OPTIONAL, as this pattern should only apply if the type applies
     const fieldNode: FieldNode = {
-      alias: null,
-      arguments: null,
+      alias: undefined,
+      arguments: undefined,
       directives: inlineFragmentNode.directives,
       kind: 'Field',
       name: { kind: 'Name', value: convertContext.subject.value },

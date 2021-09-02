@@ -38,7 +38,7 @@ export abstract class DirectiveNodeHandlerAdapter {
    * @return {Term} The term.
    */
   public getDirectiveConditionalValue(directive: DirectiveNode, convertContext: IConvertContext): RDF.Term {
-    const arg: ArgumentNode = this.util.getArgument(directive.arguments, 'if');
+    const arg: ArgumentNode | undefined = this.util.getArgument(directive.arguments, 'if');
     if (!arg) {
       throw new Error(`The directive ${directive.name.value} is missing an if-argument.`);
     }
@@ -55,7 +55,7 @@ export abstract class DirectiveNodeHandlerAdapter {
    * @return {boolean} If `scope: all` is present.
    */
   public isDirectiveScopeAll(directive: DirectiveNode) {
-    const scopeArg: ArgumentNode = this.util.getArgument(directive.arguments, 'scope');
+    const scopeArg: ArgumentNode | undefined = this.util.getArgument(directive.arguments, 'scope');
     return scopeArg && scopeArg.value.kind === 'EnumValue' && scopeArg.value.value === 'all';
   }
 }

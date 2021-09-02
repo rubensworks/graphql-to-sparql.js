@@ -21,7 +21,7 @@ export class DirectiveNodeHandlerPlural extends DirectiveNodeHandlerAdapter {
       convertContext.singularizeState = SingularizeState.PLURAL;
     }
     // Delete the existing entry, as this may have already been set before if we were in a single scope.
-    delete convertContext.singularizeVariables
+    delete convertContext.singularizeVariables!
       [this.util.nameToVariable(directiveContext.fieldLabel, convertContext).value];
     return {};
   }

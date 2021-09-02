@@ -108,7 +108,7 @@ export class Converter {
       path: [],
       singularizeState: SingularizeState.PLURAL, // We don't make this configurable to enforce query consistency
       singularizeVariables: options.singularizeVariables || {},
-      subject: null,
+      subject: null!,
       terminalVariables: [],
       variablesDict: options.variablesDict || {},
       variablesMetaDict: {},

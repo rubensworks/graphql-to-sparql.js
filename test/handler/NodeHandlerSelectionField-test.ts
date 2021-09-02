@@ -344,10 +344,10 @@ describe('NodeHandlerSelectionField', () => {
       }, ctx)).toEqual(
         OperationFactory.createPath(
           subject,
-          OperationFactory.createAlt(
+          OperationFactory.createAlt([
             OperationFactory.createLink(DF.namedNode('http://example.org/field1')),
             OperationFactory.createLink(DF.namedNode('http://example.org/field2')),
-          ),
+          ]),
           DF.variable('a_field1'),
         ));
     });
@@ -383,13 +383,13 @@ describe('NodeHandlerSelectionField', () => {
       }, ctx)).toEqual(
         OperationFactory.createPath(
           subject,
-          OperationFactory.createAlt(
-            OperationFactory.createAlt(
+          OperationFactory.createAlt([
+            OperationFactory.createAlt([
               OperationFactory.createLink(DF.namedNode('http://example.org/field1')),
               OperationFactory.createLink(DF.namedNode('http://example.org/field2')),
-            ),
+            ]),
             OperationFactory.createLink(DF.namedNode('http://example.org/field3')),
-          ),
+          ]),
           DF.variable('a_field1'),
         ));
     });

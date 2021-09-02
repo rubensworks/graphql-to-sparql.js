@@ -6,6 +6,7 @@ import {Converter} from "../lib/Converter";
 import {IConvertContext, IVariablesDictionary, SingularizeState} from "../lib/IConvertContext";
 import {Util} from "../lib/Util";
 import {JsonLdContextNormalized} from "jsonld-context-parser";
+import { IDirectiveNodeHandlerOutput } from '../lib/handler/directivenode';
 
 // tslint:disable:object-literal-sort-keys
 
@@ -79,27 +80,27 @@ describe('Util', () => {
 
     it('should return a nested join when not all operations are BGPs', async () => {
       return expect(util.joinOperations([
-        OperationFactory.createUnion(null, null),
+        OperationFactory.createUnion([ { type: 'nop' }, { type: 'nop' } ]),
         OperationFactory.createBgp([
           OperationFactory.createPattern(<RDF.Term> <any> 'a2', <RDF.Term> <any> 'b2',
             <RDF.Term> <any> 'c2'),
           OperationFactory.createPattern(<RDF.Term> <any> 'd2', <RDF.Term> <any> 'e2',
             <RDF.Term> <any> 'f2'),
         ]),
-        OperationFactory.createLeftJoin(null, null),
+        OperationFactory.createLeftJoin({ type: 'nop' }, { type: 'nop' }),
       ])).toEqual(
-        OperationFactory.createJoin(
+        OperationFactory.createJoin([
           OperationFactory.createBgp([
             OperationFactory.createPattern(<RDF.Term> <any> 'a2', <RDF.Term> <any> 'b2',
               <RDF.Term> <any> 'c2'),
             OperationFactory.createPattern(<RDF.Term> <any> 'd2', <RDF.Term> <any> 'e2',
               <RDF.Term> <any> 'f2'),
           ]),
-          OperationFactory.createJoin(
-            OperationFactory.createUnion(null, null),
-            OperationFactory.createLeftJoin(null, null),
-          ),
-        ),
+          OperationFactory.createJoin([
+            OperationFactory.createUnion([ { type: 'nop' }, { type: 'nop' } ]),
+            OperationFactory.createLeftJoin({ type: 'nop' }, { type: 'nop' }),
+          ]),
+        ]),
       );
     });
 
@@ -146,7 +147,7 @@ describe('Util', () => {
         context: new JsonLdContextNormalized({}),
         graph: DF.defaultGraph(),
         path: [],
-        subject: null,
+        subject: null!,
         singularizeState: SingularizeState.PLURAL,
         singularizeVariables: {},
         terminalVariables: [],
@@ -163,7 +164,7 @@ describe('Util', () => {
         context: new JsonLdContextNormalized({}),
         graph: DF.defaultGraph(),
         path: [ 'abc' ],
-        subject: null,
+        subject: null!,
         singularizeState: SingularizeState.PLURAL,
         singularizeVariables: {},
         terminalVariables: [],
@@ -180,7 +181,7 @@ describe('Util', () => {
         context: new JsonLdContextNormalized({}),
         graph: DF.defaultGraph(),
         path: [ 'abc', 'def', 'ghi' ],
-        subject: null,
+        subject: null!,
         singularizeState: SingularizeState.PLURAL,
         singularizeVariables: {},
         terminalVariables: [],
@@ -222,7 +223,7 @@ describe('Util', () => {
       }),
       graph: DF.defaultGraph(),
       path: [],
-      subject: null,
+      subject: null!,
       singularizeState: SingularizeState.PLURAL,
       singularizeVariables: {},
       terminalVariables: [],
@@ -354,45 +355,45 @@ describe('Util', () => {
             { kind: 'BooleanValue', value: false },
         ] }, 'va', ctx);
       expect(out.terms[0].termType).toEqual('BlankNode');
-      expect(out.auxiliaryPatterns.length).toEqual(6);
+      expect(out.auxiliaryPatterns!.length).toEqual(6);
 
-      expect(out.auxiliaryPatterns[0].subject).toEqual(out.auxiliaryPatterns[1].subject);
-      expect(out.auxiliaryPatterns[0].subject.termType).toEqual('BlankNode');
-      expect(out.auxiliaryPatterns[0].predicate)
+      expect(out.auxiliaryPatterns![0].subject).toEqual(out.auxiliaryPatterns![1].subject);
+      expect(out.auxiliaryPatterns![0].subject.termType).toEqual('BlankNode');
+      expect(out.auxiliaryPatterns![0].predicate)
         .toEqual(DF.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#first'));
-      expect(out.auxiliaryPatterns[0].object)
+      expect(out.auxiliaryPatterns![0].object)
         .toEqual(DF.literal('false',
           DF.namedNode('http://www.w3.org/2001/XMLSchema#boolean')));
-      expect(out.auxiliaryPatterns[1].subject.termType).toEqual('BlankNode');
-      expect(out.auxiliaryPatterns[1].predicate)
+      expect(out.auxiliaryPatterns![1].subject.termType).toEqual('BlankNode');
+      expect(out.auxiliaryPatterns![1].predicate)
         .toEqual(DF.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#rest'));
-      expect(out.auxiliaryPatterns[1].object.termType).toEqual('BlankNode');
+      expect(out.auxiliaryPatterns![1].object.termType).toEqual('BlankNode');
 
-      expect(out.auxiliaryPatterns[1].object).toEqual(out.auxiliaryPatterns[2].subject);
-      expect(out.auxiliaryPatterns[2].subject).toEqual(out.auxiliaryPatterns[3].subject);
-      expect(out.auxiliaryPatterns[2].subject.termType).toEqual('BlankNode');
-      expect(out.auxiliaryPatterns[2].predicate)
+      expect(out.auxiliaryPatterns![1].object).toEqual(out.auxiliaryPatterns![2].subject);
+      expect(out.auxiliaryPatterns![2].subject).toEqual(out.auxiliaryPatterns![3].subject);
+      expect(out.auxiliaryPatterns![2].subject.termType).toEqual('BlankNode');
+      expect(out.auxiliaryPatterns![2].predicate)
         .toEqual(DF.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#first'));
-      expect(out.auxiliaryPatterns[2].object)
+      expect(out.auxiliaryPatterns![2].object)
         .toEqual(DF.literal('true',
           DF.namedNode('http://www.w3.org/2001/XMLSchema#boolean')));
-      expect(out.auxiliaryPatterns[3].subject.termType).toEqual('BlankNode');
-      expect(out.auxiliaryPatterns[3].predicate)
+      expect(out.auxiliaryPatterns![3].subject.termType).toEqual('BlankNode');
+      expect(out.auxiliaryPatterns![3].predicate)
         .toEqual(DF.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#rest'));
-      expect(out.auxiliaryPatterns[3].object.termType).toEqual('BlankNode');
+      expect(out.auxiliaryPatterns![3].object.termType).toEqual('BlankNode');
 
-      expect(out.auxiliaryPatterns[3].object).toEqual(out.auxiliaryPatterns[4].subject);
-      expect(out.auxiliaryPatterns[4].subject).toEqual(out.auxiliaryPatterns[5].subject);
-      expect(out.auxiliaryPatterns[4].subject.termType).toEqual('BlankNode');
-      expect(out.auxiliaryPatterns[4].predicate)
+      expect(out.auxiliaryPatterns![3].object).toEqual(out.auxiliaryPatterns![4].subject);
+      expect(out.auxiliaryPatterns![4].subject).toEqual(out.auxiliaryPatterns![5].subject);
+      expect(out.auxiliaryPatterns![4].subject.termType).toEqual('BlankNode');
+      expect(out.auxiliaryPatterns![4].predicate)
         .toEqual(DF.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#first'));
-      expect(out.auxiliaryPatterns[4].object)
+      expect(out.auxiliaryPatterns![4].object)
         .toEqual(DF.literal('false',
           DF.namedNode('http://www.w3.org/2001/XMLSchema#boolean')));
-      expect(out.auxiliaryPatterns[5].subject.termType).toEqual('BlankNode');
-      expect(out.auxiliaryPatterns[5].predicate)
+      expect(out.auxiliaryPatterns![5].subject.termType).toEqual('BlankNode');
+      expect(out.auxiliaryPatterns![5].predicate)
         .toEqual(DF.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#rest'));
-      expect(out.auxiliaryPatterns[5].object)
+      expect(out.auxiliaryPatterns![5].object)
         .toEqual(DF.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#nil'));
     });
 
@@ -404,26 +405,26 @@ describe('Util', () => {
             { kind: 'ObjectField', name: { kind: 'Name', value: 'vc' }, value: { kind: 'BooleanValue', value: false } },
         ] }, 'va', ctx);
       expect(out.terms[0].termType).toEqual('BlankNode');
-      expect(out.auxiliaryPatterns.length).toEqual(3);
+      expect(out.auxiliaryPatterns!.length).toEqual(3);
 
-      expect(out.auxiliaryPatterns[0].subject).toEqual(out.terms[0]);
-      expect(out.auxiliaryPatterns[0].predicate)
+      expect(out.auxiliaryPatterns![0].subject).toEqual(out.terms[0]);
+      expect(out.auxiliaryPatterns![0].predicate)
         .toEqual(DF.namedNode('http://example.org/va'));
-      expect(out.auxiliaryPatterns[0].object)
+      expect(out.auxiliaryPatterns![0].object)
         .toEqual(DF.literal('false',
           DF.namedNode('http://www.w3.org/2001/XMLSchema#boolean')));
 
-      expect(out.auxiliaryPatterns[1].subject).toEqual(out.terms[0]);
-      expect(out.auxiliaryPatterns[1].predicate)
+      expect(out.auxiliaryPatterns![1].subject).toEqual(out.terms[0]);
+      expect(out.auxiliaryPatterns![1].predicate)
         .toEqual(DF.namedNode('http://example.org/vb'));
-      expect(out.auxiliaryPatterns[1].object)
+      expect(out.auxiliaryPatterns![1].object)
         .toEqual(DF.literal('true',
           DF.namedNode('http://www.w3.org/2001/XMLSchema#boolean')));
 
-      expect(out.auxiliaryPatterns[2].subject).toEqual(out.terms[0]);
-      expect(out.auxiliaryPatterns[2].predicate)
+      expect(out.auxiliaryPatterns![2].subject).toEqual(out.terms[0]);
+      expect(out.auxiliaryPatterns![2].predicate)
         .toEqual(DF.namedNode('http://example.org/vc'));
-      expect(out.auxiliaryPatterns[2].object)
+      expect(out.auxiliaryPatterns![2].object)
         .toEqual(DF.literal('false',
           DF.namedNode('http://www.w3.org/2001/XMLSchema#boolean')));
     });
@@ -434,8 +435,8 @@ describe('Util', () => {
       context: new JsonLdContextNormalized({}),
       graph: DF.defaultGraph(),
       path: [ 'parent' ],
-      subject: null,
-      singularizeState: null,
+      subject: null!,
+      singularizeState: null!,
       singularizeVariables: {},
       terminalVariables: [],
       fragmentDefinitions: {},
@@ -532,7 +533,7 @@ describe('Util', () => {
     });
 
     it('should modify singularize variables and not set the single state on single', async () => {
-      ctx.singularizeState = null;
+      ctx.singularizeState = null!;
       ctx.singularizeVariables = {};
       util.handleDirectiveNode({ directive: single, fieldLabel: 'field' }, ctx);
       expect(ctx.singularizeVariables).toEqual({
@@ -542,7 +543,7 @@ describe('Util', () => {
     });
 
     it('should modify singularize variables and set the single state on single all', async () => {
-      ctx.singularizeState = null;
+      ctx.singularizeState = null!;
       ctx.singularizeVariables = {};
       util.handleDirectiveNode({ directive: singleAll, fieldLabel: 'field' }, ctx);
       expect(ctx.singularizeVariables).toEqual({
@@ -552,7 +553,7 @@ describe('Util', () => {
     });
 
     it('should modify singularize variables and not set the single state on plural', async () => {
-      ctx.singularizeState = null;
+      ctx.singularizeState = null!;
       ctx.singularizeVariables = {
         parent_field: true,
       };
@@ -562,7 +563,7 @@ describe('Util', () => {
     });
 
     it('should modify singularize variables and set the single state on plural all', async () => {
-      ctx.singularizeState = null;
+      ctx.singularizeState = null!;
       ctx.singularizeVariables = {
         parent_field: true,
       };
@@ -572,10 +573,10 @@ describe('Util', () => {
     });
 
     it('should wrap the operation into a left join for optional', async () => {
-      const { ignore, operationOverrider } = util
+      const { ignore, operationOverrider } = <IDirectiveNodeHandlerOutput> util
         .handleDirectiveNode({ directive: optional, fieldLabel: 'field' }, ctx);
       expect(ignore).toBeFalsy();
-      expect(operationOverrider(OperationFactory.createBgp([
+      expect(operationOverrider!(OperationFactory.createBgp([
         OperationFactory.createPattern(
           DF.namedNode('s'),
           DF.namedNode('p'),
@@ -648,13 +649,13 @@ describe('Util', () => {
 
   describe('#getArgument', () => {
     it('should return null on null arguments', async () => {
-      return expect(util.getArgument(null, 'abc')).toBe(null);
+      return expect(util.getArgument(undefined, 'abc')).toBe(undefined);
     });
 
     it('should return null on an argument that is not present', async () => {
       return expect(util.getArgument([
         { kind: 'Argument', name: { kind: 'Name', value: 'def' }, value: { kind: 'StringValue', value: 'val' } },
-      ], 'abc')).toBe(null);
+      ], 'abc')).toBe(undefined);
     });
 
     it('should return the named argument', async () => {

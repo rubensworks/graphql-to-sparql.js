@@ -1,7 +1,7 @@
 import {DataFactory} from "rdf-data-factory";
 import {DirectiveNode, NameNode} from "graphql";
 import * as RDF from "@rdfjs/types";
-import {Factory} from "sparqlalgebrajs";
+import { Algebra, Factory } from "sparqlalgebrajs";
 import {Converter} from "../lib/Converter";
 import {IConvertContext, IVariablesDictionary, SingularizeState} from "../lib/IConvertContext";
 import {Util} from "../lib/Util";
@@ -80,14 +80,14 @@ describe('Util', () => {
 
     it('should return a nested join when not all operations are BGPs', async () => {
       return expect(util.joinOperations([
-        OperationFactory.createUnion([ { type: 'nop' }, { type: 'nop' } ]),
+        OperationFactory.createUnion([ { type: Algebra.types.NOP }, { type: Algebra.types.NOP } ]),
         OperationFactory.createBgp([
           OperationFactory.createPattern(<RDF.Term> <any> 'a2', <RDF.Term> <any> 'b2',
             <RDF.Term> <any> 'c2'),
           OperationFactory.createPattern(<RDF.Term> <any> 'd2', <RDF.Term> <any> 'e2',
             <RDF.Term> <any> 'f2'),
         ]),
-        OperationFactory.createLeftJoin({ type: 'nop' }, { type: 'nop' }),
+        OperationFactory.createLeftJoin({ type: Algebra.types.NOP }, { type: Algebra.types.NOP }),
       ])).toEqual(
         OperationFactory.createJoin([
           OperationFactory.createBgp([
@@ -97,8 +97,8 @@ describe('Util', () => {
               <RDF.Term> <any> 'f2'),
           ]),
           OperationFactory.createJoin([
-            OperationFactory.createUnion([ { type: 'nop' }, { type: 'nop' } ]),
-            OperationFactory.createLeftJoin({ type: 'nop' }, { type: 'nop' }),
+            OperationFactory.createUnion([ { type: Algebra.types.NOP }, { type: Algebra.types.NOP } ]),
+            OperationFactory.createLeftJoin({ type: Algebra.types.NOP }, { type: Algebra.types.NOP }),
           ]),
         ]),
       );

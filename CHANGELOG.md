@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+<a name="v3.0.1"></a>
+## [v3.0.1](https://github.com/rubensworks/graphql-to-sparql.js/compare/v3.0.0...v3.0.1) - 2022-11-09
+
+### Fixed
+* [Include source map files in packed files](https://github.com/rubensworks/graphql-to-sparql.js/commit/22fbf393d393c5a7f1542cf00e95a1e7e029c8bc)
+
 <a name="v3.0.0"></a>
 ## [v3.0.0](https://github.com/rubensworks/graphql-to-sparql.js/compare/v2.4.0...v3.0.0) - 2021-10-27
 

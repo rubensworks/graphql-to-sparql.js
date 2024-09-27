@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+<a name="v4.0.0"></a>
+## [v4.0.0](https://github.com/rubensworks/graphql-to-sparql.js/compare/v3.0.1...v4.0.0) - 2024-09-27
+
+### BREAKING CHANGE
+* [Update to jsonld-context-parser v3](https://github.com/rubensworks/graphql-to-sparql.js/commit/eafce891bb5412c9999f658942bf74149a87803c). This is not a breaking change for users of Node 18+
+
 <a name="v3.0.1"></a>
 ## [v3.0.1](https://github.com/rubensworks/graphql-to-sparql.js/compare/v3.0.0...v3.0.1) - 2022-11-09
 

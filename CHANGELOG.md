@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+<a name="v5.0.0"></a>
+## [v5.0.0](https://github.com/rubensworks/graphql-to-sparql.js/compare/v4.0.0...v5.0.0) - 2025-01-09
+
+### BREAKING CHANGES
+* [Update to rdf-data-factory v2](https://github.com/rubensworks/graphql-to-sparql.js/commit/1811d94a205299c0eede8526e63d4138a4c30499)
+    This includes a bump to @rdfjs/types@2.0.0, which requires TypeScript 5 and Node 14+
+
 <a name="v4.0.0"></a>
 ## [v4.0.0](https://github.com/rubensworks/graphql-to-sparql.js/compare/v3.0.1...v4.0.0) - 2024-09-27
 

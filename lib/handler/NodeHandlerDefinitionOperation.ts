@@ -1,5 +1,5 @@
 import {ListTypeNode, NamedTypeNode, NonNullTypeNode, OperationDefinitionNode, TypeNode} from "graphql/language";
-import {Algebra} from "sparqlalgebrajs";
+import type {Algebra} from "@traqula/algebra-sparql-1-1";
 import {IConvertContext} from "../IConvertContext";
 import {IConvertSettings} from "../IConvertSettings";
 import {Util} from "../Util";

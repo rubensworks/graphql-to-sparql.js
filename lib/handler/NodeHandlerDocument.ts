@@ -1,7 +1,8 @@
 import {DocumentNode} from "graphql";
 import {DefinitionNode} from "graphql/language";
 import * as RDF from "@rdfjs/types";
-import {Algebra, Factory, Util as AlgebraUtil} from "sparqlalgebrajs";
+import type {Algebra} from "@traqula/algebra-sparql-1-1";
+import {Factory, Util as AlgebraUtil} from "@traqula/algebra-sparql-1-1";
 import {IConvertContext} from "../IConvertContext";
 import {IConvertSettings} from "../IConvertSettings";
 import {Util} from "../Util";
@@ -66,11 +67,7 @@ export class NodeHandlerDocument extends NodeHandlerAdapter<DocumentNode> {
   public translateBlankNodesToVariables(operation: Algebra.Project): Algebra.Operation {
     const self = this;
     const blankToVariableMapping: {[bLabel: string]: RDF.Variable} = {};
-    const variablesRaw: {[vLabel: string]: boolean} = Array.from(operation.variables)
-      .reduce((acc: {[vLabel: string]: boolean}, variable: RDF.Variable) => {
-        acc[variable.value] = true;
-        return acc;
-      }, {});
+    const variablesRaw = new Set(operation.variables.map(x => x.value));
     return AlgebraUtil.mapOperation(operation, {
       path: (op: Algebra.Path, factory: Factory) => {
         return {
@@ -101,7 +98,7 @@ export class NodeHandlerDocument extends NodeHandlerAdapter<DocumentNode> {
         let variable = blankToVariableMapping[term.value];
         if (!variable) {
           variable = AlgebraUtil.createUniqueVariable(term.value, variablesRaw, self.util.dataFactory);
-          variablesRaw[variable.value] = true;
+          variablesRaw.add(variable.value)
           blankToVariableMapping[term.value] = variable;
         }
         return variable;

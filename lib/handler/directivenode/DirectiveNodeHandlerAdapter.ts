@@ -1,6 +1,6 @@
 import {DirectiveNode} from "graphql";
 import * as RDF from "@rdfjs/types";
-import {Algebra} from "sparqlalgebrajs";
+import type {Algebra} from "@traqula/algebra-sparql-1-1";
 import {IConvertContext} from "../../IConvertContext";
 import {IConvertSettings} from "../../IConvertSettings";
 import {Util} from "../../Util";

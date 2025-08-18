@@ -2,7 +2,8 @@
 
 import * as fs from 'fs';
 import minimist = require('minimist');
-import {toSparql} from "sparqlalgebrajs";
+import {toSparql12} from "@traqula/algebra-sparql-1-1";
+import {Generator} from "@traqula/generator-sparql-1-2";
 import {Converter} from "../lib/Converter";
 
 const args = minimist(process.argv.slice(2));
@@ -24,6 +25,7 @@ const context = JSON.parse(fs.existsSync(args._[0]) ? fs.readFileSync(args._[0],
 const query = fs.existsSync(args._[1]) ? fs.readFileSync(args._[1], 'utf8') : args._[1];
 
 async function run() {
-  process.stdout.write(toSparql(await new Converter().graphqlToSparqlAlgebra(query, context)) + '\n');
+  const generator = new Generator();
+  process.stdout.write(generator.generate(toSparql12(await new Converter().graphqlToSparqlAlgebra(query, context))) + '\n');
 }
 run();

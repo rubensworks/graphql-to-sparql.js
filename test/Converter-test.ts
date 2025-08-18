@@ -1,6 +1,6 @@
 import {DataFactory} from "rdf-data-factory";
 import {DocumentNode} from "graphql";
-import {Factory} from "sparqlalgebrajs";
+import {Factory} from "@traqula/algebra-sparql-1-1";
 import {Converter} from "../lib/Converter";
 import {IVariablesDictionary} from "../lib/IConvertContext";
 

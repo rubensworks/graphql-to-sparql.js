@@ -20,6 +20,11 @@
     "strictFunctionTypes": false,
     "strictPropertyInitialization": false
   },
+  "references": [
+    {
+      "path": "../traqula"
+    }
+  ],
   "include": [
     "index.ts",
     "lib/**/*",

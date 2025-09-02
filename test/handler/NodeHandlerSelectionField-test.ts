@@ -1,5 +1,5 @@
 import {DataFactory} from "rdf-data-factory";
-import {Factory} from "@traqula/algebra-sparql-1-1";
+import {Factory} from "@traqula/algebra-transformations-1-2";
 import {Converter} from "../../lib/Converter";
 import {NodeHandlerSelectionField} from "../../lib/handler/NodeHandlerSelectionField";
 import {IConvertContext, IVariablesDictionary, SingularizeState} from "../../lib/IConvertContext";

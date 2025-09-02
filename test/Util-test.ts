@@ -1,7 +1,7 @@
 import {DataFactory} from "rdf-data-factory";
 import {DirectiveNode, NameNode} from "graphql";
 import * as RDF from "@rdfjs/types";
-import { Factory, Algebra } from "@traqula/algebra-sparql-1-1";
+import { Factory, Algebra } from "@traqula/algebra-transformations-1-2";
 import {Converter} from "../lib/Converter";
 import {IConvertContext, IVariablesDictionary, SingularizeState} from "../lib/IConvertContext";
 import {Util} from "../lib/Util";

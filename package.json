@@ -91,7 +91,7 @@
     "minimist": "^1.2.0",
     "rdf-data-factory": "^2.0.1",
     "@traqula/algebra-sparql-1-2": "^0.0.4",
-    "@traqula/algebra-transformations-1-2": "^0.0.4",
+    "@traqula/algebra-transformations-1-2": "^0.0.5",
     "@traqula/generator-sparql-1-2": "^0.0.4"
   },
   "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"

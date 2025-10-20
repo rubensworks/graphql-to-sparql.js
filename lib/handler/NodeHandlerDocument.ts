@@ -1,7 +1,8 @@
 import {DocumentNode} from "graphql";
 import {DefinitionNode} from "graphql/language";
 import * as RDF from "@rdfjs/types";
-import {Algebra, Factory, Util as AlgebraUtil} from "sparqlalgebrajs";
+import {Algebra} from "@traqula/algebra-transformations-1-2";
+import {AlgebraFactory, algebraUtils} from "@traqula/algebra-transformations-1-2";
 import {IConvertContext} from "../IConvertContext";
 import {IConvertSettings} from "../IConvertSettings";
 import {Util} from "../Util";
@@ -11,7 +12,6 @@ import {INodeQuadContext, NodeHandlerAdapter} from "./NodeHandlerAdapter";
  * Converts GraphQL documents to joined operations for all its definitions.
  */
 export class NodeHandlerDocument extends NodeHandlerAdapter<DocumentNode> {
-
   constructor(util: Util, settings: IConvertSettings) {
     super('Document', util, settings);
   }
@@ -64,50 +64,50 @@ export class NodeHandlerDocument extends NodeHandlerAdapter<DocumentNode> {
    * @return {Operation} The transformed operation.
    */
   public translateBlankNodesToVariables(operation: Algebra.Project): Algebra.Operation {
-    const self = this;
     const blankToVariableMapping: {[bLabel: string]: RDF.Variable} = {};
-    const variablesRaw: {[vLabel: string]: boolean} = Array.from(operation.variables)
-      .reduce((acc: {[vLabel: string]: boolean}, variable: RDF.Variable) => {
-        acc[variable.value] = true;
-        return acc;
-      }, {});
-    return AlgebraUtil.mapOperation(operation, {
-      path: (op: Algebra.Path, factory: Factory) => {
-        return {
-          recurse: false,
-          result: factory.createPath(
-            blankToVariable(op.subject),
-            op.predicate,
-            blankToVariable(op.object),
-            blankToVariable(op.graph),
-          ),
-        };
-      },
-      pattern: (op: Algebra.Pattern, factory: Factory) => {
-        return {
-          recurse: false,
-          result: factory.createPattern(
-            blankToVariable(op.subject),
-            blankToVariable(op.predicate),
-            blankToVariable(op.object),
-            blankToVariable(op.graph),
-          ),
-        };
-      },
-    });
+    const variablesRaw = new Set(operation.variables.map(x => x.value));
 
-    function blankToVariable(term: RDF.Term): RDF.Term {
+    const uniqueVar = (label: string, variables: Set<string>): RDF.Variable => {
+      let counter = 0;
+      let labelLoop = label;
+      while (variablesRaw.has(labelLoop)) {
+        labelLoop = `${label}${counter++}`;
+      }
+      return this.util.dataFactory.variable!(labelLoop);
+    }
+
+    const blankToVariable = (term: RDF.Term): RDF.Term => {
       if (term.termType === 'BlankNode') {
         let variable = blankToVariableMapping[term.value];
         if (!variable) {
-          variable = AlgebraUtil.createUniqueVariable(term.value, variablesRaw, self.util.dataFactory);
-          variablesRaw[variable.value] = true;
+          variable = uniqueVar(term.value, variablesRaw);
+          variablesRaw.add(variable.value)
           blankToVariableMapping[term.value] = variable;
         }
         return variable;
       }
       return term;
     }
-  }
 
+    return algebraUtils.mapOperation<'unsafe', typeof operation>(operation, {
+      [Algebra.Types.PATH]: {
+        preVisitor: () => ({continue: false}),
+        transform: (op: Algebra.Path) => this.util.operationFactory.createPath(
+          blankToVariable(op.subject),
+          op.predicate,
+          blankToVariable(op.object),
+          blankToVariable(op.graph),
+        )
+      },
+      [Algebra.Types.PATTERN]: {
+        preVisitor: () => ({continue: false}),
+        transform: (op: Algebra.Pattern) => this.util.operationFactory.createPattern(
+            blankToVariable(op.subject),
+            blankToVariable(op.predicate),
+            blankToVariable(op.object),
+            blankToVariable(op.graph),
+          ),
+      },
+    });
+  }
 }

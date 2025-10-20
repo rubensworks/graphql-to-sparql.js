@@ -1,6 +1,6 @@
 import {DefinitionNode, DocumentNode, FragmentDefinitionNode, parse} from "graphql/language";
 import {JsonLdContextNormalized, JsonLdContext} from "jsonld-context-parser";
-import {Algebra} from "sparqlalgebrajs";
+import type {Algebra} from "@traqula/algebra-transformations-1-2";
 import {
   NodeHandlerDefinitionFragment,
   NodeHandlerDefinitionOperation,

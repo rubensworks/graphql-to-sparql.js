@@ -1,13 +1,13 @@
 import {DataFactory} from "rdf-data-factory";
 import {DocumentNode} from "graphql";
-import {Factory} from "sparqlalgebrajs";
+import {AlgebraFactory} from "@traqula/algebra-transformations-1-2";
 import {Converter} from "../lib/Converter";
 import {IVariablesDictionary} from "../lib/IConvertContext";
 
 // tslint:disable:object-literal-sort-keys
 
 const DF = new DataFactory({ blankNodePrefix: 'df_' });
-const OperationFactory = new Factory(DF);
+const OperationFactory = new AlgebraFactory(DF);
 
 describe('Converter', () => {
 

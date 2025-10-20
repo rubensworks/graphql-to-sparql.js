@@ -3,7 +3,7 @@ import {ArgumentNode, FieldNode, ListValueNode, NamedTypeNode, NameNode, ValueNo
 import {ContextParser, JsonLdContextNormalized} from "jsonld-context-parser";
 import * as RDF from "@rdfjs/types";
 import type {Algebra} from "@traqula/algebra-transformations-1-2";
-import {Factory} from "@traqula/algebra-transformations-1-2";
+import {AlgebraFactory} from "@traqula/algebra-transformations-1-2";
 import {IValueNodeHandlerOutput, NodeHandlerAdapter, NodeValueHandlerAdapter} from "./handler";
 import {IConvertContext} from "./IConvertContext";
 import {IConvertSettings} from "./IConvertSettings";
@@ -19,7 +19,7 @@ import {
 export class Util {
 
   public readonly dataFactory: RDF.DataFactory;
-  public readonly operationFactory: Factory;
+  public readonly operationFactory: AlgebraFactory;
   public readonly contextParser: ContextParser;
 
   protected readonly settings: IConvertSettings;
@@ -31,7 +31,7 @@ export class Util {
   constructor(settings: IConvertSettings) {
     this.settings = settings;
     this.dataFactory = settings.dataFactory || new DataFactory();
-    this.operationFactory = new Factory(this.dataFactory);
+    this.operationFactory = new AlgebraFactory(this.dataFactory);
     this.contextParser = new ContextParser();
   }
 

@@ -1,5 +1,5 @@
 import {DataFactory} from "rdf-data-factory";
-import {Factory} from "@traqula/algebra-transformations-1-2";
+import {AlgebraFactory} from "@traqula/algebra-transformations-1-2";
 import {Converter} from "../../lib/Converter";
 import {NodeHandlerSelectionField} from "../../lib/handler/NodeHandlerSelectionField";
 import {IConvertContext, IVariablesDictionary, SingularizeState} from "../../lib/IConvertContext";
@@ -9,7 +9,7 @@ import {JsonLdContextNormalized} from "jsonld-context-parser";
 // tslint:disable:object-literal-sort-keys
 
 const DF = new DataFactory();
-const OperationFactory = new Factory(DF);
+const OperationFactory = new AlgebraFactory(DF);
 
 describe('NodeHandlerSelectionField', () => {
 

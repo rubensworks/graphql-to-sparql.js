@@ -28,8 +28,8 @@ describe('Util', () => {
   });
 
   describe('#joinOperations', () => {
-    it.skip('should error on no patterns', async () => {
-      return expect(() => (<any> util.joinOperations([])).toThrow());
+    it('should (not) error on no patterns', async () => {
+      return expect(util.joinOperations([])).toEqual(util.operationFactory.createBgp([]));
     });
 
     it('should return the single passed operation', async () => {

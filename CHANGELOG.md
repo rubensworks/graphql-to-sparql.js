@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+<a name="v6.0.0"></a>
+## [v6.0.0](https://github.com/rubensworks/graphql-to-sparql.js/compare/v5.0.0...v6.0.0) - 2026-01-07
+
+### BREAKING CHANGE
+* [Migrate algebra to Traqula](https://github.com/rubensworks/graphql-to-sparql.js/commit/fb1802aacbca1a1c683fa9dd053ef58dca130665)
+    [Traqula](https://github.com/comunica/traqula) replaces the to-be-deprecated sparqlalgebrajs.
+
 <a name="v5.0.0"></a>
 ## [v5.0.0](https://github.com/rubensworks/graphql-to-sparql.js/compare/v4.0.0...v5.0.0) - 2025-01-09
 

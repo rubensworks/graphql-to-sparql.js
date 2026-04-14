@@ -12,12 +12,16 @@ import { NodeValueHandlerAdapter } from './NodeValueHandlerAdapter';
 export class NodeValueHandlerInt extends NodeValueHandlerAdapter<IntValueNode> {
   protected readonly datatype: RDF.NamedNode;
 
-  constructor(util: Util, settings: IConvertSettings) {
+  public constructor(util: Util, settings: IConvertSettings) {
     super('IntValue', util, settings);
     this.datatype = this.util.dataFactory.namedNode('http://www.w3.org/2001/XMLSchema#integer');
   }
 
-  public handle(valueNode: IntValueNode, fieldName: string, convertContext: IConvertContext): IValueNodeHandlerOutput {
+  public handle(
+    valueNode: IntValueNode,
+    _fieldName: string,
+    _convertContext: IConvertContext,
+  ): IValueNodeHandlerOutput {
     return { terms: [ this.util.dataFactory.literal(valueNode.value, this.datatype) ]};
   }
 }

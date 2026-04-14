@@ -10,11 +10,15 @@ import { NodeValueHandlerAdapter } from './NodeValueHandlerAdapter';
  * Converts GraphQL objects to triple patterns by converting keys to predicates and values to objects.
  */
 export class NodeValueHandlerObject extends NodeValueHandlerAdapter<ObjectValueNode> {
-  constructor(util: Util, settings: IConvertSettings) {
+  public constructor(util: Util, settings: IConvertSettings) {
     super('ObjectValue', util, settings);
   }
 
-  public handle(valueNode: ObjectValueNode, fieldName: string, convertContext: IConvertContext): IValueNodeHandlerOutput {
+  public handle(
+    valueNode: ObjectValueNode,
+    fieldName: string,
+    convertContext: IConvertContext,
+  ): IValueNodeHandlerOutput {
     // Convert object keys to predicates and values to objects, and link them both with a new blank node.
     const subject = this.util.dataFactory.blankNode();
     let auxiliaryObjectPatterns: Algebra.Pattern[] = [];
@@ -30,7 +34,7 @@ export class NodeValueHandlerObject extends NodeValueHandlerAdapter<ObjectValueN
         ));
       }
       if (subValue.auxiliaryPatterns) {
-        auxiliaryObjectPatterns = auxiliaryObjectPatterns.concat(subValue.auxiliaryPatterns);
+        auxiliaryObjectPatterns = [ ...auxiliaryObjectPatterns, ...subValue.auxiliaryPatterns ];
       }
     }
     return { terms: [ subject ], auxiliaryPatterns: auxiliaryObjectPatterns };

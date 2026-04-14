@@ -9,7 +9,7 @@ import { NodeHandlerSelectionAdapter } from './NodeHandlerSelectionAdapter';
  * Converts GraphQL fields to one or more quad patterns.
  */
 export class NodeHandlerSelectionField extends NodeHandlerSelectionAdapter<FieldNode> {
-  constructor(util: Util, settings: IConvertSettings) {
+  public constructor(util: Util, settings: IConvertSettings) {
     super('Field', util, settings);
   }
 

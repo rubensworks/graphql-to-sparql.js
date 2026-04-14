@@ -15,7 +15,7 @@ export class NodeValueHandlerList extends NodeValueHandlerAdapter<ListValueNode>
   protected readonly nodeRest: RDF.NamedNode;
   protected readonly nodeNil: RDF.NamedNode;
 
-  constructor(util: Util, settings: IConvertSettings) {
+  public constructor(util: Util, settings: IConvertSettings) {
     super('ListValue', util, settings);
     this.nodeFirst = this.util.dataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#first');
     this.nodeRest = this.util.dataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#rest');
@@ -32,7 +32,7 @@ export class NodeValueHandlerList extends NodeValueHandlerAdapter<ListValueNode>
         listTerms.push(term);
       }
       if (subValue.auxiliaryPatterns) {
-        auxiliaryPatterns = auxiliaryPatterns.concat(subValue.auxiliaryPatterns);
+        auxiliaryPatterns = [ ...auxiliaryPatterns, ...subValue.auxiliaryPatterns ];
       }
     }
 

@@ -13,7 +13,7 @@ import {
  * A handler for skip directives.
  */
 export class DirectiveNodeHandlerSkip extends DirectiveNodeHandlerAdapter {
-  constructor(util: Util, settings: IConvertSettings) {
+  public constructor(util: Util, settings: IConvertSettings) {
     super('skip', util, settings);
   }
 

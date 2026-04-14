@@ -28,9 +28,9 @@ export class Util {
   private readonly nodeValueHandlers: Record<string, NodeValueHandlerAdapter<any>> = {};
   private readonly directiveNodeHandlers: Record<string, DirectiveNodeHandlerAdapter> = {};
 
-  constructor(settings: IConvertSettings) {
+  public constructor(settings: IConvertSettings) {
     this.settings = settings;
-    this.dataFactory = settings.dataFactory || new DataFactory();
+    this.dataFactory = settings.dataFactory ?? new DataFactory();
     this.operationFactory = new AlgebraFactory(this.dataFactory);
     this.contextParser = new ContextParser();
   }
@@ -39,7 +39,7 @@ export class Util {
    * Register a new {@link NodeHandlerAdapter}.
    * @param {NodeHandlerAdapter<any>} nodeHandler A handler for converting GraphQL nodes to operations.
    */
-  public registerNodeHandler(nodeHandler: NodeHandlerAdapter<any>) {
+  public registerNodeHandler(nodeHandler: NodeHandlerAdapter<any>): void {
     this.nodeHandlers[nodeHandler.targetKind] = nodeHandler;
   }
 
@@ -48,7 +48,7 @@ export class Util {
    * @param {NodeValueHandlerAdapter<any>} nodeValueHandler A handler for converting GraphQL value nodes
    *                                                        to terms and patterns.
    */
-  public registerNodeValueHandler(nodeValueHandler: NodeValueHandlerAdapter<any>) {
+  public registerNodeValueHandler(nodeValueHandler: NodeValueHandlerAdapter<any>): void {
     this.nodeValueHandlers[nodeValueHandler.targetKind] = nodeValueHandler;
   }
 
@@ -56,7 +56,7 @@ export class Util {
    * Register a new {@link DirectiveNodeHandlerAdapter}
    * @param {DirectiveNodeHandlerAdapter} directiveNodeHandler A handler for handling GraphQL directives.
    */
-  public registerDirectiveNodeHandler(directiveNodeHandler: DirectiveNodeHandlerAdapter) {
+  public registerDirectiveNodeHandler(directiveNodeHandler: DirectiveNodeHandlerAdapter): void {
     this.directiveNodeHandlers[directiveNodeHandler.targetKind] = directiveNodeHandler;
   }
 
@@ -81,7 +81,11 @@ export class Util {
    * @param {IConvertContext} convertContext A conversion context.
    * @return {IValueNodeHandlerOutput} The RDF terms and patterns.
    */
-  public handleNodeValue<T extends ValueNode>(node: T, fieldName: string, convertContext: IConvertContext): IValueNodeHandlerOutput {
+  public handleNodeValue<T extends ValueNode>(
+    node: T,
+    fieldName: string,
+    convertContext: IConvertContext,
+  ): IValueNodeHandlerOutput {
     const nodeValueHandler = this.nodeValueHandlers[node.kind];
     if (!nodeValueHandler) {
       throw new Error(`Unsupported GraphQL value node '${node.kind}'`);
@@ -95,7 +99,10 @@ export class Util {
    * @param {IConvertContext} convertContext A conversion context.
    * @return {IDirectiveNodeHandlerOutput} The directive node handler output or null.
    */
-  public handleDirectiveNode(directiveContext: IDirectiveContext, convertContext: IConvertContext): IDirectiveNodeHandlerOutput | null {
+  public handleDirectiveNode(
+    directiveContext: IDirectiveContext,
+    convertContext: IConvertContext,
+  ): IDirectiveNodeHandlerOutput | null {
     const directiveNodeHandler = this.directiveNodeHandlers[directiveContext.directive.name.value];
     if (!directiveNodeHandler) {
       return null;
@@ -128,7 +135,8 @@ export class Util {
     if (bgps.length === operations.length) {
       // Create a big BGP from all BGPs
       return this.joinOperationsAsBgp(bgps);
-    } if (bgps.length === operations.length - 1 &&
+    }
+    if (bgps.length === operations.length - 1 &&
       nonBgps[0].type === 'leftjoin' &&
       nonBgps[0].input[0].type === 'bgp') {
       // Check if we have one left-join (with a BGP on the left), and the rest are BGPs.
@@ -139,7 +147,8 @@ export class Util {
         this.joinOperationsAsBgp(bgps),
         originalLeftJoin.input[1],
       );
-    } if (nonBgps.length === operations.length) {
+    }
+    if (nonBgps.length === operations.length) {
       // Create nested joins
       return this.joinOperationsAsNestedJoin(nonBgps);
     }
@@ -151,8 +160,9 @@ export class Util {
   }
 
   public joinOperationsAsBgp(operations: Algebra.Operation[]): Algebra.Operation {
-    return this.operationFactory.createBgp((<Algebra.Pattern[]> []).concat.apply([], operations
-      .map(op => (<Algebra.Bgp> op).patterns)));
+    return this.operationFactory.createBgp(
+      operations.flatMap(op => (<Algebra.Bgp> op).patterns),
+    );
   }
 
   public joinOperationsAsNestedJoin(operations: Algebra.Operation[]): Algebra.Operation {
@@ -202,7 +212,7 @@ export class Util {
     if (this.settings.requireContext && !contextValue) {
       throw new Error(`No context entry was found for ${value}`);
     }
-    return this.dataFactory.namedNode(contextValue || value);
+    return this.dataFactory.namedNode(contextValue ?? value);
   }
 
   /**
@@ -229,7 +239,11 @@ export class Util {
    * @param {IConvertContext} convertContext A convert context.
    * @return {Pattern} A pattern.
    */
-  public newTypePattern(subject: RDF.Term, typeCondition: NamedTypeNode, convertContext: IConvertContext) {
+  public newTypePattern(
+    subject: RDF.Term,
+    typeCondition: NamedTypeNode,
+    convertContext: IConvertContext,
+  ): Algebra.Pattern {
     return this.operationFactory.createPattern(
       subject,
       this.dataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
@@ -247,7 +261,13 @@ export class Util {
    * @param {IContext} context A context.
    * @return {Pattern} A quad pattern.
    */
-  public createQuadPattern(subject: RDF.Term, predicateName: NameNode, object: RDF.Term, graph: RDF.Term, context: JsonLdContextNormalized): Algebra.Pattern {
+  public createQuadPattern(
+    subject: RDF.Term,
+    predicateName: NameNode,
+    object: RDF.Term,
+    graph: RDF.Term,
+    context: JsonLdContextNormalized,
+  ): Algebra.Pattern {
     const predicate: RDF.NamedNode = this.valueToNamedNode(predicateName.value, context);
     if (context && context.getContextRaw()[predicateName.value] &&
       (context.getContextRaw()[predicateName.value])['@reverse']) {
@@ -266,7 +286,14 @@ export class Util {
    * @param {IContext} context A context.
    * @return {Path} A quad property path.
    */
-  public createQuadPath(subject: RDF.Term, predicateName: NameNode, predicateAlternatives: ListValueNode, object: RDF.Term, graph: RDF.Term, context: JsonLdContextNormalized): Algebra.Path {
+  public createQuadPath(
+    subject: RDF.Term,
+    predicateName: NameNode,
+    predicateAlternatives: ListValueNode,
+    object: RDF.Term,
+    graph: RDF.Term,
+    context: JsonLdContextNormalized,
+  ): Algebra.Path {
     const predicateInitial: RDF.NamedNode = this.valueToNamedNode(predicateName.value, context);
     let pathSymbol: Algebra.PropertyPathSymbol = this.operationFactory.createLink(predicateInitial);
 

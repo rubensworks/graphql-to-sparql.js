@@ -12,12 +12,16 @@ import { NodeValueHandlerAdapter } from './NodeValueHandlerAdapter';
 export class NodeValueHandlerNull extends NodeValueHandlerAdapter<NullValueNode> {
   protected readonly nil: RDF.NamedNode;
 
-  constructor(util: Util, settings: IConvertSettings) {
+  public constructor(util: Util, settings: IConvertSettings) {
     super('NullValue', util, settings);
     this.nil = this.util.dataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#nil');
   }
 
-  public handle(valueNode: NullValueNode, fieldName: string, convertContext: IConvertContext): IValueNodeHandlerOutput {
+  public handle(
+    _valueNode: NullValueNode,
+    _fieldName: string,
+    _convertContext: IConvertContext,
+  ): IValueNodeHandlerOutput {
     return { terms: [ this.nil ]};
   }
 }

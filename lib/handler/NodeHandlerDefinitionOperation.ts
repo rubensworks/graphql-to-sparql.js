@@ -9,7 +9,7 @@ import { NodeHandlerDefinitionAdapter } from './NodeHandlerDefinitionAdapter';
  * Converts GraphQL definitions to joined operations for all its selections.
  */
 export class NodeHandlerDefinitionOperation extends NodeHandlerDefinitionAdapter<OperationDefinitionNode> {
-  constructor(util: Util, settings: IConvertSettings) {
+  public constructor(util: Util, settings: IConvertSettings) {
     super('OperationDefinition', util, settings);
   }
 
@@ -44,7 +44,11 @@ export class NodeHandlerDefinitionOperation extends NodeHandlerDefinitionAdapter
     }
 
     // Directives
-    const directiveOutputs = this.getDirectiveOutputs(operationDefinition.directives, operationDefinition.name ? operationDefinition.name.value : '', convertContext);
+    const directiveOutputs = this.getDirectiveOutputs(
+      operationDefinition.directives,
+      operationDefinition.name ? operationDefinition.name.value : '',
+      convertContext,
+    );
     if (!directiveOutputs) {
       return this.util.operationFactory.createBgp([]);
     }

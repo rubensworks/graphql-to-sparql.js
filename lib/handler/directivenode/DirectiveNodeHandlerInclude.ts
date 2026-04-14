@@ -13,7 +13,7 @@ import {
  * A handler for include directives.
  */
 export class DirectiveNodeHandlerInclude extends DirectiveNodeHandlerAdapter {
-  constructor(util: Util, settings: IConvertSettings) {
+  public constructor(util: Util, settings: IConvertSettings) {
     super('include', util, settings);
   }
 

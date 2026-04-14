@@ -10,11 +10,11 @@ import { NodeHandlerDefinitionAdapter } from './NodeHandlerDefinitionAdapter';
  * as these should have been processed away earlier.
  */
 export class NodeHandlerDefinitionFragment extends NodeHandlerDefinitionAdapter<FragmentDefinitionNode> {
-  constructor(util: Util, settings: IConvertSettings) {
+  public constructor(util: Util, settings: IConvertSettings) {
     super('FragmentDefinition', util, settings);
   }
 
-  public handle(operationDefinition: FragmentDefinitionNode, convertContext: IConvertContext): Algebra.Operation {
+  public handle(_operationDefinition: FragmentDefinitionNode, _convertContext: IConvertContext): Algebra.Operation {
     throw new Error('Illegal state: fragment definitions must be indexed and removed before processing');
   }
 }

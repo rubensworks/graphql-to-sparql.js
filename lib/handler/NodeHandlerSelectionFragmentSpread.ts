@@ -9,7 +9,7 @@ import { NodeHandlerSelectionAdapter } from './NodeHandlerSelectionAdapter';
  * Converts GraphQL fragment spread to one or more quad patterns with a given type within an optional.
  */
 export class NodeHandlerSelectionFragmentSpread extends NodeHandlerSelectionAdapter<FragmentSpreadNode> {
-  constructor(util: Util, settings: IConvertSettings) {
+  public constructor(util: Util, settings: IConvertSettings) {
     super('FragmentSpread', util, settings);
   }
 

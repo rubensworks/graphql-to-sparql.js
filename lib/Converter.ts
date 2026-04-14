@@ -38,17 +38,17 @@ import { Util } from './Util';
 export class Converter {
   private readonly util: Util;
 
-  constructor(settings?: IConvertSettings) {
-    settings = settings || {};
-    settings.variableDelimiter = settings.variableDelimiter || '_';
-    settings.expressionVariableCounter = settings.expressionVariableCounter || 0;
+  public constructor(settings?: IConvertSettings) {
+    settings = settings ?? {};
+    settings.variableDelimiter = settings.variableDelimiter ?? '_';
+    settings.expressionVariableCounter = settings.expressionVariableCounter ?? 0;
 
     this.util = new Util(settings);
 
     this.initializeNodeHandlers(settings);
   }
 
-  public static registerNodeHandlers(util: Util, settings: IConvertSettings) {
+  public static registerNodeHandlers(util: Util, settings: IConvertSettings): void {
     util.registerNodeHandler(new NodeHandlerDocument(util, settings));
     util.registerNodeHandler(new NodeHandlerDefinitionOperation(util, settings));
     util.registerNodeHandler(new NodeHandlerDefinitionFragment(util, settings));
@@ -57,7 +57,7 @@ export class Converter {
     util.registerNodeHandler(new NodeHandlerSelectionField(util, settings));
   }
 
-  public static registerNodeValueHandlers(util: Util, settings: IConvertSettings) {
+  public static registerNodeValueHandlers(util: Util, settings: IConvertSettings): void {
     util.registerNodeValueHandler(new NodeValueHandlerVariable(util, settings));
     util.registerNodeValueHandler(new NodeValueHandlerInt(util, settings));
     util.registerNodeValueHandler(new NodeValueHandlerFloat(util, settings));
@@ -69,7 +69,7 @@ export class Converter {
     util.registerNodeValueHandler(new NodeValueHandlerObject(util, settings));
   }
 
-  public static registerDirectiveNodeHandlers(util: Util, settings: IConvertSettings) {
+  public static registerDirectiveNodeHandlers(util: Util, settings: IConvertSettings): void {
     util.registerDirectiveNodeHandler(new DirectiveNodeHandlerInclude(util, settings));
     util.registerDirectiveNodeHandler(new DirectiveNodeHandlerOptional(util, settings));
     util.registerDirectiveNodeHandler(new DirectiveNodeHandlerPlural(util, settings));
@@ -84,7 +84,11 @@ export class Converter {
    * @param {IConvertOptions} options An options object.
    * @return {Promise<Operation>} A promise resolving to an operation.
    */
-  public async graphqlToSparqlAlgebra(graphqlQuery: string | DocumentNode, context: JsonLdContext, options?: IConvertOptions): Promise<Algebra.Operation> {
+  public async graphqlToSparqlAlgebra(
+    graphqlQuery: string | DocumentNode,
+    context: JsonLdContext,
+    options?: IConvertOptions,
+  ): Promise<Algebra.Operation> {
     return this.graphqlToSparqlAlgebraRawContext(graphqlQuery, await this.util.contextParser.parse(context), options);
   }
 
@@ -95,8 +99,12 @@ export class Converter {
    * @param {IConvertOptions} options An options object.
    * @return {Operation} An operation.
    */
-  public graphqlToSparqlAlgebraRawContext(graphqlQuery: string | DocumentNode, context: JsonLdContextNormalized, options?: IConvertOptions): Algebra.Operation {
-    options = options || {};
+  public graphqlToSparqlAlgebraRawContext(
+    graphqlQuery: string | DocumentNode,
+    context: JsonLdContextNormalized,
+    options?: IConvertOptions,
+  ): Algebra.Operation {
+    options = options ?? {};
     const document: DocumentNode = typeof graphqlQuery === 'string' ? parse(graphqlQuery) : graphqlQuery;
     const fragmentDefinitions = this.indexFragments(document);
     const convertContext: IConvertContext = {
@@ -104,11 +112,12 @@ export class Converter {
       fragmentDefinitions,
       graph: this.util.dataFactory.defaultGraph(),
       path: [],
-      singularizeState: SingularizeState.PLURAL, // We don't make this configurable to enforce query consistency
-      singularizeVariables: options.singularizeVariables || {},
+      // We don't make singularizeState configurable to enforce query consistency
+      singularizeState: SingularizeState.PLURAL,
+      singularizeVariables: options.singularizeVariables ?? {},
       subject: null!,
       terminalVariables: [],
-      variablesDict: options.variablesDict || {},
+      variablesDict: options.variablesDict ?? {},
       variablesMetaDict: {},
     };
 
@@ -137,7 +146,7 @@ export class Converter {
     return fragmentDefinitions;
   }
 
-  private initializeNodeHandlers(settings: IConvertSettings) {
+  private initializeNodeHandlers(settings: IConvertSettings): void {
     Converter.registerNodeHandlers(this.util, settings);
     Converter.registerNodeValueHandlers(this.util, settings);
     Converter.registerDirectiveNodeHandlers(this.util, settings);

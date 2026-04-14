@@ -12,12 +12,16 @@ import { NodeValueHandlerAdapter } from './NodeValueHandlerAdapter';
 export class NodeValueHandlerFloat extends NodeValueHandlerAdapter<FloatValueNode> {
   protected readonly datatype: RDF.NamedNode;
 
-  constructor(util: Util, settings: IConvertSettings) {
+  public constructor(util: Util, settings: IConvertSettings) {
     super('FloatValue', util, settings);
     this.datatype = this.util.dataFactory.namedNode('http://www.w3.org/2001/XMLSchema#float');
   }
 
-  public handle(valueNode: FloatValueNode, fieldName: string, convertContext: IConvertContext): IValueNodeHandlerOutput {
+  public handle(
+    valueNode: FloatValueNode,
+    _fieldName: string,
+    _convertContext: IConvertContext,
+  ): IValueNodeHandlerOutput {
     return { terms: [ this.util.dataFactory.literal(valueNode.value, this.datatype) ]};
   }
 }

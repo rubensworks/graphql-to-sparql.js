@@ -24,7 +24,7 @@ if (args._.length !== 2 || args.h || args.help) {
 const context = JSON.parse(fs.existsSync(args._[0]) ? fs.readFileSync(args._[0], 'utf8') : args._[0]);
 const query = fs.existsSync(args._[1]) ? fs.readFileSync(args._[1], 'utf8') : args._[1];
 
-async function run() {
+async function run(): Promise<void> {
   const generator = new Generator();
   process.stdout.write(`${generator.generate(toAst(await new Converter().graphqlToSparqlAlgebra(query, context)))}\n`);
 }

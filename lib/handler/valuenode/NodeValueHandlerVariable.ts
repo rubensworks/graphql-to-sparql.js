@@ -10,7 +10,7 @@ import { NodeValueHandlerAdapter } from './NodeValueHandlerAdapter';
  * Converts GraphQL variables to terms based on the contents of the variablesDict.
  */
 export class NodeValueHandlerVariable extends NodeValueHandlerAdapter<VariableNode> {
-  constructor(util: Util, settings: IConvertSettings) {
+  public constructor(util: Util, settings: IConvertSettings) {
     super('Variable', util, settings);
   }
 

@@ -120,8 +120,16 @@ describe('NodeHandlerSelectionField', () => {
         kind: 'Field',
         name: { kind: 'Name', value: 'theField' },
         arguments: [
-          { kind: 'Argument', name: { kind: 'Name', value: 'anotherField' }, value: { kind: 'StringValue', value: 'abc' }},
-          { kind: 'Argument', name: { kind: 'Name', value: 'andAnotherField' }, value: { kind: 'StringValue', value: 'def' }},
+          {
+            kind: 'Argument',
+            name: { kind: 'Name', value: 'anotherField' },
+            value: { kind: 'StringValue', value: 'abc' },
+          },
+          {
+            kind: 'Argument',
+            name: { kind: 'Name', value: 'andAnotherField' },
+            value: { kind: 'StringValue', value: 'def' },
+          },
         ],
       }, ctx)).toEqual(OperationFactory.createBgp([
         OperationFactory.createPattern(

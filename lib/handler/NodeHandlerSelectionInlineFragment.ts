@@ -9,7 +9,7 @@ import { NodeHandlerSelectionAdapter } from './NodeHandlerSelectionAdapter';
  * Converts GraphQL inline fragment to one or more quad patterns with a given type within an optional.
  */
 export class NodeHandlerSelectionInlineFragment extends NodeHandlerSelectionAdapter<InlineFragmentNode> {
-  constructor(util: Util, settings: IConvertSettings) {
+  public constructor(util: Util, settings: IConvertSettings) {
     super('InlineFragment', util, settings);
   }
 

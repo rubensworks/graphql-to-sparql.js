@@ -14,7 +14,7 @@ import {
  * A handler for single directives.
  */
 export class DirectiveNodeHandlerSingle extends DirectiveNodeHandlerAdapter {
-  constructor(util: Util, settings: IConvertSettings) {
+  public constructor(util: Util, settings: IConvertSettings) {
     super('single', util, settings);
   }
 
@@ -22,8 +22,8 @@ export class DirectiveNodeHandlerSingle extends DirectiveNodeHandlerAdapter {
     if (this.isDirectiveScopeAll(directiveContext.directive)) {
       convertContext.singularizeState = SingularizeState.SINGLE;
     }
-    convertContext.singularizeVariables!
-      [this.util.nameToVariable(directiveContext.fieldLabel, convertContext).value] = true;
+    const varName = this.util.nameToVariable(directiveContext.fieldLabel, convertContext).value;
+    convertContext.singularizeVariables![varName] = true;
     return {};
   }
 }

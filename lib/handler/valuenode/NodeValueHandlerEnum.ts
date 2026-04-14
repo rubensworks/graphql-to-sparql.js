@@ -9,7 +9,7 @@ import { NodeValueHandlerAdapter } from './NodeValueHandlerAdapter';
  * Converts GraphQL enums to RDF named nodes.
  */
 export class NodeValueHandlerEnum extends NodeValueHandlerAdapter<EnumValueNode> {
-  constructor(util: Util, settings: IConvertSettings) {
+  public constructor(util: Util, settings: IConvertSettings) {
     super('EnumValue', util, settings);
   }
 

@@ -13,7 +13,7 @@ import { NodeHandlerAdapter } from './NodeHandlerAdapter';
  * A handler for converting GraphQL selection nodes to operations.
  */
 export abstract class NodeHandlerSelectionAdapter<T extends SelectionNode> extends NodeHandlerAdapter<T> {
-  constructor(targetKind: T['kind'], util: Util, settings: IConvertSettings) {
+  public constructor(targetKind: T['kind'], util: Util, settings: IConvertSettings) {
     super(targetKind, util, settings);
   }
 
@@ -24,7 +24,11 @@ export abstract class NodeHandlerSelectionAdapter<T extends SelectionNode> exten
    * @param {IConvertContext} convertContext A convert context.
    * @return {INodeQuadContext} The subject and optional auxiliary patterns.
    */
-  public getNodeQuadContextFieldNode(field: FieldNode, fieldLabel: string, convertContext: IConvertContext): INodeQuadContext {
+  public getNodeQuadContextFieldNode(
+    field: FieldNode,
+    fieldLabel: string,
+    convertContext: IConvertContext,
+  ): INodeQuadContext {
     return this.getNodeQuadContextSelectionSet(field.selectionSet, fieldLabel, {
       ...convertContext,
       path: this.util.appendFieldToPath(convertContext.path, fieldLabel),
@@ -39,7 +43,12 @@ export abstract class NodeHandlerSelectionAdapter<T extends SelectionNode> exten
    * @param {Pattern[]} auxiliaryPatterns Optional patterns that should be part of the BGP.
    * @return {Operation} The reslting operation.
    */
-  public fieldToOperation(convertContext: IConvertContext, fieldNode: FieldNode, pushTerminalVariables: boolean, auxiliaryPatterns?: Algebra.Pattern[]): Algebra.Operation {
+  public fieldToOperation(
+    convertContext: IConvertContext,
+    fieldNode: FieldNode,
+    pushTerminalVariables: boolean,
+    auxiliaryPatterns?: Algebra.Pattern[],
+  ): Algebra.Operation {
     // If a deeper node is being selected, and if the current object should become the next subject
     const nesting = pushTerminalVariables;
 
@@ -85,8 +94,8 @@ export abstract class NodeHandlerSelectionAdapter<T extends SelectionNode> exten
 
     // Define subject and object
     const subjectOutput = this.getNodeQuadContextFieldNode(fieldNode, fieldLabel, convertContext);
-    let object: RDF.Term = subjectOutput.subject || this.util.nameToVariable(fieldLabel, convertContext);
-    let graph: RDF.Term = subjectOutput.graph || convertContext.graph;
+    let object: RDF.Term = subjectOutput.subject ?? this.util.nameToVariable(fieldLabel, convertContext);
+    let graph: RDF.Term = subjectOutput.graph ?? convertContext.graph;
     if (subjectOutput.auxiliaryPatterns) {
       operations.push(this.util.operationFactory.createBgp(subjectOutput.auxiliaryPatterns));
     }
@@ -136,7 +145,14 @@ export abstract class NodeHandlerSelectionAdapter<T extends SelectionNode> exten
             pathValue = { kind: 'ListValue', values: [ pathValue ]};
           }
 
-          operations.push(this.util.createQuadPath(convertContext.subject, fieldNode.name, pathValue, object, convertContext.graph, convertContext.context));
+          operations.push(this.util.createQuadPath(
+            convertContext.subject,
+            fieldNode.name,
+            pathValue,
+            object,
+            convertContext.graph,
+            convertContext.context,
+          ));
           createQuadPattern = false;
 
           break;
@@ -147,7 +163,13 @@ export abstract class NodeHandlerSelectionAdapter<T extends SelectionNode> exten
     // Create at least a pattern for the parent node and the current path.
     if (pushTerminalVariables && createQuadPattern) {
       operations.push(this.util.operationFactory.createBgp([
-        this.util.createQuadPattern(convertContext.subject, fieldNode.name, object, convertContext.graph, convertContext.context),
+        this.util.createQuadPattern(
+          convertContext.subject,
+          fieldNode.name,
+          object,
+          convertContext.graph,
+          convertContext.context,
+        ),
       ]));
     }
 
@@ -221,8 +243,10 @@ export abstract class NodeHandlerSelectionAdapter<T extends SelectionNode> exten
           return true;
         });
 
-      let joinedOperation = this.util.joinOperations(operations
-        .concat(selections.map(selectionNode => this.util.handleNode(selectionNode, subConvertContext))));
+      let joinedOperation = this.util.joinOperations([
+        ...operations,
+        ...selections.map(selectionNode => this.util.handleNode(selectionNode, subConvertContext)),
+      ]);
 
       // Modify the operation if there was a count selection
       if (totalCount) {
@@ -230,7 +254,12 @@ export abstract class NodeHandlerSelectionAdapter<T extends SelectionNode> exten
         const expressionVariable = this.util.dataFactory.variable!(`var${this.settings.expressionVariableCounter!++}`);
         const countOverVariable: RDF.Variable = this.util.dataFactory
           .variable!(`${object.value + this.settings.variableDelimiter}totalCount`);
-        const aggregator: Algebra.BoundAggregate = this.util.operationFactory.createBoundAggregate(expressionVariable, 'count', this.util.operationFactory.createTermExpression(object), false);
+        const aggregator: Algebra.BoundAggregate = this.util.operationFactory.createBoundAggregate(
+          expressionVariable,
+          'count',
+          this.util.operationFactory.createTermExpression(object),
+          false,
+        );
 
         const countProject = this.util.operationFactory.createProject(
           this.util.operationFactory.createExtend(
@@ -283,7 +312,11 @@ export abstract class NodeHandlerSelectionAdapter<T extends SelectionNode> exten
    * @param {Pattern[]} auxiliaryPatterns Optional patterns that should be part of the BGP.
    * @return {Operation} An operation or undefined.
    */
-  public handleMetaField(convertContext: IConvertContext, fieldLabel: string, auxiliaryPatterns?: Algebra.Pattern[]): Algebra.Operation | undefined {
+  public handleMetaField(
+    convertContext: IConvertContext,
+    fieldLabel: string,
+    auxiliaryPatterns?: Algebra.Pattern[],
+  ): Algebra.Operation | undefined {
     // TODO: in the future, we should add support for GraphQL wide range of introspection features:
     // http://graphql.org/learn/introspection/
     if (fieldLabel === '__typename') {
@@ -296,7 +329,8 @@ export abstract class NodeHandlerSelectionAdapter<T extends SelectionNode> exten
           this.util.nameToVariable(fieldLabel, convertContext),
           convertContext.graph,
         ),
-      ].concat(auxiliaryPatterns || []));
+        ...(auxiliaryPatterns ?? []),
+      ]);
     }
   }
 }

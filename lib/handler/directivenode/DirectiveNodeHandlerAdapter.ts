@@ -15,7 +15,7 @@ export abstract class DirectiveNodeHandlerAdapter {
   protected readonly util: Util;
   protected readonly settings: IConvertSettings;
 
-  constructor(targetKind: string, util: Util, settings: IConvertSettings) {
+  public constructor(targetKind: string, util: Util, settings: IConvertSettings) {
     this.targetKind = targetKind;
     this.util = util;
     this.settings = settings;
@@ -27,7 +27,10 @@ export abstract class DirectiveNodeHandlerAdapter {
    * @param {IConvertContext} convertContext A conversion context.
    * @return {IValueNodeHandlerOutput} The RDF terms and patterns.
    */
-  public abstract handle(directiveContext: IDirectiveContext, convertContext: IConvertContext): IDirectiveNodeHandlerOutput;
+  public abstract handle(
+    directiveContext: IDirectiveContext,
+    convertContext: IConvertContext,
+  ): IDirectiveNodeHandlerOutput;
 
   /**
    * Get the value of the 'if' argument in a directive.
@@ -52,9 +55,9 @@ export abstract class DirectiveNodeHandlerAdapter {
    * @param {DirectiveNode} directive A directive.
    * @return {boolean} If `scope: all` is present.
    */
-  public isDirectiveScopeAll(directive: DirectiveNode) {
+  public isDirectiveScopeAll(directive: DirectiveNode): boolean {
     const scopeArg: ArgumentNode | undefined = this.util.getArgument(directive.arguments, 'scope');
-    return scopeArg && scopeArg.value.kind === 'EnumValue' && scopeArg.value.value === 'all';
+    return Boolean(scopeArg && scopeArg.value.kind === 'EnumValue' && scopeArg.value.value === 'all');
   }
 }
 

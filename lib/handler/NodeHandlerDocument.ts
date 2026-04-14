@@ -12,18 +12,21 @@ import { NodeHandlerAdapter } from './NodeHandlerAdapter';
  * Converts GraphQL documents to joined operations for all its definitions.
  */
 export class NodeHandlerDocument extends NodeHandlerAdapter<DocumentNode> {
-  constructor(util: Util, settings: IConvertSettings) {
+  public constructor(util: Util, settings: IConvertSettings) {
     super('Document', util, settings);
   }
 
   public handle(document: DocumentNode, convertContext: IConvertContext): Algebra.Operation {
     const definitionOperations = document.definitions
       .map((definition) => {
-        const subjectOutput = this.getNodeQuadContextDefinitionNode(definition, { ...convertContext, ignoreUnknownVariables: true });
+        const subjectOutput = this.getNodeQuadContextDefinitionNode(
+          definition,
+          { ...convertContext, ignoreUnknownVariables: true },
+        );
         const queryParseContext: IConvertContext = {
           ...convertContext,
-          graph: subjectOutput.graph || convertContext.graph,
-          subject: subjectOutput.subject || this.util.dataFactory.blankNode(),
+          graph: subjectOutput.graph ?? convertContext.graph,
+          subject: subjectOutput.subject ?? this.util.dataFactory.blankNode(),
         };
         let definitionOperation = this.util.handleNode(definition, queryParseContext);
         if (subjectOutput && subjectOutput.auxiliaryPatterns) {
@@ -35,7 +38,9 @@ export class NodeHandlerDocument extends NodeHandlerAdapter<DocumentNode> {
         return definitionOperation;
       });
     const operation = this.util.operationFactory.createProject(
-      definitionOperations.length === 1 ? definitionOperations[0] : this.util.operationFactory.createUnion(definitionOperations),
+      definitionOperations.length === 1 ?
+        definitionOperations[0] :
+        this.util.operationFactory.createUnion(definitionOperations),
       convertContext.terminalVariables,
     );
 
@@ -49,9 +54,16 @@ export class NodeHandlerDocument extends NodeHandlerAdapter<DocumentNode> {
    * @param {IConvertContext} convertContext A convert context.
    * @return {INodeQuadContext} The subject and optional auxiliary patterns.
    */
-  public getNodeQuadContextDefinitionNode(definition: DefinitionNode, convertContext: IConvertContext): INodeQuadContext {
+  public getNodeQuadContextDefinitionNode(
+    definition: DefinitionNode,
+    convertContext: IConvertContext,
+  ): INodeQuadContext {
     if (definition.kind === 'OperationDefinition') {
-      return this.getNodeQuadContextSelectionSet(definition.selectionSet, definition.name ? definition.name.value : '', convertContext);
+      return this.getNodeQuadContextSelectionSet(
+        definition.selectionSet,
+        definition.name ? definition.name.value : '',
+        convertContext,
+      );
     }
     throw new Error(`Unsupported definition: ${definition.kind}`);
   }
@@ -65,7 +77,7 @@ export class NodeHandlerDocument extends NodeHandlerAdapter<DocumentNode> {
     const blankToVariableMapping: Record<string, RDF.Variable> = {};
     const variablesRaw = new Set(operation.variables.map(x => x.value));
 
-    const uniqueVar = (label: string, variables: Set<string>): RDF.Variable => {
+    const uniqueVar = (label: string, _variables: Set<string>): RDF.Variable => {
       let counter = 0;
       let labelLoop = label;
       while (variablesRaw.has(labelLoop)) {

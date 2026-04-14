@@ -14,7 +14,7 @@ export abstract class NodeValueHandlerAdapter<T extends ValueNode> {
   protected readonly util: Util;
   protected readonly settings: IConvertSettings;
 
-  constructor(targetKind: T['kind'], util: Util, settings: IConvertSettings) {
+  public constructor(targetKind: T['kind'], util: Util, settings: IConvertSettings) {
     this.targetKind = targetKind;
     this.util = util;
     this.settings = settings;

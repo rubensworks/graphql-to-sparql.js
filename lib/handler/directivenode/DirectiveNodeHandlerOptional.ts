@@ -13,11 +13,11 @@ import {
  * A handler for optional directives.
  */
 export class DirectiveNodeHandlerOptional extends DirectiveNodeHandlerAdapter {
-  constructor(util: Util, settings: IConvertSettings) {
+  public constructor(util: Util, settings: IConvertSettings) {
     super('optional', util, settings);
   }
 
-  public handle(directiveContext: IDirectiveContext, convertContext: IConvertContext): IDirectiveNodeHandlerOutput {
+  public handle(_directiveContext: IDirectiveContext, _convertContext: IConvertContext): IDirectiveNodeHandlerOutput {
     return {
       operationOverrider: operation => this.util.operationFactory.createLeftJoin(
         this.util.operationFactory.createBgp([]),

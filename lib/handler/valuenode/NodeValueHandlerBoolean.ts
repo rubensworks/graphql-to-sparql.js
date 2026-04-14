@@ -12,12 +12,16 @@ import { NodeValueHandlerAdapter } from './NodeValueHandlerAdapter';
 export class NodeValueHandlerBoolean extends NodeValueHandlerAdapter<BooleanValueNode> {
   protected readonly datatype: RDF.NamedNode;
 
-  constructor(util: Util, settings: IConvertSettings) {
+  public constructor(util: Util, settings: IConvertSettings) {
     super('BooleanValue', util, settings);
     this.datatype = this.util.dataFactory.namedNode('http://www.w3.org/2001/XMLSchema#boolean');
   }
 
-  public handle(valueNode: BooleanValueNode, fieldName: string, convertContext: IConvertContext): IValueNodeHandlerOutput {
+  public handle(
+    valueNode: BooleanValueNode,
+    _fieldName: string,
+    _convertContext: IConvertContext,
+  ): IValueNodeHandlerOutput {
     return { terms: [ this.util.dataFactory.literal(valueNode.value ? 'true' : 'false', this.datatype) ]};
   }
 }

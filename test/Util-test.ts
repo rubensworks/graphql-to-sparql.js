@@ -232,7 +232,7 @@ describe('Util', () => {
         { kind: 'Variable', name: { kind: 'Name', value: 'myVar3' }},
         'va',
         ctx,
-      )).toThrow();
+      )).toThrow('Undefined variable: myVar3');
     });
 
     it('should error when a mandatory variable is not defined', async() => {
@@ -240,7 +240,7 @@ describe('Util', () => {
         { kind: 'Variable', name: { kind: 'Name', value: 'myVar4' }},
         'va',
         ctx,
-      )).toThrow();
+      )).toThrow('Undefined variable: myVar4');
     });
 
     it('should error when a variable has no list type while it was expected', async() => {
@@ -248,7 +248,7 @@ describe('Util', () => {
         { kind: 'Variable', name: { kind: 'Name', value: 'myVar5' }},
         'va',
         ctx,
-      )).toThrow();
+      )).toThrow('Expected a list');
     });
 
     it('should error when a variable has an incorrect defined list type', async() => {
@@ -256,7 +256,7 @@ describe('Util', () => {
         { kind: 'Variable', name: { kind: 'Name', value: 'myVar6' }},
         'va',
         ctx,
-      )).toThrow();
+      )).toThrow('Expected');
     });
 
     it('should convert an int', async() => {
@@ -495,7 +495,7 @@ describe('Util', () => {
         value: { kind: 'Variable', name: { kind: 'Name', value: 'varFalse' }},
       },
     ]};
-    const idDirective: DirectiveNode = { kind: 'Directive', name: { kind: 'Name', value: 'id' }, arguments: []};
+    const _idDirective: DirectiveNode = { kind: 'Directive', name: { kind: 'Name', value: 'id' }, arguments: []};
     const single: DirectiveNode = { kind: 'Directive', name: { kind: 'Name', value: 'single' }, arguments: []};
     const singleAll: DirectiveNode = { kind: 'Directive', name: { kind: 'Name', value: 'single' }, arguments: [
       {
@@ -627,7 +627,13 @@ describe('Util', () => {
       const p: NameNode = { kind: 'Name', value: 'p' };
       const o = DF.namedNode('o');
       const g = DF.defaultGraph();
-      expect(util.createQuadPattern(s, p, o, g, new JsonLdContextNormalized({ p: { '@reverse': true, '@id': 'ex:myP' }})))
+      expect(util.createQuadPattern(
+        s,
+        p,
+        o,
+        g,
+        new JsonLdContextNormalized({ p: { '@reverse': true, '@id': 'ex:myP' }}),
+      ))
         .toEqual(OperationFactory.createPattern(o, DF.namedNode('ex:myP'), s));
     });
 
@@ -645,7 +651,13 @@ describe('Util', () => {
       const p: NameNode = { kind: 'Name', value: 'p' };
       const o = DF.namedNode('o');
       const g = DF.namedNode('g');
-      expect(util.createQuadPattern(s, p, o, g, new JsonLdContextNormalized({ p: { '@reverse': true, '@id': 'ex:myP' }})))
+      expect(util.createQuadPattern(
+        s,
+        p,
+        o,
+        g,
+        new JsonLdContextNormalized({ p: { '@reverse': true, '@id': 'ex:myP' }}),
+      ))
         .toEqual(OperationFactory.createPattern(o, DF.namedNode('ex:myP'), s, g));
     });
   });

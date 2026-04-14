@@ -1,17 +1,19 @@
-import {IConvertContext, SingularizeState} from "../../IConvertContext";
-import {IConvertSettings} from "../../IConvertSettings";
-import {Util} from "../../Util";
+import type { IConvertContext } from '../../IConvertContext';
+import { SingularizeState } from '../../IConvertContext';
+import type { IConvertSettings } from '../../IConvertSettings';
+import type { Util } from '../../Util';
+import type {
+  IDirectiveContext,
+  IDirectiveNodeHandlerOutput,
+} from './DirectiveNodeHandlerAdapter';
 import {
   DirectiveNodeHandlerAdapter,
-  IDirectiveContext,
-  IDirectiveNodeHandlerOutput
-} from "./DirectiveNodeHandlerAdapter";
+} from './DirectiveNodeHandlerAdapter';
 
 /**
  * A handler for plural directives.
  */
 export class DirectiveNodeHandlerPlural extends DirectiveNodeHandlerAdapter {
-
   constructor(util: Util, settings: IConvertSettings) {
     super('plural', util, settings);
   }

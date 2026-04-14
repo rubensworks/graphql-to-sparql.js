@@ -1,21 +1,20 @@
-import {ListValueNode, ValueNode} from "graphql/language";
-import {VariableNode} from "graphql/language/ast";
-import {IConvertContext} from "../../IConvertContext";
-import {IConvertSettings} from "../../IConvertSettings";
-import {Util} from "../../Util";
-import {IValueNodeHandlerOutput, NodeValueHandlerAdapter} from "./NodeValueHandlerAdapter";
+import type { ListValueNode, ValueNode } from 'graphql/language';
+import type { VariableNode } from 'graphql/language/ast';
+import type { IConvertContext } from '../../IConvertContext';
+import type { IConvertSettings } from '../../IConvertSettings';
+import type { Util } from '../../Util';
+import type { IValueNodeHandlerOutput } from './NodeValueHandlerAdapter';
+import { NodeValueHandlerAdapter } from './NodeValueHandlerAdapter';
 
 /**
  * Converts GraphQL variables to terms based on the contents of the variablesDict.
  */
 export class NodeValueHandlerVariable extends NodeValueHandlerAdapter<VariableNode> {
-
   constructor(util: Util, settings: IConvertSettings) {
     super('Variable', util, settings);
   }
 
-  public handle(valueNode: VariableNode, fieldName: string,
-                convertContext: IConvertContext): IValueNodeHandlerOutput {
+  public handle(valueNode: VariableNode, fieldName: string, convertContext: IConvertContext): IValueNodeHandlerOutput {
     const id: string = valueNode.name.value;
     const value: ValueNode = convertContext.variablesDict[id];
     const meta = convertContext.variablesMetaDict[id];
@@ -26,10 +25,10 @@ export class NodeValueHandlerVariable extends NodeValueHandlerAdapter<VariableNo
         throw new Error(`Undefined variable: ${id}`);
       } else {
         const variable = this.util.dataFactory.variable!(id);
-        if (convertContext.terminalVariables.map((v) => v.value).indexOf(id) < 0) {
+        if (!convertContext.terminalVariables.map(v => v.value).includes(id)) {
           convertContext.terminalVariables.push(variable);
         }
-        return { terms: [variable] };
+        return { terms: [ variable ]};
       }
     }
 
@@ -47,7 +46,7 @@ export class NodeValueHandlerVariable extends NodeValueHandlerAdapter<VariableNo
         }
         // Check the type in the list
         if (meta.type) {
-          const listValue: ListValueNode = <ListValueNode> value;
+          const listValue: ListValueNode = value;
           for (const v of listValue.values) {
             if (v.kind !== meta.type) {
               throw new Error(`Expected ${meta.type}, but got ${v.kind} for ${id}`);
@@ -56,13 +55,12 @@ export class NodeValueHandlerVariable extends NodeValueHandlerAdapter<VariableNo
         }
       } else if (meta.type) {
         // This is allowed to be different (?)
-        /*if (value.kind !== meta.type) {
-          throw new Error(`Expected ${meta.type}, but got ${value.kind} for ${id}`);
-        }*/
+        // if (value.kind !== meta.type) {
+        // throw new Error(`Expected ${meta.type}, but got ${value.kind} for ${id}`);
+        // }
       }
     }
 
     return this.util.handleNodeValue(value, fieldName, convertContext);
   }
-
 }

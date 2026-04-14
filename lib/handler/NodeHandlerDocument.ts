@@ -1,12 +1,12 @@
-import {DocumentNode} from "graphql";
-import {DefinitionNode} from "graphql/language";
-import * as RDF from "@rdfjs/types";
-import {Algebra} from "@traqula/algebra-transformations-1-2";
-import {AlgebraFactory, algebraUtils} from "@traqula/algebra-transformations-1-2";
-import {IConvertContext} from "../IConvertContext";
-import {IConvertSettings} from "../IConvertSettings";
-import {Util} from "../Util";
-import {INodeQuadContext, NodeHandlerAdapter} from "./NodeHandlerAdapter";
+import type * as RDF from '@rdfjs/types';
+import { Algebra, algebraUtils } from '@traqula/algebra-transformations-1-2';
+import type { DocumentNode } from 'graphql';
+import type { DefinitionNode } from 'graphql/language';
+import type { IConvertContext } from '../IConvertContext';
+import type { IConvertSettings } from '../IConvertSettings';
+import type { Util } from '../Util';
+import type { INodeQuadContext } from './NodeHandlerAdapter';
+import { NodeHandlerAdapter } from './NodeHandlerAdapter';
 
 /**
  * Converts GraphQL documents to joined operations for all its definitions.
@@ -19,8 +19,7 @@ export class NodeHandlerDocument extends NodeHandlerAdapter<DocumentNode> {
   public handle(document: DocumentNode, convertContext: IConvertContext): Algebra.Operation {
     const definitionOperations = document.definitions
       .map((definition) => {
-        const subjectOutput = this.getNodeQuadContextDefinitionNode(definition,
-          {...convertContext, ignoreUnknownVariables: true});
+        const subjectOutput = this.getNodeQuadContextDefinitionNode(definition, { ...convertContext, ignoreUnknownVariables: true });
         const queryParseContext: IConvertContext = {
           ...convertContext,
           graph: subjectOutput.graph || convertContext.graph,
@@ -37,7 +36,8 @@ export class NodeHandlerDocument extends NodeHandlerAdapter<DocumentNode> {
       });
     const operation = this.util.operationFactory.createProject(
       definitionOperations.length === 1 ? definitionOperations[0] : this.util.operationFactory.createUnion(definitionOperations),
-      convertContext.terminalVariables);
+      convertContext.terminalVariables,
+    );
 
     // Convert blank nodes to variables
     return this.translateBlankNodesToVariables(operation);
@@ -49,11 +49,9 @@ export class NodeHandlerDocument extends NodeHandlerAdapter<DocumentNode> {
    * @param {IConvertContext} convertContext A convert context.
    * @return {INodeQuadContext} The subject and optional auxiliary patterns.
    */
-  public getNodeQuadContextDefinitionNode(definition: DefinitionNode, convertContext: IConvertContext)
-    : INodeQuadContext {
+  public getNodeQuadContextDefinitionNode(definition: DefinitionNode, convertContext: IConvertContext): INodeQuadContext {
     if (definition.kind === 'OperationDefinition') {
-      return this.getNodeQuadContextSelectionSet(definition.selectionSet,
-        definition.name ? definition.name.value : '', convertContext);
+      return this.getNodeQuadContextSelectionSet(definition.selectionSet, definition.name ? definition.name.value : '', convertContext);
     }
     throw new Error(`Unsupported definition: ${definition.kind}`);
   }
@@ -64,7 +62,7 @@ export class NodeHandlerDocument extends NodeHandlerAdapter<DocumentNode> {
    * @return {Operation} The transformed operation.
    */
   public translateBlankNodesToVariables(operation: Algebra.Project): Algebra.Operation {
-    const blankToVariableMapping: {[bLabel: string]: RDF.Variable} = {};
+    const blankToVariableMapping: Record<string, RDF.Variable> = {};
     const variablesRaw = new Set(operation.variables.map(x => x.value));
 
     const uniqueVar = (label: string, variables: Set<string>): RDF.Variable => {
@@ -74,39 +72,39 @@ export class NodeHandlerDocument extends NodeHandlerAdapter<DocumentNode> {
         labelLoop = `${label}${counter++}`;
       }
       return this.util.dataFactory.variable!(labelLoop);
-    }
+    };
 
     const blankToVariable = (term: RDF.Term): RDF.Term => {
       if (term.termType === 'BlankNode') {
         let variable = blankToVariableMapping[term.value];
         if (!variable) {
           variable = uniqueVar(term.value, variablesRaw);
-          variablesRaw.add(variable.value)
+          variablesRaw.add(variable.value);
           blankToVariableMapping[term.value] = variable;
         }
         return variable;
       }
       return term;
-    }
+    };
 
     return algebraUtils.mapOperation<'unsafe', typeof operation>(operation, {
       [Algebra.Types.PATH]: {
-        preVisitor: () => ({continue: false}),
+        preVisitor: () => ({ continue: false }),
         transform: (op: Algebra.Path) => this.util.operationFactory.createPath(
           blankToVariable(op.subject),
           op.predicate,
           blankToVariable(op.object),
           blankToVariable(op.graph),
-        )
+        ),
       },
       [Algebra.Types.PATTERN]: {
-        preVisitor: () => ({continue: false}),
+        preVisitor: () => ({ continue: false }),
         transform: (op: Algebra.Pattern) => this.util.operationFactory.createPattern(
-            blankToVariable(op.subject),
-            blankToVariable(op.predicate),
-            blankToVariable(op.object),
-            blankToVariable(op.graph),
-          ),
+          blankToVariable(op.subject),
+          blankToVariable(op.predicate),
+          blankToVariable(op.object),
+          blankToVariable(op.graph),
+        ),
       },
     });
   }

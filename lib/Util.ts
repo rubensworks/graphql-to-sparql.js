@@ -1,32 +1,32 @@
-import {DataFactory} from "rdf-data-factory";
-import {ArgumentNode, FieldNode, ListValueNode, NamedTypeNode, NameNode, ValueNode} from "graphql/language";
-import {ContextParser, JsonLdContextNormalized} from "jsonld-context-parser";
-import * as RDF from "@rdfjs/types";
-import type {Algebra} from "@traqula/algebra-transformations-1-2";
-import {AlgebraFactory} from "@traqula/algebra-transformations-1-2";
-import {IValueNodeHandlerOutput, NodeHandlerAdapter, NodeValueHandlerAdapter} from "./handler";
-import {IConvertContext} from "./IConvertContext";
-import {IConvertSettings} from "./IConvertSettings";
-import {
+import type * as RDF from '@rdfjs/types';
+import type { Algebra } from '@traqula/algebra-transformations-1-2';
+import { AlgebraFactory } from '@traqula/algebra-transformations-1-2';
+import type { ArgumentNode, FieldNode, ListValueNode, NamedTypeNode, NameNode, ValueNode } from 'graphql/language';
+import { ContextParser } from 'jsonld-context-parser';
+import type { JsonLdContextNormalized } from 'jsonld-context-parser';
+import { DataFactory } from 'rdf-data-factory';
+import type { IValueNodeHandlerOutput, NodeHandlerAdapter, NodeValueHandlerAdapter } from './handler';
+import type {
   DirectiveNodeHandlerAdapter,
   IDirectiveContext,
-  IDirectiveNodeHandlerOutput
-} from "./handler/directivenode/DirectiveNodeHandlerAdapter";
+  IDirectiveNodeHandlerOutput,
+} from './handler/directivenode/DirectiveNodeHandlerAdapter';
+import type { IConvertContext } from './IConvertContext';
+import type { IConvertSettings } from './IConvertSettings';
 
 /**
  * Utilities for conversion.
  */
 export class Util {
-
   public readonly dataFactory: RDF.DataFactory;
   public readonly operationFactory: AlgebraFactory;
   public readonly contextParser: ContextParser;
 
   protected readonly settings: IConvertSettings;
 
-  private readonly nodeHandlers: {[kind: string]: NodeHandlerAdapter<any>} = {};
-  private readonly nodeValueHandlers: {[kind: string]: NodeValueHandlerAdapter<any>} = {};
-  private readonly directiveNodeHandlers: {[kind: string]: DirectiveNodeHandlerAdapter} = {};
+  private readonly nodeHandlers: Record<string, NodeHandlerAdapter<any>> = {};
+  private readonly nodeValueHandlers: Record<string, NodeValueHandlerAdapter<any>> = {};
+  private readonly directiveNodeHandlers: Record<string, DirectiveNodeHandlerAdapter> = {};
 
   constructor(settings: IConvertSettings) {
     this.settings = settings;
@@ -81,8 +81,7 @@ export class Util {
    * @param {IConvertContext} convertContext A conversion context.
    * @return {IValueNodeHandlerOutput} The RDF terms and patterns.
    */
-  public handleNodeValue<T extends ValueNode>(node: T, fieldName: string,
-                                              convertContext: IConvertContext): IValueNodeHandlerOutput {
+  public handleNodeValue<T extends ValueNode>(node: T, fieldName: string, convertContext: IConvertContext): IValueNodeHandlerOutput {
     const nodeValueHandler = this.nodeValueHandlers[node.kind];
     if (!nodeValueHandler) {
       throw new Error(`Unsupported GraphQL value node '${node.kind}'`);
@@ -96,8 +95,7 @@ export class Util {
    * @param {IConvertContext} convertContext A conversion context.
    * @return {IDirectiveNodeHandlerOutput} The directive node handler output or null.
    */
-  public handleDirectiveNode(directiveContext: IDirectiveContext, convertContext: IConvertContext)
-    : IDirectiveNodeHandlerOutput | null {
+  public handleDirectiveNode(directiveContext: IDirectiveContext, convertContext: IConvertContext): IDirectiveNodeHandlerOutput | null {
     const directiveNodeHandler = this.directiveNodeHandlers[directiveContext.directive.name.value];
     if (!directiveNodeHandler) {
       return null;
@@ -130,32 +128,31 @@ export class Util {
     if (bgps.length === operations.length) {
       // Create a big BGP from all BGPs
       return this.joinOperationsAsBgp(bgps);
-    } else if (bgps.length === operations.length - 1
-      && nonBgps[0].type === 'leftjoin'
-      && nonBgps[0].input[0].type === 'bgp') {
+    } if (bgps.length === operations.length - 1 &&
+      nonBgps[0].type === 'leftjoin' &&
+      nonBgps[0].input[0].type === 'bgp') {
       // Check if we have one left-join (with a BGP on the left), and the rest are BGPs.
       // If so, merge the BGPS within the left-hand-side of the left-join.
-      const originalLeftJoin: Algebra.LeftJoin = <Algebra.LeftJoin> nonBgps[0];
+      const originalLeftJoin: Algebra.LeftJoin = nonBgps[0];
       bgps.push(originalLeftJoin.input[0]);
       return this.operationFactory.createLeftJoin(
         this.joinOperationsAsBgp(bgps),
         originalLeftJoin.input[1],
       );
-    } else if (nonBgps.length === operations.length) {
+    } if (nonBgps.length === operations.length) {
       // Create nested joins
       return this.joinOperationsAsNestedJoin(nonBgps);
-    } else {
-      // Join as much BGPs together as possible, and join with the other operations
-      return this.joinOperationsAsNestedJoin([
-        this.joinOperationsAsBgp(bgps),
-        this.joinOperationsAsNestedJoin(nonBgps),
-      ]);
     }
+    // Join as much BGPs together as possible, and join with the other operations
+    return this.joinOperationsAsNestedJoin([
+      this.joinOperationsAsBgp(bgps),
+      this.joinOperationsAsNestedJoin(nonBgps),
+    ]);
   }
 
   public joinOperationsAsBgp(operations: Algebra.Operation[]): Algebra.Operation {
     return this.operationFactory.createBgp((<Algebra.Pattern[]> []).concat.apply([], operations
-      .map((op) => (<Algebra.Bgp> op).patterns)));
+      .map(op => (<Algebra.Bgp> op).patterns)));
   }
 
   public joinOperationsAsNestedJoin(operations: Algebra.Operation[]): Algebra.Operation {
@@ -169,7 +166,7 @@ export class Util {
    * @return {string[]} A new path array.
    */
   public appendFieldToPath(path: string[], fieldLabel: string): string[] {
-    return path.concat([fieldLabel]);
+    return [ ...path, fieldLabel ];
   }
 
   /**
@@ -189,8 +186,9 @@ export class Util {
    * @return {Variable} A variable.
    */
   public nameToVariable(fieldLabel: string, convertContext: IConvertContext): RDF.Variable {
-    return this.dataFactory.variable!((convertContext.path.length
-      ? convertContext.path.join(this.settings.variableDelimiter) + this.settings.variableDelimiter : '') + fieldLabel);
+    return this.dataFactory.variable!((convertContext.path.length > 0 ?
+      convertContext.path.join(this.settings.variableDelimiter) + this.settings.variableDelimiter :
+      '') + fieldLabel);
   }
 
   /**
@@ -202,7 +200,7 @@ export class Util {
   public valueToNamedNode(value: string, context: JsonLdContextNormalized): RDF.NamedNode {
     const contextValue = context.expandTerm(value, true);
     if (this.settings.requireContext && !contextValue) {
-      throw new Error('No context entry was found for ' + value);
+      throw new Error(`No context entry was found for ${value}`);
     }
     return this.dataFactory.namedNode(contextValue || value);
   }
@@ -214,7 +212,7 @@ export class Util {
    * @param {string} name The name of an argument.
    * @return {ArgumentNode} The named argument.
    */
-  public getArgument(args: ReadonlyArray<ArgumentNode> | undefined, name: string): ArgumentNode | undefined {
+  public getArgument(args: readonly ArgumentNode[] | undefined, name: string): ArgumentNode | undefined {
     if (args) {
       for (const argument of args) {
         if (argument.name.value === name) {
@@ -236,7 +234,8 @@ export class Util {
       subject,
       this.dataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
       this.valueToNamedNode(typeCondition.name.value, convertContext.context),
-      convertContext.graph);
+      convertContext.graph,
+    );
   }
 
   /**
@@ -248,11 +247,10 @@ export class Util {
    * @param {IContext} context A context.
    * @return {Pattern} A quad pattern.
    */
-  public createQuadPattern(subject: RDF.Term, predicateName: NameNode, object: RDF.Term, graph: RDF.Term,
-                           context: JsonLdContextNormalized): Algebra.Pattern {
+  public createQuadPattern(subject: RDF.Term, predicateName: NameNode, object: RDF.Term, graph: RDF.Term, context: JsonLdContextNormalized): Algebra.Pattern {
     const predicate: RDF.NamedNode = this.valueToNamedNode(predicateName.value, context);
-    if (context && context.getContextRaw()[predicateName.value]
-      && (<any> context.getContextRaw()[predicateName.value])['@reverse']) {
+    if (context && context.getContextRaw()[predicateName.value] &&
+      (context.getContextRaw()[predicateName.value])['@reverse']) {
       return this.operationFactory.createPattern(object, predicate, subject, graph);
     }
     return this.operationFactory.createPattern(subject, predicate, object, graph);
@@ -268,17 +266,15 @@ export class Util {
    * @param {IContext} context A context.
    * @return {Path} A quad property path.
    */
-  public createQuadPath(subject: RDF.Term, predicateName: NameNode, predicateAlternatives: ListValueNode,
-                        object: RDF.Term, graph: RDF.Term,
-                        context: JsonLdContextNormalized): Algebra.Path {
+  public createQuadPath(subject: RDF.Term, predicateName: NameNode, predicateAlternatives: ListValueNode, object: RDF.Term, graph: RDF.Term, context: JsonLdContextNormalized): Algebra.Path {
     const predicateInitial: RDF.NamedNode = this.valueToNamedNode(predicateName.value, context);
     let pathSymbol: Algebra.PropertyPathSymbol = this.operationFactory.createLink(predicateInitial);
 
     // Add all fields in the list as predicate alternatives
     for (const predicateAlternative of predicateAlternatives.values) {
       if (predicateAlternative.kind !== 'EnumValue') {
-        throw new Error('Invalid value type for \'alt\' argument, must be EnumValue, but got '
-          + predicateAlternative.kind);
+        throw new Error(`Invalid value type for 'alt' argument, must be EnumValue, but got ${
+           predicateAlternative.kind}`);
       }
       pathSymbol = this.operationFactory.createAlt([
         pathSymbol,
@@ -287,11 +283,10 @@ export class Util {
     }
 
     // Reverse the path based on the initial predicate
-    if (context && context.getContextRaw()[predicateName.value]
-      && (<any> context.getContextRaw()[predicateName.value])['@reverse']) {
+    if (context && context.getContextRaw()[predicateName.value] &&
+      (context.getContextRaw()[predicateName.value])['@reverse']) {
       return this.operationFactory.createPath(object, pathSymbol, subject, graph);
     }
     return this.operationFactory.createPath(subject, pathSymbol, object, graph);
   }
-
 }

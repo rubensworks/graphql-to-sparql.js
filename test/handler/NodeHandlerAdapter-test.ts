@@ -1,16 +1,15 @@
-import {DataFactory} from "rdf-data-factory";
-import {Converter} from "../../lib/Converter";
-import {NodeHandlerAdapter} from "../../lib/handler/NodeHandlerAdapter";
-import { IConvertContext, IVariablesDictionary } from "../../lib/IConvertContext";
-import {Util} from "../../lib/Util";
-import {JsonLdContextNormalized} from "jsonld-context-parser";
+import { JsonLdContextNormalized } from 'jsonld-context-parser';
+import { DataFactory } from 'rdf-data-factory';
+import { Converter } from '../../lib/Converter';
+import { NodeHandlerAdapter } from '../../lib/handler/NodeHandlerAdapter';
+import type { IConvertContext, IVariablesDictionary } from '../../lib/IConvertContext';
+import { Util } from '../../lib/Util';
 
 const DF = new DataFactory();
 
-// tslint:disable:object-literal-sort-keys
+// Tslint:disable:object-literal-sort-keys
 
 describe('NodeHandlerAdapter', () => {
-
   let adapter: NodeHandlerAdapter<any>;
 
   beforeEach(() => {
@@ -41,12 +40,12 @@ describe('NodeHandlerAdapter', () => {
       };
     });
 
-    it('should be empty for no selection set', async () => {
-      return expect(adapter.getNodeQuadContextSelectionSet(undefined, 'field', ctx)).toEqual({});
+    it('should be empty for no selection set', async() => {
+      expect(adapter.getNodeQuadContextSelectionSet(undefined, 'field', ctx)).toEqual({});
     });
 
-    it('should be empty for unknown fields', async () => {
-      return expect(adapter.getNodeQuadContextSelectionSet({
+    it('should be empty for unknown fields', async() => {
+      expect(adapter.getNodeQuadContextSelectionSet({
         kind: 'SelectionSet',
         selections: [
           {
@@ -65,7 +64,7 @@ describe('NodeHandlerAdapter', () => {
       }, 'field', ctx)).toEqual({});
     });
 
-    it('should return a variable id for an id field', async () => {
+    it('should return a variable id for an id field', async() => {
       expect(adapter.getNodeQuadContextSelectionSet({
         kind: 'SelectionSet',
         selections: [
@@ -86,7 +85,7 @@ describe('NodeHandlerAdapter', () => {
       expect(ctx.terminalVariables).toEqual([ DF.variable('a_id') ]);
     });
 
-    it('should return a variable id for an id field with alias', async () => {
+    it('should return a variable id for an id field with alias', async() => {
       expect(adapter.getNodeQuadContextSelectionSet({
         kind: 'SelectionSet',
         selections: [
@@ -108,8 +107,8 @@ describe('NodeHandlerAdapter', () => {
       expect(ctx.terminalVariables).toEqual([ DF.variable('a_myId') ]);
     });
 
-    it('should return a variable id for an id field with non-_ args', async () => {
-      return expect(adapter.getNodeQuadContextSelectionSet({
+    it('should return a variable id for an id field with non-_ args', async() => {
+      expect(adapter.getNodeQuadContextSelectionSet({
         kind: 'SelectionSet',
         selections: [
           {
@@ -140,7 +139,7 @@ describe('NodeHandlerAdapter', () => {
       }, 'field', ctx)).toEqual({ subject: DF.variable('a_id') });
     });
 
-    it('should return a concrete id for an id field with _ arg', async () => {
+    it('should return a concrete id for an id field with _ arg', async() => {
       expect(adapter.getNodeQuadContextSelectionSet({
         kind: 'SelectionSet',
         selections: [
@@ -169,8 +168,8 @@ describe('NodeHandlerAdapter', () => {
       expect(ctx.terminalVariables).toEqual([]);
     });
 
-    it('should error on a concrete id for an id field with _ arg with list value', async () => {
-      return expect(() => adapter.getNodeQuadContextSelectionSet({
+    it('should error on a concrete id for an id field with _ arg with list value', async() => {
+      expect(() => adapter.getNodeQuadContextSelectionSet({
         kind: 'SelectionSet',
         selections: [
           {
@@ -186,9 +185,9 @@ describe('NodeHandlerAdapter', () => {
                 kind: 'Argument',
                 name: { kind: 'Name', value: '_' },
                 value: { kind: 'ListValue', values: [
-                    { kind: 'EnumValue', value: 'http://ex.org/val1' },
-                    { kind: 'EnumValue', value: 'http://ex.org/val2' },
-                ] },
+                  { kind: 'EnumValue', value: 'http://ex.org/val1' },
+                  { kind: 'EnumValue', value: 'http://ex.org/val2' },
+                ]},
               },
             ],
           },
@@ -200,7 +199,7 @@ describe('NodeHandlerAdapter', () => {
       }, 'field', ctx)).toThrow(new Error('Only single values can be set as id, but got 2 at id'));
     });
 
-    it('should return a variable graph for an graph field', async () => {
+    it('should return a variable graph for an graph field', async() => {
       expect(adapter.getNodeQuadContextSelectionSet({
         kind: 'SelectionSet',
         selections: [
@@ -221,7 +220,7 @@ describe('NodeHandlerAdapter', () => {
       expect(ctx.terminalVariables).toEqual([ DF.variable('a_graph') ]);
     });
 
-    it('should return a variable id for an graph field with alias', async () => {
+    it('should return a variable id for an graph field with alias', async() => {
       expect(adapter.getNodeQuadContextSelectionSet({
         kind: 'SelectionSet',
         selections: [
@@ -243,8 +242,8 @@ describe('NodeHandlerAdapter', () => {
       expect(ctx.terminalVariables).toEqual([ DF.variable('a_myGraph') ]);
     });
 
-    it('should return a variable graph for a graph field with non-_ args', async () => {
-      return expect(adapter.getNodeQuadContextSelectionSet({
+    it('should return a variable graph for a graph field with non-_ args', async() => {
+      expect(adapter.getNodeQuadContextSelectionSet({
         kind: 'SelectionSet',
         selections: [
           {
@@ -275,7 +274,7 @@ describe('NodeHandlerAdapter', () => {
       }, 'field', ctx)).toEqual({ graph: DF.variable('a_graph') });
     });
 
-    it('should return a concrete graph for a graph field with _ arg', async () => {
+    it('should return a concrete graph for a graph field with _ arg', async() => {
       expect(adapter.getNodeQuadContextSelectionSet({
         kind: 'SelectionSet',
         selections: [
@@ -304,8 +303,8 @@ describe('NodeHandlerAdapter', () => {
       expect(ctx.terminalVariables).toEqual([]);
     });
 
-    it('should error on a concrete id for an graph field with _ arg with list value', async () => {
-      return expect(() => adapter.getNodeQuadContextSelectionSet({
+    it('should error on a concrete id for an graph field with _ arg with list value', async() => {
+      expect(() => adapter.getNodeQuadContextSelectionSet({
         kind: 'SelectionSet',
         selections: [
           {
@@ -321,9 +320,9 @@ describe('NodeHandlerAdapter', () => {
                 kind: 'Argument',
                 name: { kind: 'Name', value: '_' },
                 value: { kind: 'ListValue', values: [
-                    { kind: 'EnumValue', value: 'http://ex.org/val1' },
-                    { kind: 'EnumValue', value: 'http://ex.org/val2' },
-                ] },
+                  { kind: 'EnumValue', value: 'http://ex.org/val1' },
+                  { kind: 'EnumValue', value: 'http://ex.org/val2' },
+                ]},
               },
             ],
           },

@@ -1,18 +1,18 @@
-import {DataFactory} from "rdf-data-factory";
-import {AlgebraFactory} from "@traqula/algebra-transformations-1-2";
-import {Converter} from "../../lib/Converter";
-import {NodeHandlerSelectionField} from "../../lib/handler/NodeHandlerSelectionField";
-import {IConvertContext, IVariablesDictionary, SingularizeState} from "../../lib/IConvertContext";
-import {Util} from "../../lib/Util";
-import {JsonLdContextNormalized} from "jsonld-context-parser";
+import { AlgebraFactory } from '@traqula/algebra-transformations-1-2';
+import { JsonLdContextNormalized } from 'jsonld-context-parser';
+import { DataFactory } from 'rdf-data-factory';
+import { Converter } from '../../lib/Converter';
+import { NodeHandlerSelectionField } from '../../lib/handler/NodeHandlerSelectionField';
+import type { IConvertContext, IVariablesDictionary } from '../../lib/IConvertContext';
+import { SingularizeState } from '../../lib/IConvertContext';
+import { Util } from '../../lib/Util';
 
-// tslint:disable:object-literal-sort-keys
+// Tslint:disable:object-literal-sort-keys
 
 const DF = new DataFactory();
 const OperationFactory = new AlgebraFactory(DF);
 
 describe('NodeHandlerSelectionField', () => {
-
   let handler: NodeHandlerSelectionField;
 
   beforeEach(() => {
@@ -27,7 +27,7 @@ describe('NodeHandlerSelectionField', () => {
   });
 
   describe('#handle', () => {
-    it('should convert a field selection node', async () => {
+    it('should convert a field selection node', async() => {
       const subject = DF.namedNode('theSubject');
       const ctx: IConvertContext = {
         context: new JsonLdContextNormalized({ theField: 'http://example.org/theField' }),
@@ -41,7 +41,7 @@ describe('NodeHandlerSelectionField', () => {
         variablesDict: {},
         variablesMetaDict: {},
       };
-      return expect(handler.handle({ kind: 'Field', name: { kind: 'Name', value: 'theField' } }, ctx))
+      expect(handler.handle({ kind: 'Field', name: { kind: 'Name', value: 'theField' }}, ctx))
         .toEqual(OperationFactory.createBgp([
           OperationFactory.createPattern(
             subject,
@@ -51,7 +51,7 @@ describe('NodeHandlerSelectionField', () => {
         ]));
     });
 
-    it('should convert a field selection node with a selection set', async () => {
+    it('should convert a field selection node with a selection set', async() => {
       const subject = DF.namedNode('theSubject');
       const ctx: IConvertContext = {
         context: new JsonLdContextNormalized({
@@ -69,14 +69,14 @@ describe('NodeHandlerSelectionField', () => {
         variablesDict: {},
         variablesMetaDict: {},
       };
-      return expect(handler.handle({
+      expect(handler.handle({
         kind: 'Field',
         name: { kind: 'Name', value: 'theField' },
         selectionSet: {
           kind: 'SelectionSet',
           selections: [
-            { kind: 'Field', name: { kind: 'Name', value: 'anotherField' } },
-            { kind: 'Field', name: { kind: 'Name', value: 'andAnotherField' } },
+            { kind: 'Field', name: { kind: 'Name', value: 'anotherField' }},
+            { kind: 'Field', name: { kind: 'Name', value: 'andAnotherField' }},
           ],
         },
       }, ctx)).toEqual(OperationFactory.createBgp([
@@ -98,7 +98,7 @@ describe('NodeHandlerSelectionField', () => {
       ]));
     });
 
-    it('should convert a field selection node with arguments', async () => {
+    it('should convert a field selection node with arguments', async() => {
       const subject = DF.namedNode('theSubject');
       const ctx: IConvertContext = {
         context: new JsonLdContextNormalized({
@@ -116,14 +116,12 @@ describe('NodeHandlerSelectionField', () => {
         variablesDict: {},
         variablesMetaDict: {},
       };
-      return expect(handler.handle({
+      expect(handler.handle({
         kind: 'Field',
         name: { kind: 'Name', value: 'theField' },
         arguments: [
-          { kind: 'Argument', name: { kind: 'Name', value: 'anotherField' },
-            value: { kind: 'StringValue', value: 'abc' } },
-          { kind: 'Argument', name: { kind: 'Name', value: 'andAnotherField' },
-            value: { kind: 'StringValue', value: 'def' } },
+          { kind: 'Argument', name: { kind: 'Name', value: 'anotherField' }, value: { kind: 'StringValue', value: 'abc' }},
+          { kind: 'Argument', name: { kind: 'Name', value: 'andAnotherField' }, value: { kind: 'StringValue', value: 'def' }},
         ],
       }, ctx)).toEqual(OperationFactory.createBgp([
         OperationFactory.createPattern(
@@ -144,7 +142,7 @@ describe('NodeHandlerSelectionField', () => {
       ]));
     });
 
-    it('should terminate a field selection node without selection set', async () => {
+    it('should terminate a field selection node without selection set', async() => {
       const subject = DF.namedNode('theSubject');
       const ctx: IConvertContext = {
         context: new JsonLdContextNormalized({ theField: 'http://example.org/theField' }),
@@ -158,13 +156,13 @@ describe('NodeHandlerSelectionField', () => {
         variablesDict: {},
         variablesMetaDict: {},
       };
-      handler.handle({ kind: 'Field', name: { kind: 'Name', value: 'theField' } }, ctx);
-      return expect(ctx.terminalVariables).toEqual([
+      handler.handle({ kind: 'Field', name: { kind: 'Name', value: 'theField' }}, ctx);
+      expect(ctx.terminalVariables).toEqual([
         DF.variable('a_theField'),
       ]);
     });
 
-    it('should terminate a field selection node with an empty selection set', async () => {
+    it('should terminate a field selection node with an empty selection set', async() => {
       const subject = DF.namedNode('theSubject');
       const ctx: IConvertContext = {
         context: new JsonLdContextNormalized({ theField: 'http://example.org/theField' }),
@@ -181,14 +179,14 @@ describe('NodeHandlerSelectionField', () => {
       handler.handle({
         kind: 'Field',
         name: { kind: 'Name', value: 'theField' },
-        selectionSet: { kind: 'SelectionSet', selections: [] },
+        selectionSet: { kind: 'SelectionSet', selections: []},
       }, ctx);
-      return expect(ctx.terminalVariables).toEqual([
+      expect(ctx.terminalVariables).toEqual([
         DF.variable('a_theField'),
       ]);
     });
 
-    it('should not terminate a field selection node with selection set', async () => {
+    it('should not terminate a field selection node with selection set', async() => {
       const subject = DF.namedNode('theSubject');
       const ctx: IConvertContext = {
         context: new JsonLdContextNormalized({ theField: 'http://example.org/theField' }),
@@ -208,16 +206,16 @@ describe('NodeHandlerSelectionField', () => {
         selectionSet: {
           kind: 'SelectionSet',
           selections: [
-            { kind: 'Field', name: { kind: 'Name', value: 'anotherField' } },
+            { kind: 'Field', name: { kind: 'Name', value: 'anotherField' }},
           ],
         },
       }, ctx);
-      return expect(ctx.terminalVariables).toEqual([
+      expect(ctx.terminalVariables).toEqual([
         DF.variable('a_theField_anotherField'),
       ]);
     });
 
-    it('should convert a field selection node with an alias', async () => {
+    it('should convert a field selection node with an alias', async() => {
       const subject = DF.namedNode('theSubject');
       const ctx: IConvertContext = {
         context: new JsonLdContextNormalized({
@@ -233,7 +231,7 @@ describe('NodeHandlerSelectionField', () => {
         variablesDict: {},
         variablesMetaDict: {},
       };
-      return expect(handler.handle({
+      expect(handler.handle({
         alias: { kind: 'Name', value: 'theAliasField' },
         kind: 'Field',
         name: { kind: 'Name', value: 'theField' },
@@ -246,7 +244,7 @@ describe('NodeHandlerSelectionField', () => {
       ]));
     });
 
-    it('should convert a field selection node with a directive', async () => {
+    it('should convert a field selection node with a directive', async() => {
       const subject = DF.namedNode('theSubject');
       const ctx: IConvertContext = {
         context: new JsonLdContextNormalized({
@@ -265,7 +263,7 @@ describe('NodeHandlerSelectionField', () => {
         },
         variablesMetaDict: {},
       };
-      return expect(handler.handle({
+      expect(handler.handle({
         alias: { kind: 'Name', value: 'theAliasField' },
         kind: 'Field',
         name: { kind: 'Name', value: 'theField' },
@@ -274,9 +272,9 @@ describe('NodeHandlerSelectionField', () => {
             {
               kind: 'Argument',
               name: { kind: 'Name', value: 'if' },
-              value: { kind: 'Variable', name: { kind: 'Name', value: 'varTrue' } },
+              value: { kind: 'Variable', name: { kind: 'Name', value: 'varTrue' }},
             },
-          ] },
+          ]},
         ],
       }, ctx)).toEqual(OperationFactory.createBgp([
         OperationFactory.createPattern(
@@ -287,7 +285,7 @@ describe('NodeHandlerSelectionField', () => {
       ]));
     });
 
-    it('should convert the __typename meta field', async () => {
+    it('should convert the __typename meta field', async() => {
       const subject = DF.namedNode('theSubject');
       const ctx: IConvertContext = {
         context: new JsonLdContextNormalized({
@@ -304,7 +302,7 @@ describe('NodeHandlerSelectionField', () => {
         variablesDict: {},
         variablesMetaDict: {},
       };
-      return expect(handler.handle({
+      expect(handler.handle({
         kind: 'Field',
         name: { kind: 'Name', value: '__typename' },
       }, ctx)).toEqual(
@@ -314,10 +312,11 @@ describe('NodeHandlerSelectionField', () => {
             DF.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
             DF.variable('a___typename'),
           ),
-        ]));
+        ]),
+      );
     });
 
-    it('should convert a field with one alt argument', async () => {
+    it('should convert a field with one alt argument', async() => {
       const subject = DF.namedNode('theSubject');
       const ctx: IConvertContext = {
         context: new JsonLdContextNormalized({
@@ -334,12 +333,11 @@ describe('NodeHandlerSelectionField', () => {
         variablesDict: {},
         variablesMetaDict: {},
       };
-      return expect(handler.handle({
+      expect(handler.handle({
         kind: 'Field',
         name: { kind: 'Name', value: 'field1' },
         arguments: [
-          { kind: 'Argument', name: { kind: 'Name', value: 'alt' },
-            value: { kind: 'EnumValue', value: 'field2' } },
+          { kind: 'Argument', name: { kind: 'Name', value: 'alt' }, value: { kind: 'EnumValue', value: 'field2' }},
         ],
       }, ctx)).toEqual(
         OperationFactory.createPath(
@@ -349,10 +347,11 @@ describe('NodeHandlerSelectionField', () => {
             OperationFactory.createLink(DF.namedNode('http://example.org/field2')),
           ]),
           DF.variable('a_field1'),
-        ));
+        ),
+      );
     });
 
-    it('should convert a field with multiple alt arguments', async () => {
+    it('should convert a field with multiple alt arguments', async() => {
       const subject = DF.namedNode('theSubject');
       const ctx: IConvertContext = {
         context: new JsonLdContextNormalized({
@@ -370,15 +369,14 @@ describe('NodeHandlerSelectionField', () => {
         variablesDict: {},
         variablesMetaDict: {},
       };
-      return expect(handler.handle({
+      expect(handler.handle({
         kind: 'Field',
         name: { kind: 'Name', value: 'field1' },
         arguments: [
-          { kind: 'Argument', name: { kind: 'Name', value: 'alt' },
-            value: { kind: 'ListValue', values: [
-                { kind: 'EnumValue', value: 'field2' },
-                { kind: 'EnumValue', value: 'field3' },
-            ] } },
+          { kind: 'Argument', name: { kind: 'Name', value: 'alt' }, value: { kind: 'ListValue', values: [
+            { kind: 'EnumValue', value: 'field2' },
+            { kind: 'EnumValue', value: 'field3' },
+          ]}},
         ],
       }, ctx)).toEqual(
         OperationFactory.createPath(
@@ -391,10 +389,11 @@ describe('NodeHandlerSelectionField', () => {
             OperationFactory.createLink(DF.namedNode('http://example.org/field3')),
           ]),
           DF.variable('a_field1'),
-        ));
+        ),
+      );
     });
 
-    it('should error on an alt argument of invalid kind', async () => {
+    it('should error on an alt argument of invalid kind', async() => {
       const subject = DF.namedNode('theSubject');
       const ctx: IConvertContext = {
         context: new JsonLdContextNormalized({
@@ -411,15 +410,13 @@ describe('NodeHandlerSelectionField', () => {
         variablesDict: {},
         variablesMetaDict: {},
       };
-      return expect(() => handler.handle({
+      expect(() => handler.handle({
         kind: 'Field',
         name: { kind: 'Name', value: 'field1' },
         arguments: [
-          { kind: 'Argument', name: { kind: 'Name', value: 'alt' },
-            value: { kind: 'StringValue', value: 'field2' } },
+          { kind: 'Argument', name: { kind: 'Name', value: 'alt' }, value: { kind: 'StringValue', value: 'field2' }},
         ],
       }, ctx)).toThrow(new Error('Invalid value type for \'alt\' argument, must be EnumValue, but got StringValue'));
     });
   });
-
 });

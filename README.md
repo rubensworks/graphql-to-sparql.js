@@ -57,8 +57,8 @@ GraphQL trees are converted to SPARQL graphs by chaining triple patterns.
 Context:
 ```json
 {
-    "me": "http://example.org/me",
-    "name": "http://example.org/name"
+  "me": "http://example.org/me",
+  "name": "http://example.org/name"
 }
 ```
 
@@ -86,9 +86,9 @@ Nodes can be nested to any depth, and just produce more triple patterns.
 Context:
 ```json
 {
-    "hero": "http://example.org/hero",
-    "name": "http://example.org/name",
-    "friends": "http://example.org/friends"
+  "hero": "http://example.org/hero",
+  "name": "http://example.org/name",
+  "friends": "http://example.org/friends"
 }
 ```
 
@@ -123,10 +123,10 @@ which are converted to triple objects in SPARQL.
 Context:
 ```json
 {
-    "human": "http://example.org/human",
-    "id": "http://example.org/id",
-    "name": "http://example.org/name",
-    "height": "http://example.org/height"
+  "human": "http://example.org/human",
+  "id": "http://example.org/id",
+  "name": "http://example.org/name",
+  "height": "http://example.org/height"
 }
 ```
 
@@ -158,11 +158,11 @@ For these situations, _aliases_ can be used to make your rename variables.
 Context:
 ```json
 {
-    "hero": "http://example.org/hero",
-    "name": "http://example.org/name",
-    "episode": "http://example.org/episode",
-    "EMPIRE": "http://example.org/types/Empire",
-    "JEDI": "http://example.org/types/Jedi"
+  "hero": "http://example.org/hero",
+  "name": "http://example.org/name",
+  "episode": "http://example.org/episode",
+  "EMPIRE": "http://example.org/types/Empire",
+  "JEDI": "http://example.org/types/Jedi"
 }
 ```
 
@@ -190,7 +190,6 @@ SELECT ?empireHero_name ?jediHero_name WHERE {
 }
 ```
 
-
 ### Fragments
 
 GraphQL fragments can be used to abstract certain parts of your query tree to reuse them in different places.
@@ -199,13 +198,13 @@ GraphQL always applies fragments on certain _types_, which are translated to RDF
 Context:
 ```json
 {
-    "hero": "http://example.org/hero",
-    "name": "http://example.org/name",
-    "appearsIn": "http://example.org/appearsIn",
-    "friends": "http://example.org/friends",
-    "episode": "http://example.org/episode",
-    "EMPIRE": "http://example.org/types/Empire",
-    "JEDI": "http://example.org/types/Jedi"
+  "hero": "http://example.org/hero",
+  "name": "http://example.org/name",
+  "appearsIn": "http://example.org/appearsIn",
+  "friends": "http://example.org/friends",
+  "episode": "http://example.org/episode",
+  "EMPIRE": "http://example.org/types/Empire",
+  "JEDI": "http://example.org/types/Jedi"
 }
 ```
 
@@ -263,11 +262,11 @@ so that the source query does not have to be changed for every single case.
 Context:
 ```json
 {
-    "hero": "http://example.org/hero",
-    "name": "http://example.org/name",
-    "friends": "http://example.org/friends",
-    "episode": "http://example.org/episode",
-    "JEDI": "http://example.org/types/Jedi"
+  "hero": "http://example.org/hero",
+  "name": "http://example.org/name",
+  "friends": "http://example.org/friends",
+  "episode": "http://example.org/episode",
+  "JEDI": "http://example.org/types/Jedi"
 }
 ```
 
@@ -304,11 +303,11 @@ such as `@include(if: Boolean)` and `@skip(if: Boolean)`.
 Context:
 ```json
 {
-    "hero": "http://example.org/hero",
-    "name": "http://example.org/name",
-    "friends": "http://example.org/friends",
-    "episode": "http://example.org/episode",
-    "JEDI": "http://example.org/types/Jedi"
+  "hero": "http://example.org/hero",
+  "name": "http://example.org/name",
+  "friends": "http://example.org/friends",
+  "episode": "http://example.org/episode",
+  "JEDI": "http://example.org/types/Jedi"
 }
 ```
 
@@ -342,12 +341,12 @@ Similar to regular fragments, inline fragments can be used to scope a block to a
 Context:
 ```json
 {
-    "hero": "http://example.org/hero",
-    "name": "http://example.org/name",
-    "primaryFunction": "http://example.org/primaryFunction",
-    "height": "http://example.org/height",
-    "Droid": "http://example.org/types/Droid",
-    "Human": "http://example.org/types/Human"
+  "hero": "http://example.org/hero",
+  "name": "http://example.org/name",
+  "primaryFunction": "http://example.org/primaryFunction",
+  "height": "http://example.org/height",
+  "Droid": "http://example.org/types/Droid",
+  "Human": "http://example.org/types/Human"
 }
 ```
 
@@ -389,11 +388,11 @@ Some meta fields, such as `__typename` can be used to bind to the type of a node
 Context:
 ```json
 {
-    "search": "http://example.org/search",
-    "text": "http://example.org/text",
-    "name": "http://example.org/name",
-    "Droid": "http://example.org/types/Droid",
-    "Human": "http://example.org/types/Human"
+  "search": "http://example.org/search",
+  "text": "http://example.org/text",
+  "name": "http://example.org/name",
+  "Droid": "http://example.org/types/Droid",
+  "Human": "http://example.org/types/Human"
 }
 ```
 
@@ -444,9 +443,9 @@ Furthermore, the magical `totalCount` field will bind to the total number of mat
 Context:
 ```json
 {
-    "hero": "http://example.org/hero",
-    "name": "http://example.org/name",
-    "friends": "http://example.org/friends"
+  "hero": "http://example.org/hero",
+  "name": "http://example.org/name",
+  "friends": "http://example.org/friends"
 }
 ```
 
@@ -505,10 +504,10 @@ Using `id` fields, the id (or _subject_) of entities can be queried or defined.
 Context:
 ```json
 {
-    "hero": "http://example.org/hero",
-    "HAN_SOLO": "http://example.org/HanSolo",
-    "name": "http://example.org/name",
-    "friend": "http://example.org/friend"
+  "hero": "http://example.org/hero",
+  "HAN_SOLO": "http://example.org/HanSolo",
+  "name": "http://example.org/name",
+  "friend": "http://example.org/friend"
 }
 ```
 
@@ -580,10 +579,10 @@ instead of only the _default graph_.
 Context:
 ```json
 {
-    "hero": "http://example.org/hero",
-    "EMPIRE": "http://example.org/EMPIRE",
-    "name": "http://example.org/name",
-    "friend": "http://example.org/friend"
+  "hero": "http://example.org/hero",
+  "EMPIRE": "http://example.org/EMPIRE",
+  "name": "http://example.org/name",
+  "friend": "http://example.org/friend"
 }
 ```
 
@@ -687,11 +686,10 @@ In those cases, you may want to mark a field as _optional_, using the `@optional
 Context:
 ```json
 {
-    "hero": "http://example.org/hero",
-    "name": "http://example.org/name",
-    "friend": "http://example.org/friend"
+  "hero": "http://example.org/hero",
+  "name": "http://example.org/name",
+  "friend": "http://example.org/friend"
 }
-
 ```
 
 GraphQL:
@@ -723,9 +721,9 @@ you can use the `@reverse` context option for a field.
 Context:
 ```json
 {
-    "hero": "http://example.org/hero",
-    "name": "http://example.org/name",
-    "friend": { "@reverse": "http://example.org/friend" }
+  "hero": "http://example.org/hero",
+  "name": "http://example.org/name",
+  "friend": { "@reverse": "http://example.org/friend" }
 }
 ```
 
@@ -757,9 +755,9 @@ then you can define all of them via the `alt` argument.
 Context:
 ```json
 {
-    "hero": "http://example.org/hero",
-    "name": "http://example.org/name",
-    "firstName": "http://example.org/firstName"
+  "hero": "http://example.org/hero",
+  "name": "http://example.org/name",
+  "firstName": "http://example.org/firstName"
 }
 ```
 
@@ -888,7 +886,6 @@ Example output:
   ]
 }
 ```
-
 
 ## License
 This software is written by [Ruben Taelman](http://rubensworks.net/).

@@ -1,6 +1,7 @@
-import {DefinitionNode, DocumentNode, FragmentDefinitionNode, parse} from "graphql/language";
-import {JsonLdContextNormalized, JsonLdContext} from "jsonld-context-parser";
-import type {Algebra} from "@traqula/algebra-transformations-1-2";
+import type { Algebra } from '@traqula/algebra-transformations-1-2';
+import type { DefinitionNode, DocumentNode, FragmentDefinitionNode } from 'graphql/language';
+import { parse } from 'graphql/language';
+import type { JsonLdContextNormalized, JsonLdContext } from 'jsonld-context-parser';
 import {
   NodeHandlerDefinitionFragment,
   NodeHandlerDefinitionOperation,
@@ -17,24 +18,24 @@ import {
   NodeValueHandlerObject,
   NodeValueHandlerString,
   NodeValueHandlerVariable,
-} from "./handler";
+} from './handler';
 import {
   DirectiveNodeHandlerInclude,
   DirectiveNodeHandlerOptional,
   DirectiveNodeHandlerPlural,
   DirectiveNodeHandlerSingle,
   DirectiveNodeHandlerSkip,
-} from "./handler/directivenode";
-import {IConvertContext, SingularizeState} from "./IConvertContext";
-import {IConvertOptions} from "./IConvertOptions";
-import {IConvertSettings} from "./IConvertSettings";
-import {Util} from "./Util";
+} from './handler/directivenode';
+import type { IConvertContext } from './IConvertContext';
+import { SingularizeState } from './IConvertContext';
+import type { IConvertOptions } from './IConvertOptions';
+import type { IConvertSettings } from './IConvertSettings';
+import { Util } from './Util';
 
 /**
  * Translate GraphQL queries into SPARQL algebra.
  */
 export class Converter {
-
   private readonly util: Util;
 
   constructor(settings?: IConvertSettings) {
@@ -83,10 +84,8 @@ export class Converter {
    * @param {IConvertOptions} options An options object.
    * @return {Promise<Operation>} A promise resolving to an operation.
    */
-  public async graphqlToSparqlAlgebra(graphqlQuery: string | DocumentNode, context: JsonLdContext,
-                                      options?: IConvertOptions): Promise<Algebra.Operation> {
-    return this.graphqlToSparqlAlgebraRawContext(graphqlQuery,
-      await this.util.contextParser.parse(context), options);
+  public async graphqlToSparqlAlgebra(graphqlQuery: string | DocumentNode, context: JsonLdContext, options?: IConvertOptions): Promise<Algebra.Operation> {
+    return this.graphqlToSparqlAlgebraRawContext(graphqlQuery, await this.util.contextParser.parse(context), options);
   }
 
   /**
@@ -96,8 +95,7 @@ export class Converter {
    * @param {IConvertOptions} options An options object.
    * @return {Operation} An operation.
    */
-  public graphqlToSparqlAlgebraRawContext(graphqlQuery: string | DocumentNode, context: JsonLdContextNormalized,
-                                          options?: IConvertOptions): Algebra.Operation {
+  public graphqlToSparqlAlgebraRawContext(graphqlQuery: string | DocumentNode, context: JsonLdContextNormalized, options?: IConvertOptions): Algebra.Operation {
     options = options || {};
     const document: DocumentNode = typeof graphqlQuery === 'string' ? parse(graphqlQuery) : graphqlQuery;
     const fragmentDefinitions = this.indexFragments(document);
@@ -125,8 +123,8 @@ export class Converter {
    * @param {DocumentNode} document A document node.
    * @return {{[p: string]: FragmentDefinitionNode}} An index of fragment definition nodes.
    */
-  public indexFragments(document: DocumentNode): {[name: string]: FragmentDefinitionNode} {
-    const fragmentDefinitions: {[name: string]: FragmentDefinitionNode} = {};
+  public indexFragments(document: DocumentNode): Record<string, FragmentDefinitionNode> {
+    const fragmentDefinitions: Record<string, FragmentDefinitionNode> = {};
     const newDefinitions: DefinitionNode[] = [];
     for (const definition of document.definitions) {
       if (definition.kind === 'FragmentDefinition') {
@@ -144,5 +142,4 @@ export class Converter {
     Converter.registerNodeValueHandlers(this.util, settings);
     Converter.registerDirectiveNodeHandlers(this.util, settings);
   }
-
 }

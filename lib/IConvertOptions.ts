@@ -1,4 +1,4 @@
-import {ISingularizeVariables, IVariablesDictionary} from "./IConvertContext";
+import type { ISingularizeVariables, IVariablesDictionary } from './IConvertContext';
 
 /**
  * Options for initiating a conversion.

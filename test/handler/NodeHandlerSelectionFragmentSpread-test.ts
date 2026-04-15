@@ -1,18 +1,18 @@
-import {DataFactory} from "rdf-data-factory";
-import {AlgebraFactory} from "@traqula/algebra-transformations-1-2";
-import {Converter} from "../../lib/Converter";
-import {NodeHandlerSelectionFragmentSpread} from "../../lib/handler/NodeHandlerSelectionFragmentSpread";
-import {IConvertContext, SingularizeState} from "../../lib/IConvertContext";
-import {Util} from "../../lib/Util";
-import {JsonLdContextNormalized} from "jsonld-context-parser";
+import { AlgebraFactory } from '@traqula/algebra-transformations-1-2';
+import { JsonLdContextNormalized } from 'jsonld-context-parser';
+import { DataFactory } from 'rdf-data-factory';
+import { Converter } from '../../lib/Converter';
+import { NodeHandlerSelectionFragmentSpread } from '../../lib/handler/NodeHandlerSelectionFragmentSpread';
+import type { IConvertContext } from '../../lib/IConvertContext';
+import { SingularizeState } from '../../lib/IConvertContext';
+import { Util } from '../../lib/Util';
 
-// tslint:disable:object-literal-sort-keys
+// Tslint:disable:object-literal-sort-keys
 
 const DF = new DataFactory();
 const OperationFactory = new AlgebraFactory(DF);
 
 describe('NodeHandlerSelectionFragmentSpread', () => {
-
   let handler: NodeHandlerSelectionFragmentSpread;
 
   beforeEach(() => {
@@ -27,7 +27,7 @@ describe('NodeHandlerSelectionFragmentSpread', () => {
   });
 
   describe('#handle', () => {
-    it('should convert a fragment spread selection node', async () => {
+    it('should convert a fragment spread selection node', async() => {
       const subject = DF.namedNode('theSubject');
       const ctx: IConvertContext = {
         context: new JsonLdContextNormalized({
@@ -51,7 +51,7 @@ describe('NodeHandlerSelectionFragmentSpread', () => {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'theField' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'theField' }},
               ],
             },
           },
@@ -59,7 +59,7 @@ describe('NodeHandlerSelectionFragmentSpread', () => {
         variablesDict: {},
         variablesMetaDict: {},
       };
-      return expect(handler.handle({
+      expect(handler.handle({
         kind: 'FragmentSpread',
         name: { kind: 'Name', value: 'fragment1' },
       }, ctx)).toEqual(OperationFactory.createLeftJoin(
@@ -79,5 +79,4 @@ describe('NodeHandlerSelectionFragmentSpread', () => {
       ));
     });
   });
-
 });

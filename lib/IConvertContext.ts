@@ -1,6 +1,6 @@
-import {FragmentDefinitionNode, ValueNode} from "graphql/language";
-import {JsonLdContextNormalized} from "jsonld-context-parser";
-import * as RDF from "@rdfjs/types";
+import type * as RDF from '@rdfjs/types';
+import type { FragmentDefinitionNode, ValueNode } from 'graphql/language';
+import type { JsonLdContextNormalized } from 'jsonld-context-parser';
 
 /**
  * A context object that is passed through conversion steps.
@@ -31,7 +31,7 @@ export interface IConvertContext {
   /**
    * All available fragment definitions.
    */
-  fragmentDefinitions: {[name: string]: FragmentDefinitionNode};
+  fragmentDefinitions: Record<string, FragmentDefinitionNode>;
   /**
    * A variable dictionary in case there are dynamic arguments in the query.
    */
@@ -57,24 +57,18 @@ export interface IConvertContext {
 /**
  * A variable dictionary in case there are dynamic arguments in the query.
  */
-export interface IVariablesDictionary {
-  [id: string]: ValueNode;
-}
+export type IVariablesDictionary = Record<string, ValueNode>;
 
 /**
  * A dictionary of variable metadata.
  */
-export interface IVariablesMetaDictionary {
-  [id: string]: { mandatory: boolean, list: boolean, type: string };
-}
+export type IVariablesMetaDictionary = Record<string, { mandatory: boolean; list: boolean; type: string }>;
 
 /**
  * A mapping from (nested) field names to a boolean indicating whether or not this field should be singularized.
  * If the field is not present, singularization for this field is false.
  */
-export interface ISingularizeVariables {
-  [id: string]: boolean;
-}
+export type ISingularizeVariables = Record<string, boolean>;
 
 /**
  * A singularization state for variable values.

@@ -1,22 +1,21 @@
-import {DirectiveNode} from "graphql";
-import * as RDF from "@rdfjs/types";
-import type {Algebra} from "@traqula/algebra-transformations-1-2";
-import {IConvertContext} from "../../IConvertContext";
-import {IConvertSettings} from "../../IConvertSettings";
-import {Util} from "../../Util";
-import {ArgumentNode} from "graphql/language";
+import type * as RDF from '@rdfjs/types';
+import type { Algebra } from '@traqula/algebra-transformations-1-2';
+import type { DirectiveNode } from 'graphql';
+import type { ArgumentNode } from 'graphql/language';
+import type { IConvertContext } from '../../IConvertContext';
+import type { IConvertSettings } from '../../IConvertSettings';
+import type { Util } from '../../Util';
 
 /**
  * An abstract handler for GraphQL directives.
  */
 export abstract class DirectiveNodeHandlerAdapter {
-
   public readonly targetKind: string;
 
   protected readonly util: Util;
   protected readonly settings: IConvertSettings;
 
-  constructor(targetKind: string, util: Util, settings: IConvertSettings) {
+  public constructor(targetKind: string, util: Util, settings: IConvertSettings) {
     this.targetKind = targetKind;
     this.util = util;
     this.settings = settings;
@@ -28,8 +27,10 @@ export abstract class DirectiveNodeHandlerAdapter {
    * @param {IConvertContext} convertContext A conversion context.
    * @return {IValueNodeHandlerOutput} The RDF terms and patterns.
    */
-  public abstract handle(directiveContext: IDirectiveContext, convertContext: IConvertContext)
-    : IDirectiveNodeHandlerOutput;
+  public abstract handle(
+    directiveContext: IDirectiveContext,
+    convertContext: IConvertContext,
+  ): IDirectiveNodeHandlerOutput;
 
   /**
    * Get the value of the 'if' argument in a directive.
@@ -54,9 +55,9 @@ export abstract class DirectiveNodeHandlerAdapter {
    * @param {DirectiveNode} directive A directive.
    * @return {boolean} If `scope: all` is present.
    */
-  public isDirectiveScopeAll(directive: DirectiveNode) {
+  public isDirectiveScopeAll(directive: DirectiveNode): boolean {
     const scopeArg: ArgumentNode | undefined = this.util.getArgument(directive.arguments, 'scope');
-    return scopeArg && scopeArg.value.kind === 'EnumValue' && scopeArg.value.value === 'all';
+    return Boolean(scopeArg && scopeArg.value.kind === 'EnumValue' && scopeArg.value.value === 'all');
   }
 }
 

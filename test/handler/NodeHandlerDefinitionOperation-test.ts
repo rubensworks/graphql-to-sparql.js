@@ -1,18 +1,18 @@
-import {DataFactory} from "rdf-data-factory";
-import {AlgebraFactory} from "@traqula/algebra-transformations-1-2";
-import {Converter} from "../../lib/Converter";
-import {NodeHandlerDefinitionOperation} from "../../lib/handler/NodeHandlerDefinitionOperation";
-import { IConvertContext, IVariablesDictionary, SingularizeState } from "../../lib/IConvertContext";
-import {Util} from "../../lib/Util";
-import {JsonLdContextNormalized} from "jsonld-context-parser";
+import { AlgebraFactory } from '@traqula/algebra-transformations-1-2';
+import { JsonLdContextNormalized } from 'jsonld-context-parser';
+import { DataFactory } from 'rdf-data-factory';
+import { Converter } from '../../lib/Converter';
+import { NodeHandlerDefinitionOperation } from '../../lib/handler/NodeHandlerDefinitionOperation';
+import type { IConvertContext, IVariablesDictionary } from '../../lib/IConvertContext';
+import { SingularizeState } from '../../lib/IConvertContext';
+import { Util } from '../../lib/Util';
 
-// tslint:disable:object-literal-sort-keys
+// Tslint:disable:object-literal-sort-keys
 
 const DF = new DataFactory();
 const OperationFactory = new AlgebraFactory(DF);
 
 describe('NodeHandlerDefinitionOperation', () => {
-
   let handler: NodeHandlerDefinitionOperation;
 
   beforeEach(() => {
@@ -27,7 +27,7 @@ describe('NodeHandlerDefinitionOperation', () => {
   });
 
   describe('#handle', () => {
-    it('should convert an operation query definition node', async () => {
+    it('should convert an operation query definition node', async() => {
       const ctx: IConvertContext = {
         context: new JsonLdContextNormalized({ theField: 'http://example.org/theField' }),
         graph: DF.defaultGraph(),
@@ -40,13 +40,13 @@ describe('NodeHandlerDefinitionOperation', () => {
         variablesDict: {},
         variablesMetaDict: {},
       };
-      return expect(handler.handle({
+      expect(handler.handle({
         kind: 'OperationDefinition',
         operation: 'query',
         selectionSet: {
           kind: 'SelectionSet',
           selections: [
-            { kind: 'Field', name: { kind: 'Name', value: 'theField' } },
+            { kind: 'Field', name: { kind: 'Name', value: 'theField' }},
           ],
         },
       }, ctx)).toEqual(OperationFactory.createBgp([
@@ -58,7 +58,7 @@ describe('NodeHandlerDefinitionOperation', () => {
       ]));
     });
 
-    it('should convert an operation query definition node with a directive', async () => {
+    it('should convert an operation query definition node with a directive', async() => {
       const ctx: IConvertContext = {
         context: new JsonLdContextNormalized({ theField: 'http://example.org/theField' }),
         graph: DF.defaultGraph(),
@@ -73,13 +73,13 @@ describe('NodeHandlerDefinitionOperation', () => {
         },
         variablesMetaDict: {},
       };
-      return expect(handler.handle({
+      expect(handler.handle({
         kind: 'OperationDefinition',
         operation: 'query',
         selectionSet: {
           kind: 'SelectionSet',
           selections: [
-            { kind: 'Field', name: { kind: 'Name', value: 'theField' } },
+            { kind: 'Field', name: { kind: 'Name', value: 'theField' }},
           ],
         },
         directives: [
@@ -87,9 +87,9 @@ describe('NodeHandlerDefinitionOperation', () => {
             {
               kind: 'Argument',
               name: { kind: 'Name', value: 'if' },
-              value: { kind: 'Variable', name: { kind: 'Name', value: 'varTrue' } },
+              value: { kind: 'Variable', name: { kind: 'Name', value: 'varTrue' }},
             },
-          ] },
+          ]},
         ],
       }, ctx)).toEqual(OperationFactory.createBgp([
         OperationFactory.createPattern(
@@ -100,5 +100,4 @@ describe('NodeHandlerDefinitionOperation', () => {
       ]));
     });
   });
-
 });

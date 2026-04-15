@@ -1,18 +1,19 @@
-import {IConvertContext} from "../../IConvertContext";
-import {IConvertSettings} from "../../IConvertSettings";
-import {Util} from "../../Util";
+import type { IConvertContext } from '../../IConvertContext';
+import type { IConvertSettings } from '../../IConvertSettings';
+import type { Util } from '../../Util';
+import type {
+  IDirectiveContext,
+  IDirectiveNodeHandlerOutput,
+} from './DirectiveNodeHandlerAdapter';
 import {
   DirectiveNodeHandlerAdapter,
-  IDirectiveContext,
-  IDirectiveNodeHandlerOutput
-} from "./DirectiveNodeHandlerAdapter";
+} from './DirectiveNodeHandlerAdapter';
 
 /**
  * A handler for skip directives.
  */
 export class DirectiveNodeHandlerSkip extends DirectiveNodeHandlerAdapter {
-
-  constructor(util: Util, settings: IConvertSettings) {
+  public constructor(util: Util, settings: IConvertSettings) {
     super('skip', util, settings);
   }
 

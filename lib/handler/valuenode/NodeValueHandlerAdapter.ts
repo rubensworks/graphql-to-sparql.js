@@ -1,21 +1,20 @@
-import {ValueNode} from "graphql";
-import * as RDF from "@rdfjs/types";
-import type {Algebra} from "@traqula/algebra-transformations-1-2";
-import {IConvertContext} from "../../IConvertContext";
-import {IConvertSettings} from "../../IConvertSettings";
-import {Util} from "../../Util";
+import type * as RDF from '@rdfjs/types';
+import type { Algebra } from '@traqula/algebra-transformations-1-2';
+import type { ValueNode } from 'graphql';
+import type { IConvertContext } from '../../IConvertContext';
+import type { IConvertSettings } from '../../IConvertSettings';
+import type { Util } from '../../Util';
 
 /**
  * A handler for converting GraphQL value nodes to terms and patterns.
  */
 export abstract class NodeValueHandlerAdapter<T extends ValueNode> {
-
   public readonly targetKind: string;
 
   protected readonly util: Util;
   protected readonly settings: IConvertSettings;
 
-  constructor(targetKind: T['kind'], util: Util, settings: IConvertSettings) {
+  public constructor(targetKind: T['kind'], util: Util, settings: IConvertSettings) {
     this.targetKind = targetKind;
     this.util = util;
     this.settings = settings;

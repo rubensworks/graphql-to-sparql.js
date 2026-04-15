@@ -1,16 +1,15 @@
-import {FieldNode, FragmentDefinitionNode, FragmentSpreadNode} from "graphql/language";
-import type {Algebra} from "@traqula/algebra-transformations-1-2";
-import {IConvertContext} from "../IConvertContext";
-import {IConvertSettings} from "../IConvertSettings";
-import {Util} from "../Util";
-import {NodeHandlerSelectionAdapter} from "./NodeHandlerSelectionAdapter";
+import type { Algebra } from '@traqula/algebra-transformations-1-2';
+import type { FieldNode, FragmentDefinitionNode, FragmentSpreadNode } from 'graphql/language';
+import type { IConvertContext } from '../IConvertContext';
+import type { IConvertSettings } from '../IConvertSettings';
+import type { Util } from '../Util';
+import { NodeHandlerSelectionAdapter } from './NodeHandlerSelectionAdapter';
 
 /**
  * Converts GraphQL fragment spread to one or more quad patterns with a given type within an optional.
  */
 export class NodeHandlerSelectionFragmentSpread extends NodeHandlerSelectionAdapter<FragmentSpreadNode> {
-
-  constructor(util: Util, settings: IConvertSettings) {
+  public constructor(util: Util, settings: IConvertSettings) {
     super('FragmentSpread', util, settings);
   }
 
@@ -18,7 +17,7 @@ export class NodeHandlerSelectionFragmentSpread extends NodeHandlerSelectionAdap
     const fragmentDefinitionNode: FragmentDefinitionNode = convertContext
       .fragmentDefinitions[fragmentSpreadNode.name.value];
     if (!fragmentDefinitionNode) {
-      throw new Error('Undefined fragment definition: ' + fragmentSpreadNode.name.value);
+      throw new Error(`Undefined fragment definition: ${fragmentSpreadNode.name.value}`);
     }
 
     // Wrap in an OPTIONAL, as this pattern should only apply if the type applies
@@ -38,5 +37,4 @@ export class NodeHandlerSelectionFragmentSpread extends NodeHandlerSelectionAdap
       this.fieldToOperation(convertContext, fieldNode, false, auxiliaryPatterns),
     );
   }
-
 }

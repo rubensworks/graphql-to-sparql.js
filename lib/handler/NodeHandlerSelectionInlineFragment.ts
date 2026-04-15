@@ -1,16 +1,15 @@
-import {FieldNode, InlineFragmentNode} from "graphql/language";
-import type {Algebra} from "@traqula/algebra-transformations-1-2";
-import {IConvertContext} from "../IConvertContext";
-import {IConvertSettings} from "../IConvertSettings";
-import {Util} from "../Util";
-import {NodeHandlerSelectionAdapter} from "./NodeHandlerSelectionAdapter";
+import type { Algebra } from '@traqula/algebra-transformations-1-2';
+import type { FieldNode, InlineFragmentNode } from 'graphql/language';
+import type { IConvertContext } from '../IConvertContext';
+import type { IConvertSettings } from '../IConvertSettings';
+import type { Util } from '../Util';
+import { NodeHandlerSelectionAdapter } from './NodeHandlerSelectionAdapter';
 
 /**
  * Converts GraphQL inline fragment to one or more quad patterns with a given type within an optional.
  */
 export class NodeHandlerSelectionInlineFragment extends NodeHandlerSelectionAdapter<InlineFragmentNode> {
-
-  constructor(util: Util, settings: IConvertSettings) {
+  public constructor(util: Util, settings: IConvertSettings) {
     super('InlineFragment', util, settings);
   }
 
@@ -24,12 +23,12 @@ export class NodeHandlerSelectionInlineFragment extends NodeHandlerSelectionAdap
       name: { kind: 'Name', value: convertContext.subject.value },
       selectionSet: inlineFragmentNode.selectionSet,
     };
-    const auxiliaryPatterns = inlineFragmentNode.typeCondition
-      ? [ this.util.newTypePattern(convertContext.subject, inlineFragmentNode.typeCondition, convertContext) ] : [];
+    const auxiliaryPatterns = inlineFragmentNode.typeCondition ?
+        [ this.util.newTypePattern(convertContext.subject, inlineFragmentNode.typeCondition, convertContext) ] :
+        [];
     return this.util.operationFactory.createLeftJoin(
       this.util.operationFactory.createBgp([]),
       this.fieldToOperation(convertContext, fieldNode, false, auxiliaryPatterns),
     );
   }
-
 }

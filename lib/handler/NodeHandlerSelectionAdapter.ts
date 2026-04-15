@@ -1,18 +1,19 @@
-import {FieldNode, IntValueNode, SelectionNode} from "graphql/language";
-import * as RDF from "@rdfjs/types";
-import type {Algebra} from "@traqula/algebra-transformations-1-2";
-import {algebraUtils} from "@traqula/algebra-transformations-1-2";
-import {IConvertContext, SingularizeState} from "../IConvertContext";
-import {IConvertSettings} from "../IConvertSettings";
-import {Util} from "../Util";
-import {INodeQuadContext, NodeHandlerAdapter} from "./NodeHandlerAdapter";
+import type * as RDF from '@rdfjs/types';
+import type { Algebra } from '@traqula/algebra-transformations-1-2';
+import { algebraUtils } from '@traqula/algebra-transformations-1-2';
+import type { FieldNode, SelectionNode } from 'graphql/language';
+import type { IConvertContext } from '../IConvertContext';
+import { SingularizeState } from '../IConvertContext';
+import type { IConvertSettings } from '../IConvertSettings';
+import type { Util } from '../Util';
+import type { INodeQuadContext } from './NodeHandlerAdapter';
+import { NodeHandlerAdapter } from './NodeHandlerAdapter';
 
 /**
  * A handler for converting GraphQL selection nodes to operations.
  */
 export abstract class NodeHandlerSelectionAdapter<T extends SelectionNode> extends NodeHandlerAdapter<T> {
-
-  constructor(targetKind: T['kind'], util: Util, settings: IConvertSettings) {
+  public constructor(targetKind: T['kind'], util: Util, settings: IConvertSettings) {
     super(targetKind, util, settings);
   }
 
@@ -23,8 +24,11 @@ export abstract class NodeHandlerSelectionAdapter<T extends SelectionNode> exten
    * @param {IConvertContext} convertContext A convert context.
    * @return {INodeQuadContext} The subject and optional auxiliary patterns.
    */
-  public getNodeQuadContextFieldNode(field: FieldNode, fieldLabel: string, convertContext: IConvertContext)
-    : INodeQuadContext {
+  public getNodeQuadContextFieldNode(
+    field: FieldNode,
+    fieldLabel: string,
+    convertContext: IConvertContext,
+  ): INodeQuadContext {
     return this.getNodeQuadContextSelectionSet(field.selectionSet, fieldLabel, {
       ...convertContext,
       path: this.util.appendFieldToPath(convertContext.path, fieldLabel),
@@ -39,8 +43,12 @@ export abstract class NodeHandlerSelectionAdapter<T extends SelectionNode> exten
    * @param {Pattern[]} auxiliaryPatterns Optional patterns that should be part of the BGP.
    * @return {Operation} The reslting operation.
    */
-  public fieldToOperation(convertContext: IConvertContext, fieldNode: FieldNode,
-                          pushTerminalVariables: boolean, auxiliaryPatterns?: Algebra.Pattern[]): Algebra.Operation {
+  public fieldToOperation(
+    convertContext: IConvertContext,
+    fieldNode: FieldNode,
+    pushTerminalVariables: boolean,
+    auxiliaryPatterns?: Algebra.Pattern[],
+  ): Algebra.Operation {
     // If a deeper node is being selected, and if the current object should become the next subject
     const nesting = pushTerminalVariables;
 
@@ -80,30 +88,36 @@ export abstract class NodeHandlerSelectionAdapter<T extends SelectionNode> exten
       }
     }
 
-    const operations: Algebra.Operation[] = auxiliaryPatterns
-      ? [this.util.operationFactory.createBgp(auxiliaryPatterns)] : [];
+    const operations: Algebra.Operation[] = auxiliaryPatterns ?
+        [ this.util.operationFactory.createBgp(auxiliaryPatterns) ] :
+        [];
 
     // Define subject and object
     const subjectOutput = this.getNodeQuadContextFieldNode(fieldNode, fieldLabel, convertContext);
-    let object: RDF.Term = subjectOutput.subject || this.util.nameToVariable(fieldLabel, convertContext);
-    let graph: RDF.Term = subjectOutput.graph || convertContext.graph;
+    let object: RDF.Term = subjectOutput.subject ?? this.util.nameToVariable(fieldLabel, convertContext);
+    let graph: RDF.Term = subjectOutput.graph ?? convertContext.graph;
     if (subjectOutput.auxiliaryPatterns) {
       operations.push(this.util.operationFactory.createBgp(subjectOutput.auxiliaryPatterns));
     }
 
     // Check if there is a '_' argument
     // We do this before handling all other arguments so that the order of final triple patterns is sane.
-    let createQuadPattern: boolean = true;
+    let createQuadPattern = true;
     let overrideObjectTerms: RDF.Term[] | null = null;
-    if (pushTerminalVariables && fieldNode.arguments && fieldNode.arguments.length) {
+    if (pushTerminalVariables && fieldNode.arguments && fieldNode.arguments.length > 0) {
       for (const argument of fieldNode.arguments) {
         if (argument.name.value === '_') {
           // '_'-arguments do not create an additional predicate link, but set the value directly.
           const valueOutput = this.util.handleNodeValue(argument.value, fieldNode.name.value, convertContext);
           overrideObjectTerms = valueOutput.terms;
           operations.push(this.util.operationFactory.createBgp(
-            valueOutput.terms.map((term) => this.util.createQuadPattern(
-              convertContext.subject, fieldNode.name, term, convertContext.graph, convertContext.context)),
+            valueOutput.terms.map(term => this.util.createQuadPattern(
+              convertContext.subject,
+              fieldNode.name,
+              term,
+              convertContext.graph,
+              convertContext.context,
+            )),
           ));
           if (valueOutput.auxiliaryPatterns) {
             operations.push(this.util.operationFactory.createBgp(valueOutput.auxiliaryPatterns));
@@ -128,11 +142,17 @@ export abstract class NodeHandlerSelectionAdapter<T extends SelectionNode> exten
 
           let pathValue = argument.value;
           if (pathValue.kind !== 'ListValue') {
-            pathValue = { kind: 'ListValue', values: [ pathValue ] };
+            pathValue = { kind: 'ListValue', values: [ pathValue ]};
           }
 
-          operations.push(this.util.createQuadPath(convertContext.subject, fieldNode.name, pathValue, object,
-            convertContext.graph, convertContext.context));
+          operations.push(this.util.createQuadPath(
+            convertContext.subject,
+            fieldNode.name,
+            pathValue,
+            object,
+            convertContext.graph,
+            convertContext.context,
+          ));
           createQuadPattern = false;
 
           break;
@@ -143,31 +163,41 @@ export abstract class NodeHandlerSelectionAdapter<T extends SelectionNode> exten
     // Create at least a pattern for the parent node and the current path.
     if (pushTerminalVariables && createQuadPattern) {
       operations.push(this.util.operationFactory.createBgp([
-        this.util.createQuadPattern(convertContext.subject, fieldNode.name, object,
-          convertContext.graph, convertContext.context),
+        this.util.createQuadPattern(
+          convertContext.subject,
+          fieldNode.name,
+          object,
+          convertContext.graph,
+          convertContext.context,
+        ),
       ]));
     }
 
     // Create patterns for the node's arguments
-    if (fieldNode.arguments && fieldNode.arguments.length) {
+    if (fieldNode.arguments && fieldNode.arguments.length > 0) {
       for (const argument of fieldNode.arguments) {
         if (argument.name.value === '_' || argument.name.value === 'graph' || argument.name.value === 'alt') {
-          // no-op
+          // No-op
         } else if (argument.name.value === 'first') {
           if (argument.value.kind !== 'IntValue') {
-            throw new Error('Invalid value type for \'first\' argument: ' + argument.value.kind);
+            throw new Error(`Invalid value type for 'first' argument: ${argument.value.kind}`);
           }
-          limit = parseInt((<IntValueNode> argument.value).value, 10);
+          limit = Number.parseInt((argument.value).value, 10);
         } else if (argument.name.value === 'offset') {
           if (argument.value.kind !== 'IntValue') {
-            throw new Error('Invalid value type for \'offset\' argument: ' + argument.value.kind);
+            throw new Error(`Invalid value type for 'offset' argument: ${argument.value.kind}`);
           }
-          offset = parseInt((<IntValueNode> argument.value).value, 10);
+          offset = Number.parseInt((argument.value).value, 10);
         } else {
           const valueOutput = this.util.handleNodeValue(argument.value, argument.name.value, convertContext);
           operations.push(this.util.operationFactory.createBgp(
-            valueOutput.terms.map((term) => this.util.createQuadPattern(
-              object, argument.name, term, convertContext.graph, convertContext.context)),
+            valueOutput.terms.map(term => this.util.createQuadPattern(
+              object,
+              argument.name,
+              term,
+              convertContext.graph,
+              convertContext.context,
+            )),
           ));
           if (valueOutput.auxiliaryPatterns) {
             operations.push(this.util.operationFactory.createBgp(valueOutput.auxiliaryPatterns));
@@ -184,7 +214,7 @@ export abstract class NodeHandlerSelectionAdapter<T extends SelectionNode> exten
 
     // Recursive call for nested selection sets
     let operation: Algebra.Operation = this.util.joinOperations(operations);
-    if (fieldNode.selectionSet && fieldNode.selectionSet.selections.length) {
+    if (fieldNode.selectionSet && fieldNode.selectionSet.selections.length > 0) {
       // Override the object if needed
       if (overrideObjectTerms) {
         if (overrideObjectTerms.length !== 1) {
@@ -203,8 +233,8 @@ export abstract class NodeHandlerSelectionAdapter<T extends SelectionNode> exten
       };
 
       // If the magic keyword 'totalCount' is present, include a count aggregator.
-      let totalCount: boolean = false;
-      const selections: ReadonlyArray<SelectionNode> = fieldNode.selectionSet.selections
+      let totalCount = false;
+      const selections: readonly SelectionNode[] = fieldNode.selectionSet.selections
         .filter((selection) => {
           if (selection.kind === 'Field' && selection.name.value === 'totalCount') {
             totalCount = true;
@@ -213,31 +243,38 @@ export abstract class NodeHandlerSelectionAdapter<T extends SelectionNode> exten
           return true;
         });
 
-      let joinedOperation = this.util.joinOperations(operations
-        .concat(selections.map((selectionNode) => this.util.handleNode(selectionNode, subConvertContext))));
+      let joinedOperation = this.util.joinOperations([
+        ...operations,
+        ...selections.map(selectionNode => this.util.handleNode(selectionNode, subConvertContext)),
+      ]);
 
       // Modify the operation if there was a count selection
       if (totalCount) {
         // Create to a count aggregation
-        const expressionVariable = this.util.dataFactory.variable!('var' + this.settings.expressionVariableCounter!++);
+        const expressionVariable = this.util.dataFactory.variable!(`var${this.settings.expressionVariableCounter!++}`);
         const countOverVariable: RDF.Variable = this.util.dataFactory
-          .variable!(object.value + this.settings.variableDelimiter + 'totalCount');
-        const aggregator: Algebra.BoundAggregate = this.util.operationFactory.createBoundAggregate(expressionVariable,
-          'count', this.util.operationFactory.createTermExpression(object), false);
+          .variable!(`${object.value + this.settings.variableDelimiter}totalCount`);
+        const aggregator: Algebra.BoundAggregate = this.util.operationFactory.createBoundAggregate(
+          expressionVariable,
+          'count',
+          this.util.operationFactory.createTermExpression(object),
+          false,
+        );
 
         const countProject = this.util.operationFactory.createProject(
           this.util.operationFactory.createExtend(
-            this.util.operationFactory.createGroup(operation, [], [aggregator]), countOverVariable,
+            this.util.operationFactory.createGroup(operation, [], [ aggregator ]),
+            countOverVariable,
             this.util.operationFactory.createTermExpression(expressionVariable),
           ),
-          [countOverVariable],
+          [ countOverVariable ],
         );
         convertContext.terminalVariables.push(countOverVariable);
 
         // If no other selections exist (next to totalCount),
         // then we just return the count operations as-is,
         // otherwise, we join the count operation with all other selections
-        if (!selections.length) {
+        if (selections.length === 0) {
           joinedOperation = countProject;
         } else {
           joinedOperation = this.util.operationFactory.createJoin([
@@ -257,7 +294,9 @@ export abstract class NodeHandlerSelectionAdapter<T extends SelectionNode> exten
     // Wrap the operation in a slice if a 'first' or 'offset' argument was provided.
     if (offset || limit) {
       operation = this.util.operationFactory.createSlice(this.util.operationFactory.createProject(
-        operation, algebraUtils.inScopeVariables(operation)), offset, limit);
+        operation,
+        algebraUtils.inScopeVariables(operation),
+      ), offset, limit);
     }
 
     // Override operation if needed
@@ -273,8 +312,11 @@ export abstract class NodeHandlerSelectionAdapter<T extends SelectionNode> exten
    * @param {Pattern[]} auxiliaryPatterns Optional patterns that should be part of the BGP.
    * @return {Operation} An operation or undefined.
    */
-  public handleMetaField(convertContext: IConvertContext, fieldLabel: string,
-                         auxiliaryPatterns?: Algebra.Pattern[]): Algebra.Operation | undefined {
+  public handleMetaField(
+    convertContext: IConvertContext,
+    fieldLabel: string,
+    auxiliaryPatterns?: Algebra.Pattern[],
+  ): Algebra.Operation | undefined {
     // TODO: in the future, we should add support for GraphQL wide range of introspection features:
     // http://graphql.org/learn/introspection/
     if (fieldLabel === '__typename') {
@@ -287,8 +329,8 @@ export abstract class NodeHandlerSelectionAdapter<T extends SelectionNode> exten
           this.util.nameToVariable(fieldLabel, convertContext),
           convertContext.graph,
         ),
-      ].concat(auxiliaryPatterns || []));
+        ...(auxiliaryPatterns ?? []),
+      ]);
     }
   }
-
 }

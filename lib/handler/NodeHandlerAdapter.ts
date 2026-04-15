@@ -1,21 +1,20 @@
-import {DirectiveNode, FieldNode, SelectionSetNode} from "graphql/language";
-import * as RDF from "@rdfjs/types";
-import type {Algebra} from "@traqula/algebra-transformations-1-2";
-import {IConvertContext} from "../IConvertContext";
-import {IConvertSettings} from "../IConvertSettings";
-import {Util} from "../Util";
-import {IDirectiveNodeHandlerOutput} from "./directivenode/DirectiveNodeHandlerAdapter";
+import type * as RDF from '@rdfjs/types';
+import type { Algebra } from '@traqula/algebra-transformations-1-2';
+import type { DirectiveNode, FieldNode, SelectionSetNode } from 'graphql/language';
+import type { IConvertContext } from '../IConvertContext';
+import type { IConvertSettings } from '../IConvertSettings';
+import type { Util } from '../Util';
+import type { IDirectiveNodeHandlerOutput } from './directivenode/DirectiveNodeHandlerAdapter';
 
 /**
  * A handler for converting GraphQL nodes to operations.
  */
 export abstract class NodeHandlerAdapter<T extends { kind: string }> {
-
   public readonly targetKind: string;
   protected readonly util: Util;
   protected readonly settings: IConvertSettings;
 
-  constructor(targetKind: T['kind'], util: Util, settings: IConvertSettings) {
+  public constructor(targetKind: T['kind'], util: Util, settings: IConvertSettings) {
     this.targetKind = targetKind;
     this.util = util;
     this.settings = settings;
@@ -45,9 +44,11 @@ export abstract class NodeHandlerAdapter<T extends { kind: string }> {
    * @param {IConvertContext} convertContext A convert context.
    * @return {INodeQuadContext} The subject, graph and auxiliary patterns.
    */
-  public getNodeQuadContextSelectionSet(selectionSet: SelectionSetNode | undefined, fieldLabel: string,
-                                        convertContext: IConvertContext)
-    : INodeQuadContext {
+  public getNodeQuadContextSelectionSet(
+    selectionSet: SelectionSetNode | undefined,
+    fieldLabel: string,
+    convertContext: IConvertContext,
+  ): INodeQuadContext {
     const nodeQuadContext: INodeQuadContext = {};
     if (selectionSet) {
       for (const selectionNode of selectionSet.selections) {
@@ -69,9 +70,13 @@ export abstract class NodeHandlerAdapter<T extends { kind: string }> {
    * @param {string} fieldName The field name to check for.
    * @param {'subject' | 'graph'} nodeQuadContextKey The key to fill into the node quad context.
    */
-  public handleNodeQuadContextField(fieldNode: FieldNode, convertContext: IConvertContext,
-                                    nodeQuadContext: INodeQuadContext, fieldName: string,
-                                    nodeQuadContextKey: 'subject' | 'graph') {
+  public handleNodeQuadContextField(
+    fieldNode: FieldNode,
+    convertContext: IConvertContext,
+    nodeQuadContext: INodeQuadContext,
+    fieldName: string,
+    nodeQuadContextKey: 'subject' | 'graph',
+  ): void {
     if (!nodeQuadContext[nodeQuadContextKey] && fieldNode.name.value === fieldName) {
       // Get (or set) the nodeQuadContextKey for fieldName fields
       if (!nodeQuadContext[nodeQuadContextKey]) {
@@ -87,7 +92,10 @@ export abstract class NodeHandlerAdapter<T extends { kind: string }> {
             if (!nodeQuadContext.auxiliaryPatterns) {
               nodeQuadContext.auxiliaryPatterns = [];
             }
-            nodeQuadContext.auxiliaryPatterns.concat(valueOutput.auxiliaryPatterns);
+            nodeQuadContext.auxiliaryPatterns = [
+              ...nodeQuadContext.auxiliaryPatterns,
+              ...valueOutput.auxiliaryPatterns,
+            ];
           }
         }
       }
@@ -112,7 +120,7 @@ export abstract class NodeHandlerAdapter<T extends { kind: string }> {
    * @return {IDirectiveNodeHandlerOutput[]} The directive node handler outputs, or null if it should be ignored.
    */
   public getDirectiveOutputs(
-    directives: ReadonlyArray<DirectiveNode> | undefined,
+    directives: readonly DirectiveNode[] | undefined,
     fieldLabel: string,
     convertContext: IConvertContext,
   ): IDirectiveNodeHandlerOutput[] | null {
@@ -140,8 +148,10 @@ export abstract class NodeHandlerAdapter<T extends { kind: string }> {
    * @param {Operation} operation
    * @return {Operation}
    */
-  public handleDirectiveOutputs(directiveOutputs: IDirectiveNodeHandlerOutput[],
-                                operation: Algebra.Operation): Algebra.Operation {
+  public handleDirectiveOutputs(
+    directiveOutputs: IDirectiveNodeHandlerOutput[],
+    operation: Algebra.Operation,
+  ): Algebra.Operation {
     for (const directiveOutput of directiveOutputs) {
       if (directiveOutput.ignore) {
         return this.util.operationFactory.createBgp([]);
@@ -152,7 +162,6 @@ export abstract class NodeHandlerAdapter<T extends { kind: string }> {
     }
     return operation;
   }
-
 }
 
 /**

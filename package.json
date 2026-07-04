@@ -78,7 +78,7 @@
     "@traqula/algebra-sparql-1-2": "^1.0.0",
     "@traqula/algebra-transformations-1-2": "^1.0.0",
     "@traqula/generator-sparql-1-2": "^1.0.0",
-    "graphql": "^15.5.2",
+    "graphql": "^17.0.0",
     "jsonld-context-parser": "^3.0.0",
     "minimist": "^1.2.0",
     "rdf-data-factory": "^2.0.1"

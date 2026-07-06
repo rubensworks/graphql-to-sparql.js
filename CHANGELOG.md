@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+<a name="v6.1.0"></a>
+## [v6.1.0](https://github.com/rubensworks/graphql-to-sparql.js/compare/v6.0.0...v6.1.0) - 2026-07-06
+
+### Changed
+* [Update graphql dependency to v17 (#73)](https://github.com/rubensworks/graphql-to-sparql.js/commit/616b3aee84f4056da12c15b4f56290dfe895bbe4)
+
 <a name="v6.0.0"></a>
 ## [v6.0.0](https://github.com/rubensworks/graphql-to-sparql.js/compare/v5.0.0...v6.0.0) - 2026-01-07
 
